@@ -892,5 +892,3 @@ const S={
   modalTitle:{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,letterSpacing:1,color:C.accent},
   iconBtn:{background:"none",border:"none",color:C.muted,fontSize:18,cursor:"pointer"},
 };
-
-              
