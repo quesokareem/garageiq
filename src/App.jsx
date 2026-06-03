@@ -78,8 +78,58 @@ const INIT_REVIEWS=[
 
 const SERVICE_TYPES=["Oil Change","Tire Rotation","Brake Pad Replacement","Air Filter","Transmission Service","Coolant Flush","Battery Replacement","Wheel Alignment","Spark Plugs","Full Inspection"];
 const JOB_TAGS=["Oil Change","Brakes","Alternator","AC","Transmission","Electrical","Tires","Engine","Battery","Other"];
-const CAR_MAKES=["Any","Ford","Toyota","Honda","Chevrolet","BMW","Mercedes","Volkswagen","Nissan","Hyundai","Kia","Jeep","RAM","Dodge","Subaru","Mazda","Lexus","Audi","Other"];
-const CAR_COLORS=["Any","Black","White","Silver","Gray","Red","Blue","Green","Orange","Yellow","Brown","Other"];
+const CAR_MAKES=["Any","Ford","Toyota","Honda","Chevrolet","GMC","RAM","Jeep","Dodge","Nissan","Hyundai","Kia","Subaru","Mazda","Volkswagen","BMW","Mercedes-Benz","Lexus","Audi","Cadillac","Buick","Lincoln","Acura","Infiniti","Volvo","Tesla","Genesis","Mitsubishi","Other"];
+
+const CAR_MODELS={
+  Ford:["F-150","F-250","F-350","Mustang","Explorer","Escape","Edge","Bronco","Bronco Sport","Ranger","Maverick","Expedition","Transit","Transit Connect","EcoSport","Fusion","Taurus","Focus","Fiesta"],
+  Toyota:["Camry","Corolla","RAV4","Tacoma","Tundra","Highlander","4Runner","Sienna","Prius","Venza","Avalon","C-HR","Sequoia","Land Cruiser","GR86","Supra","bZ4X","Yaris"],
+  Honda:["Civic","Accord","CR-V","Pilot","Odyssey","HR-V","Passport","Ridgeline","Fit","Insight","Element","Prologue","Jazz"],
+  Chevrolet:["Silverado 1500","Silverado 2500","Equinox","Tahoe","Suburban","Traverse","Colorado","Blazer","Trax","Malibu","Camaro","Corvette","Trailblazer","Express","Spark","Sonic"],
+  GMC:["Sierra 1500","Sierra 2500","Yukon","Yukon XL","Acadia","Terrain","Canyon","Envoy","Safari"],
+  RAM:["1500","2500","3500","ProMaster","ProMaster City"],
+  Jeep:["Wrangler","Grand Cherokee","Cherokee","Compass","Gladiator","Renegade","Wagoneer","Grand Wagoneer"],
+  Dodge:["Challenger","Charger","Durango","Journey","Grand Caravan","Dart","Viper"],
+  Nissan:["Altima","Rogue","Sentra","Frontier","Pathfinder","Murano","Titan","Kicks","Armada","Maxima","Versa","370Z","GT-R","Leaf"],
+  Hyundai:["Elantra","Tucson","Santa Fe","Sonata","Kona","Palisade","Ioniq 5","Ioniq 6","Venue","Accent","Veloster","Genesis Coupe"],
+  Kia:["Sorento","Sportage","Forte","Telluride","Soul","Carnival","Stinger","EV6","Niro","Seltos","K5","Rio","Cadenza"],
+  Subaru:["Outback","Forester","Crosstrek","Impreza","Legacy","Ascent","WRX","BRZ","Solterra"],
+  Mazda:["CX-5","Mazda3","CX-30","CX-50","CX-90","Mazda6","MX-5 Miata","CX-9","CX-3"],
+  Volkswagen:["Jetta","Tiguan","Atlas","Passat","Golf","GTI","Taos","ID.4","Touareg","Arteon"],
+  BMW:["3 Series","5 Series","7 Series","X1","X3","X5","X7","4 Series","2 Series","M3","M5","i4","iX","Z4"],
+  "Mercedes-Benz":["C-Class","E-Class","S-Class","GLC","GLE","GLS","A-Class","CLA","GLA","GLB","AMG GT","EQS","EQE"],
+  Lexus:["RX","ES","NX","GX","IS","UX","LX","LS","LC","RC","TX"],
+  Audi:["A4","A6","Q5","Q7","Q3","A3","A8","Q8","TT","R8","e-tron","Q4 e-tron"],
+  Cadillac:["Escalade","XT5","CT5","XT4","CT4","Lyriq","Celestiq"],
+  Buick:["Enclave","Encore","Encore GX","Envision","LaCrosse"],
+  Lincoln:["Navigator","Nautilus","Corsair","Aviator","Continental"],
+  Acura:["MDX","RDX","TLX","ILX","NSX","Integra"],
+  Infiniti:["QX60","QX80","QX50","Q50","QX55","Q60"],
+  Volvo:["XC90","XC60","XC40","S90","S60","V90","V60","C40"],
+  Tesla:["Model 3","Model Y","Model S","Model X","Cybertruck"],
+  Genesis:["GV80","GV70","G80","GV60","G70","G90"],
+  Mitsubishi:["Outlander","Eclipse Cross","Outlander Sport","Galant","Lancer","Mirage"],
+  Other:[],
+};
+
+const MODEL_TYPES={
+  // Sedans
+  "Camry":"Sedan","Corolla":"Sedan","Civic":"Sedan","Accord":"Sedan","Altima":"Sedan","Sentra":"Sedan","Maxima":"Sedan","Elantra":"Sedan","Sonata":"Sedan","Malibu":"Sedan","Fusion":"Sedan","Taurus":"Sedan","Passat":"Sedan","Jetta":"Sedan","A4":"Sedan","A6":"Sedan","3 Series":"Sedan","5 Series":"Sedan","7 Series":"Sedan","C-Class":"Sedan","E-Class":"Sedan","S-Class":"Sedan","ES":"Sedan","IS":"Sedan","LS":"Sedan","RX":"Sedan","CT5":"Sedan","CT4":"Sedan","Forte":"Sedan","K5":"Sedan","Rio":"Sedan","Impreza":"Sedan","Legacy":"Sedan","Mazda3":"Sedan","Mazda6":"Sedan","Q50":"Sedan","Stinger":"Sedan","TLX":"Sedan","ILX":"Sedan","G80":"Sedan","G70":"Sedan","G90":"Sedan","S90":"Sedan","S60":"Sedan","Model 3":"Sedan","Model S":"Sedan","LaCrosse":"Sedan","Continental":"Sedan","Cadenza":"Sedan","Versa":"Sedan","Accent":"Sedan","Dart":"Sedan","Lancer":"Sedan","Galant":"Sedan","Mirage":"Sedan","Avalon":"Sedan",
+  // SUVs / Crossovers
+  "CR-V":"SUV","RAV4":"SUV","Rogue":"SUV","Equinox":"SUV","Explorer":"SUV","Escape":"SUV","Tiguan":"SUV","Tucson":"SUV","Santa Fe":"SUV","Sorento":"SUV","Sportage":"SUV","Outlander":"SUV","Forester":"SUV","Outback":"SUV","Crosstrek":"SUV","CX-5":"SUV","CX-30":"SUV","CX-50":"SUV","CX-90":"SUV","CX-9":"SUV","CX-3":"SUV","Pilot":"SUV","HR-V":"SUV","Passport":"SUV","Atlas":"SUV","Taos":"SUV","ID.4":"SUV","Kona":"SUV","Venue":"SUV","Seltos":"SUV","Niro":"SUV","Soul":"SUV","Edge":"SUV","Bronco Sport":"SUV","EcoSport":"SUV","Terrain":"SUV","Acadia":"SUV","Trax":"SUV","Blazer":"SUV","Trailblazer":"SUV","Traverse":"SUV","Highlander":"SUV","4Runner":"SUV","Venza":"SUV","C-HR":"SUV","Sequoia":"SUV","Tahoe":"SUV","Suburban":"SUV","Expedition":"SUV","Yukon":"SUV","Yukon XL":"SUV","Escalade":"SUV","Navigator":"SUV","Aviator":"SUV","Corsair":"SUV","Nautilus":"SUV","GX":"SUV","NX":"SUV","UX":"SUV","LX":"SUV","RX":"SUV","TX":"SUV","Q5":"SUV","Q7":"SUV","Q3":"SUV","Q8":"SUV","e-tron":"SUV","Q4 e-tron":"SUV","X1":"SUV","X3":"SUV","X5":"SUV","X7":"SUV","GLC":"SUV","GLE":"SUV","GLS":"SUV","GLA":"SUV","GLB":"SUV","EQS":"SUV","EQE":"SUV","Murano":"SUV","Pathfinder":"SUV","Armada":"SUV","Kicks":"SUV","QX60":"SUV","QX80":"SUV","QX50":"SUV","QX55":"SUV","XC90":"SUV","XC60":"SUV","XC40":"SUV","C40":"SUV","V90":"SUV","V60":"SUV","MDX":"SUV","RDX":"SUV","Enclave":"SUV","Encore":"SUV","Encore GX":"SUV","Envision":"SUV","XT5":"SUV","XT4":"SUV","Lyriq":"SUV","Palisade":"SUV","Ioniq 5":"SUV","Ioniq 6":"SUV","EV6":"SUV","GV80":"SUV","GV70":"SUV","GV60":"SUV","Model Y":"SUV","Model X":"SUV","Bravada":"SUV","Envoy":"SUV","Wagoneer":"SUV","Grand Wagoneer":"SUV","Grand Cherokee":"SUV","Cherokee":"SUV","Compass":"SUV","Renegade":"SUV","Durango":"SUV","Journey":"SUV","Subaru XV":"SUV","Ascent":"SUV","Eclipse Cross":"SUV","Outlander Sport":"SUV","Solterra":"SUV","Prologue":"SUV","bZ4X":"SUV","Ioniq":"SUV",
+  // Trucks
+  "F-150":"Truck","F-250":"Truck","F-350":"Truck","Silverado 1500":"Truck","Silverado 2500":"Truck","Sierra 1500":"Truck","Sierra 2500":"Truck","RAM 1500":"Truck","1500":"Truck","2500":"Truck","3500":"Truck","Tacoma":"Truck","Tundra":"Truck","Ranger":"Truck","Maverick":"Truck","Colorado":"Truck","Canyon":"Truck","Frontier":"Truck","Titan":"Truck","Ridgeline":"Truck","Gladiator":"Truck","Cybertruck":"Truck",
+  // Minivans
+  "Odyssey":"Minivan","Sienna":"Minivan","Carnival":"Minivan","Grand Caravan":"Minivan","Pacifica":"Minivan","Transit Connect":"Minivan","ProMaster City":"Minivan",
+  // Vans
+  "Transit":"Van","ProMaster":"Van","Express":"Van","Sprinter":"Van","Safari":"Van","Savana":"Van",
+  // Sports/Coupes
+  "Mustang":"Coupe","Camaro":"Coupe","Challenger":"Coupe","Charger":"Coupe","Corvette":"Coupe","Supra":"Coupe","GR86":"Coupe","BRZ":"Coupe","MX-5 Miata":"Convertible","Z4":"Convertible","370Z":"Coupe","GT-R":"Coupe","WRX":"Sedan","Impreza":"Sedan","A3":"Sedan","CLA":"Sedan","A-Class":"Sedan","4 Series":"Coupe","2 Series":"Coupe","AMG GT":"Coupe","M3":"Sedan","M5":"Sedan","LC":"Coupe","RC":"Coupe","TT":"Coupe","R8":"Coupe","NSX":"Coupe","Integra":"Sedan","Veloster":"Hatchback","Golf":"Hatchback","GTI":"Hatchback","Focus":"Hatchback","Fiesta":"Hatchback","Fit":"Hatchback","Jazz":"Hatchback","Spark":"Hatchback","Sonic":"Hatchback","Yaris":"Hatchback","Prius":"Hatchback","Insight":"Hatchback","Leaf":"Hatchback",
+  // SUV/Luxury
+  "Bronco":"SUV","Wrangler":"SUV","Jeep":"SUV",
+};
+
+const BODY_TYPES=["Any","Sedan","SUV","Truck","Minivan","Van","Coupe","Convertible","Hatchback"];
+const CAR_COLORS=["Any","Black","White","Silver","Gray","Red","Blue","Green","Orange","Yellow","Brown","Beige","Gold","Purple","Other"];
 
 function Av({name,size=36,color=C.accent,emoji=null}){
   return <div style={{width:size,height:size,borderRadius:"50%",background:color+"22",color,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'Bebas Neue',sans-serif",fontSize:emoji?size*0.55:size*0.46,flexShrink:0}}>{emoji||name?.[0]?.toUpperCase()}</div>;
@@ -317,13 +367,16 @@ function ProfilePage({user,users,setUsers,onClose}){
 }
 
 function Marketplace({user,listings,setListings,onDM,userLocation}){
-  const [filters,setFilters]=useState({make:"Any",model:"",color:"Any",condition:"Any",minPrice:"",maxPrice:"",minMiles:"",maxMiles:"",maxDist:50});
+  const [filters,setFilters]=useState({make:"Any",model:"Any",bodyType:"Any",color:"Any",condition:"Any",minPrice:"",maxPrice:"",minMiles:"",maxMiles:"",maxDist:50});
   const [sort,setSort]=useState("newest");const [selected,setSelected]=useState(null);const [showCreate,setShowCreate]=useState(false);
   const [offerTarget,setOfferTarget]=useState(null);const [offerAmt,setOfferAmt]=useState("");const [offerMsg,setOfferMsg]=useState("");const [offerSent,setOfferSent]=useState(false);
+  const [customMake,setCustomMake]=useState(false);const [customModel,setCustomModel]=useState(false);
   const setF=(k,v)=>setFilters(p=>({...p,[k]:v}));
+  const availableModels=(CAR_MODELS[filters.make]||[]);
   const filtered=listings.filter(l=>{
     if(filters.make!=="Any"&&l.make!==filters.make)return false;
     if(filters.model&&!l.model.toLowerCase().includes(filters.model.toLowerCase()))return false;
+    if(filters.bodyType!=="Any"&&MODEL_TYPES[l.model]!==filters.bodyType)return false;
     if(filters.color!=="Any"&&l.color!==filters.color)return false;
     if(filters.condition!=="Any"&&l.condition!==filters.condition)return false;
     if(filters.minPrice&&l.price<Number(filters.minPrice))return false;
@@ -341,16 +394,54 @@ function Marketplace({user,listings,setListings,onDM,userLocation}){
   });
   const sendOffer=()=>{if(!offerAmt)return;setListings(prev=>prev.map(l=>l.id===offerTarget.id?{...l,offers:[...l.offers,{id:Date.now(),buyerId:user.id,buyerName:user.name,amount:Number(offerAmt),message:offerMsg,status:"pending",time:"Just now"}]}:l));setOfferSent(true);};
   return(<div style={{display:"flex",height:"calc(100vh - 56px)",overflow:"hidden"}}>
-    <div style={{width:210,borderRight:`1px solid ${C.border}`,padding:"14px 12px",overflow:"auto",flexShrink:0,background:C.surface}}>
+    <div style={{width:218,borderRight:`1px solid ${C.border}`,padding:"14px 12px",overflow:"auto",flexShrink:0,background:C.surface}}>
       <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:15,letterSpacing:2,color:C.accent,marginBottom:12}}>FILTERS</div>
+
+      {/* Body Type */}
+      <label style={S.label}>Body Type</label>
+      <div style={{display:"flex",flexWrap:"wrap",gap:4,marginBottom:10}}>
+        {BODY_TYPES.map(t=><button key={t} onClick={()=>setF("bodyType",t)} style={{padding:"3px 8px",borderRadius:99,border:`1px solid ${filters.bodyType===t?C.accent:C.border}`,background:filters.bodyType===t?C.accentDim:"transparent",color:filters.bodyType===t?C.accent:C.muted,fontSize:10,fontWeight:600,cursor:"pointer"}}>{t}</button>)}
+      </div>
+
+      {/* Distance */}
       {userLocation&&<><label style={S.label}>Max Distance</label><div style={{display:"flex",alignItems:"center",gap:7,marginBottom:10}}><input type="range" min={5} max={200} value={filters.maxDist} onChange={e=>setF("maxDist",e.target.value)} style={{flex:1,accentColor:C.accent}}/><span style={{fontSize:11,color:C.text,minWidth:44}}>{filters.maxDist} mi</span></div></>}
-      <label style={S.label}>Make</label><select style={{...S.input,marginBottom:8}} value={filters.make} onChange={e=>setF("make",e.target.value)}>{CAR_MAKES.map(m=><option key={m}>{m}</option>)}</select>
-      <label style={S.label}>Model</label><input style={{...S.input,marginBottom:8}} placeholder="e.g. Camry" value={filters.model} onChange={e=>setF("model",e.target.value)}/>
-      <label style={S.label}>Color</label><select style={{...S.input,marginBottom:8}} value={filters.color} onChange={e=>setF("color",e.target.value)}>{CAR_COLORS.map(c=><option key={c}>{c}</option>)}</select>
-      <label style={S.label}>Condition</label><select style={{...S.input,marginBottom:8}} value={filters.condition} onChange={e=>setF("condition",e.target.value)}>{["Any","Excellent","Good","Fair","Poor"].map(c=><option key={c}>{c}</option>)}</select>
-      <label style={S.label}>Price ($)</label><div style={{display:"flex",gap:5,marginBottom:8}}><input style={{...S.input,margin:0,fontSize:11,padding:"5px 7px"}} placeholder="Min" value={filters.minPrice} onChange={e=>setF("minPrice",e.target.value)}/><input style={{...S.input,margin:0,fontSize:11,padding:"5px 7px"}} placeholder="Max" value={filters.maxPrice} onChange={e=>setF("maxPrice",e.target.value)}/></div>
-      <label style={S.label}>Mileage</label><div style={{display:"flex",gap:5,marginBottom:10}}><input style={{...S.input,margin:0,fontSize:11,padding:"5px 7px"}} placeholder="Min" value={filters.minMiles} onChange={e=>setF("minMiles",e.target.value)}/><input style={{...S.input,margin:0,fontSize:11,padding:"5px 7px"}} placeholder="Max" value={filters.maxMiles} onChange={e=>setF("maxMiles",e.target.value)}/></div>
-      <button onClick={()=>setFilters({make:"Any",model:"",color:"Any",condition:"Any",minPrice:"",maxPrice:"",minMiles:"",maxMiles:"",maxDist:50})} style={{...S.btnSecondary,width:"100%",fontSize:11,padding:"5px 0"}}>Clear</button>
+
+      {/* Make */}
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+        <label style={{...S.label,marginBottom:0}}>Make</label>
+        <button onClick={()=>{setCustomMake(!customMake);setF("make","Any");}} style={{background:"none",border:"none",color:C.accent,fontSize:10,cursor:"pointer"}}>{customMake?"Use List":"Type It In"}</button>
+      </div>
+      {customMake
+        ? <input style={{...S.input,marginBottom:8}} placeholder="e.g. Porsche, Volvo..." value={filters.make==="Any"?"":filters.make} onChange={e=>setF("make",e.target.value||"Any")}/>
+        : <select style={{...S.input,marginBottom:8}} value={filters.make} onChange={e=>{setF("make",e.target.value);setF("model","Any");}}>
+            {CAR_MAKES.map(m=><option key={m}>{m}</option>)}
+          </select>
+      }
+
+      {/* Model — only shown when make is selected */}
+      {filters.make!=="Any"&&<>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+          <label style={{...S.label,marginBottom:0}}>Model</label>
+          <button onClick={()=>setCustomModel(!customModel)} style={{background:"none",border:"none",color:C.accent,fontSize:10,cursor:"pointer"}}>{customModel?"Use List":"Type It In"}</button>
+        </div>
+        {customModel||availableModels.length===0
+          ? <input style={{...S.input,marginBottom:8}} placeholder="e.g. Civic, Accord..." value={filters.model==="Any"?"":filters.model} onChange={e=>setF("model",e.target.value||"Any")}/>
+          : <select style={{...S.input,marginBottom:8}} value={filters.model} onChange={e=>setF("model",e.target.value)}>
+              <option value="Any">Any Model</option>
+              {availableModels.map(m=><option key={m}>{m}</option>)}
+            </select>
+        }
+      </>}
+
+      <label style={S.label}>Color</label>
+      <select style={{...S.input,marginBottom:8}} value={filters.color} onChange={e=>setF("color",e.target.value)}>{CAR_COLORS.map(c=><option key={c}>{c}</option>)}</select>
+      <label style={S.label}>Condition</label>
+      <select style={{...S.input,marginBottom:8}} value={filters.condition} onChange={e=>setF("condition",e.target.value)}>{["Any","Excellent","Good","Fair","Poor"].map(c=><option key={c}>{c}</option>)}</select>
+      <label style={S.label}>Price ($)</label>
+      <div style={{display:"flex",gap:5,marginBottom:8}}><input style={{...S.input,margin:0,fontSize:11,padding:"5px 7px"}} placeholder="Min" value={filters.minPrice} onChange={e=>setF("minPrice",e.target.value)}/><input style={{...S.input,margin:0,fontSize:11,padding:"5px 7px"}} placeholder="Max" value={filters.maxPrice} onChange={e=>setF("maxPrice",e.target.value)}/></div>
+      <label style={S.label}>Mileage</label>
+      <div style={{display:"flex",gap:5,marginBottom:10}}><input style={{...S.input,margin:0,fontSize:11,padding:"5px 7px"}} placeholder="Min" value={filters.minMiles} onChange={e=>setF("minMiles",e.target.value)}/><input style={{...S.input,margin:0,fontSize:11,padding:"5px 7px"}} placeholder="Max" value={filters.maxMiles} onChange={e=>setF("maxMiles",e.target.value)}/></div>
+      <button onClick={()=>{setFilters({make:"Any",model:"Any",bodyType:"Any",color:"Any",condition:"Any",minPrice:"",maxPrice:"",minMiles:"",maxMiles:"",maxDist:50});setCustomMake(false);setCustomModel(false);}} style={{...S.btnSecondary,width:"100%",fontSize:11,padding:"5px 0"}}>Clear All</button>
     </div>
     <div style={{flex:1,overflow:"auto",padding:"16px 18px"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,flexWrap:"wrap",gap:8}}>
@@ -409,20 +500,51 @@ function Marketplace({user,listings,setListings,onDM,userLocation}){
 
 function CreateListing({user,onClose,onSave}){
   const [form,setForm]=useState({year:new Date().getFullYear(),make:"Toyota",model:"",trim:"",color:"Black",mileage:"",price:"",condition:"Good",description:"",features:""});
+  const [customMake,setCustomMake]=useState(false);const [customModel,setCustomModel]=useState(false);
   const setF=(k,v)=>setForm(p=>({...p,[k]:v}));
+  const availableModels=CAR_MODELS[form.make]||[];
+  const bodyType=MODEL_TYPES[form.model]||"";
   const save=()=>{if(!form.model||!form.price||!form.mileage)return;onSave({...form,mileage:Number(form.mileage),price:Number(form.price),year:Number(form.year),photos:["🚗"],features:form.features.split(",").map(f=>f.trim()).filter(Boolean)});};
-  return(<div style={S.overlay}><div style={{...S.modal,maxWidth:460}}>
+  return(<div style={S.overlay}><div style={{...S.modal,maxWidth:480}}>
     <div style={S.modalHead}><span style={S.modalTitle}>List Your Car</span><button onClick={onClose} style={S.iconBtn}>✕</button></div>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:9}}>
-      {[["Year","year","number"],["Model","model","text"],["Trim","trim","text"],["Color","color","text"],["Mileage","mileage","number"],["Price ($)","price","number"]].map(([label,key,type])=>(
-        <div key={key}><label style={S.label}>{label}</label><input style={{...S.input,marginBottom:0}} type={type} value={form[key]} onChange={e=>setF(key,e.target.value)}/></div>
-      ))}
-      <div><label style={S.label}>Make</label><select style={{...S.input,marginBottom:0}} value={form.make} onChange={e=>setF("make",e.target.value)}>{CAR_MAKES.filter(m=>m!=="Any").map(m=><option key={m}>{m}</option>)}</select></div>
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:9,marginBottom:10}}>
+      <div><label style={S.label}>Year</label><input style={{...S.input,marginBottom:0}} type="number" value={form.year} onChange={e=>setF("year",e.target.value)}/></div>
+      <div>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
+          <label style={{...S.label,marginBottom:0}}>Make</label>
+          <button onClick={()=>{setCustomMake(!customMake);setF("make","");setF("model","");}} style={{background:"none",border:"none",color:C.accent,fontSize:10,cursor:"pointer"}}>{customMake?"Use List":"Type It In"}</button>
+        </div>
+        {customMake
+          ? <input style={{...S.input,marginBottom:0}} placeholder="e.g. Porsche..." value={form.make} onChange={e=>setF("make",e.target.value)}/>
+          : <select style={{...S.input,marginBottom:0}} value={form.make} onChange={e=>{setF("make",e.target.value);setF("model","");}}>{CAR_MAKES.filter(m=>m!=="Any").map(m=><option key={m}>{m}</option>)}</select>
+        }
+      </div>
+      <div>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:3}}>
+          <label style={{...S.label,marginBottom:0}}>Model</label>
+          {availableModels.length>0&&<button onClick={()=>setCustomModel(!customModel)} style={{background:"none",border:"none",color:C.accent,fontSize:10,cursor:"pointer"}}>{customModel?"Use List":"Type It In"}</button>}
+        </div>
+        {customModel||availableModels.length===0
+          ? <input style={{...S.input,marginBottom:0}} placeholder="e.g. Civic..." value={form.model} onChange={e=>setF("model",e.target.value)}/>
+          : <select style={{...S.input,marginBottom:0}} value={form.model} onChange={e=>setF("model",e.target.value)}>
+              <option value="">Select model...</option>
+              {availableModels.map(m=><option key={m}>{m}</option>)}
+            </select>
+        }
+      </div>
+      <div><label style={S.label}>Trim</label><input style={{...S.input,marginBottom:0}} placeholder="e.g. EX, Sport..." value={form.trim} onChange={e=>setF("trim",e.target.value)}/></div>
+      <div>
+        <label style={S.label}>Color</label>
+        <select style={{...S.input,marginBottom:0}} value={form.color} onChange={e=>setF("color",e.target.value)}>{CAR_COLORS.filter(c=>c!=="Any").map(c=><option key={c}>{c}</option>)}</select>
+      </div>
+      <div><label style={S.label}>Mileage</label><input style={{...S.input,marginBottom:0}} type="number" placeholder="e.g. 45000" value={form.mileage} onChange={e=>setF("mileage",e.target.value)}/></div>
+      <div><label style={S.label}>Price ($)</label><input style={{...S.input,marginBottom:0}} type="number" placeholder="e.g. 18500" value={form.price} onChange={e=>setF("price",e.target.value)}/></div>
       <div><label style={S.label}>Condition</label><select style={{...S.input,marginBottom:0}} value={form.condition} onChange={e=>setF("condition",e.target.value)}>{["Excellent","Good","Fair","Poor"].map(c=><option key={c}>{c}</option>)}</select></div>
     </div>
-    <label style={{...S.label,marginTop:10}}>Description</label><textarea style={{...S.input,height:60,resize:"none"}} placeholder="Describe your car..." value={form.description} onChange={e=>setF("description",e.target.value)}/>
-    <label style={S.label}>Features (comma separated)</label><input style={S.input} placeholder="e.g. Sunroof, Leather Seats" value={form.features} onChange={e=>setF("features",e.target.value)}/>
-    <div style={{display:"flex",gap:8}}><button style={S.btnSecondary} onClick={onClose}>Cancel</button><button style={{...S.btnPrimary,flex:1}} onClick={save} disabled={!form.model||!form.price||!form.mileage}>Publish</button></div>
+    {bodyType&&<div style={{background:C.accentDim,border:`1px solid ${C.accent}22`,borderRadius:6,padding:"5px 10px",marginBottom:10,fontSize:12,color:C.accent}}>Body type: <strong>{bodyType}</strong> (auto-detected)</div>}
+    <label style={S.label}>Description</label><textarea style={{...S.input,height:58,resize:"none"}} placeholder="Describe your car..." value={form.description} onChange={e=>setF("description",e.target.value)}/>
+    <label style={S.label}>Features (comma separated)</label><input style={S.input} placeholder="e.g. Sunroof, Leather Seats, Backup Camera" value={form.features} onChange={e=>setF("features",e.target.value)}/>
+    <div style={{display:"flex",gap:8}}><button style={S.btnSecondary} onClick={onClose}>Cancel</button><button style={{...S.btnPrimary,flex:1}} onClick={save} disabled={!form.model||!form.price||!form.mileage}>Publish Listing</button></div>
   </div></div>);
 }
 
@@ -770,3 +892,5 @@ const S={
   modalTitle:{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,letterSpacing:1,color:C.accent},
   iconBtn:{background:"none",border:"none",color:C.muted,fontSize:18,cursor:"pointer"},
 };
+
+              
