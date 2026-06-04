@@ -57,6 +57,25 @@ const INIT_LISTINGS=[
    features:["V6 Engine","Sport Package","JBL Audio"],offers:[],listed:"2024-11-12"},
 ];
 
+const INIT_SHOPS=[
+  {id:"shop1",ownerId:"m2",name:"Lee's Auto Care",workers:["m1","m3"],seniorMechanics:["m1"]},
+];
+
+const INIT_WORKERS=[
+  {id:"w1",userId:"m1",shopId:"shop1",name:"Jake Torres",role:"senior",photo:"🧑‍🔧",specialty:"Engine & Transmission",available:true},
+  {id:"w2",userId:"m3",shopId:"shop1",name:"Carlos Mendez",role:"worker",photo:"👨‍🔧",specialty:"Electrical & AC",available:true},
+];
+
+const JOB_STATUSES=["To-do","In Progress","Waiting on Parts","Done","Paid"];
+const JOB_STATUS_COLORS={"To-do":C.blue,"In Progress":C.orange,"Waiting on Parts":C.purple,"Done":C.green,"Paid":C.accent};
+
+const INIT_JOBS=[
+  {id:1,shopId:"shop1",assignedTo:"w1",assignedBy:"m2",customerId:"c1",vehicleName:"2021 Honda Civic",customerName:"Marcus Johnson",customerPhone:"555-214-8801",service:"Brake Pad Replacement",status:"In Progress",priority:"Urgent",notes:"Front brakes worn. Customer waiting on call.",parts:["Brake Pads (Front)","Brake Rotors (Front)"],estimatedHours:2,createdAt:"2024-11-12",updatedAt:"2024-11-12"},
+  {id:2,shopId:"shop1",assignedTo:"w2",assignedBy:"m1",customerId:"c3",vehicleName:"2015 Volkswagen Jetta",customerName:"Derek Williams",customerPhone:"555-441-0092",service:"Alternator Replacement",status:"Waiting on Parts",priority:"Normal",notes:"Alternator ordered. ETA tomorrow.",parts:["Alternator","Serpentine Belt"],estimatedHours:3,createdAt:"2024-11-11",updatedAt:"2024-11-12"},
+  {id:3,shopId:"shop1",assignedTo:"w1",assignedBy:"m2",customerId:"c2",vehicleName:"2018 Toyota Corolla",customerName:"Tanya Rivera",customerPhone:"555-987-3320",service:"Oil Change + Tire Rotation",status:"To-do",priority:"Normal",notes:"Full synthetic. Check tire pressure.",parts:["5W-30 Synthetic Oil","Oil Filter"],estimatedHours:1,createdAt:"2024-11-12",updatedAt:"2024-11-12"},
+  {id:4,shopId:"shop1",assignedTo:"w2",assignedBy:"m2",customerId:null,vehicleName:"2019 Ford F-150",customerName:"Walk-in Customer",customerPhone:"",service:"AC Recharge",status:"Done",priority:"Normal",notes:"Recharged and tested. Ready for pickup.",parts:["R-134a Refrigerant"],estimatedHours:1.5,createdAt:"2024-11-11",updatedAt:"2024-11-12"},
+];
+
 const INIT_MESSAGES=[
   {id:1,from:"m1",to:"c1",text:"Hi Marcus! Your Civic is ready.",time:"10:30 AM",date:"Today"},
   {id:2,from:"c1",to:"m1",text:"Thanks Jake! I'll swing by around 3pm.",time:"10:45 AM",date:"Today"},
@@ -156,10 +175,33 @@ function LocationBar({location,onUpdate}){
   const [input,setInput]=useState(location?.city||"");
   const [detecting,setDetecting]=useState(false);
   const detect=()=>{setDetecting(true);navigator.geolocation.getCurrentPosition(pos=>{onUpdate({lat:pos.coords.latitude,lng:pos.coords.longitude,city:"Current Location"});setDetecting(false);setEditing(false);},()=>{setDetecting(false);alert("Location denied. Please type your city.");},{timeout:8000});};
-  const cityCoords={"miami":{lat:25.7617,lng:-80.1918,city:"Miami, FL"},"miami fl":{lat:25.7617,lng:-80.1918,city:"Miami, FL"},"miami beach":{lat:25.7907,lng:-80.1300,city:"Miami Beach, FL"},"coral gables":{lat:25.7215,lng:-80.2684,city:"Coral Gables, FL"},"hialeah":{lat:25.8576,lng:-80.2781,city:"Hialeah, FL"},"new york":{lat:40.7128,lng:-74.0060,city:"New York, NY"},"los angeles":{lat:34.0522,lng:-118.2437,city:"Los Angeles, CA"},"chicago":{lat:41.8781,lng:-87.6298,city:"Chicago, IL"},"houston":{lat:29.7604,lng:-95.3698,city:"Houston, TX"},"atlanta":{lat:33.7490,lng:-84.3880,city:"Atlanta, GA"}};
-  const save=()=>{const found=cityCoords[input.toLowerCase().trim()];onUpdate(found||{lat:25.7617,lng:-80.1918,city:input||"Miami, FL"});setEditing(false);};
+  const zipCoords={
+    "33101":{lat:25.7617,lng:-80.1918,city:"Miami, FL 33101"},"33125":{lat:25.7753,lng:-80.2210,city:"Miami, FL 33125"},
+    "33139":{lat:25.7907,lng:-80.1300,city:"Miami Beach, FL 33139"},"33140":{lat:25.8011,lng:-80.1289,city:"Miami Beach, FL 33140"},
+    "33134":{lat:25.7215,lng:-80.2684,city:"Coral Gables, FL 33134"},"33010":{lat:25.8576,lng:-80.2781,city:"Hialeah, FL 33010"},
+    "10001":{lat:40.7484,lng:-73.9967,city:"New York, NY 10001"},"10002":{lat:40.7157,lng:-73.9863,city:"New York, NY 10002"},
+    "90001":{lat:33.9731,lng:-118.2479,city:"Los Angeles, CA 90001"},"90210":{lat:34.0901,lng:-118.4065,city:"Beverly Hills, CA 90210"},
+    "60601":{lat:41.8858,lng:-87.6181,city:"Chicago, IL 60601"},"77001":{lat:29.7490,lng:-95.3677,city:"Houston, TX 77001"},
+    "30301":{lat:33.7490,lng:-84.3880,city:"Atlanta, GA 30301"},"85001":{lat:33.4484,lng:-112.0740,city:"Phoenix, AZ 85001"},
+    "78201":{lat:29.4241,lng:-98.4936,city:"San Antonio, TX 78201"},"75201":{lat:32.7767,lng:-96.7970,city:"Dallas, TX 75201"},
+    "92101":{lat:32.7157,lng:-117.1611,city:"San Diego, CA 92101"},"95101":{lat:37.3382,lng:-121.8863,city:"San Jose, CA 95101"},
+    "32801":{lat:28.5383,lng:-81.3792,city:"Orlando, FL 32801"},"33602":{lat:27.9506,lng:-82.4572,city:"Tampa, FL 33602"},
+  };
+  const cityCoords={"miami":{lat:25.7617,lng:-80.1918,city:"Miami, FL"},"miami fl":{lat:25.7617,lng:-80.1918,city:"Miami, FL"},"miami beach":{lat:25.7907,lng:-80.1300,city:"Miami Beach, FL"},"coral gables":{lat:25.7215,lng:-80.2684,city:"Coral Gables, FL"},"hialeah":{lat:25.8576,lng:-80.2781,city:"Hialeah, FL"},"new york":{lat:40.7128,lng:-74.0060,city:"New York, NY"},"los angeles":{lat:34.0522,lng:-118.2437,city:"Los Angeles, CA"},"chicago":{lat:41.8781,lng:-87.6298,city:"Chicago, IL"},"houston":{lat:29.7604,lng:-95.3698,city:"Houston, TX"},"atlanta":{lat:33.7490,lng:-84.3880,city:"Atlanta, GA"},"orlando":{lat:28.5383,lng:-81.3792,city:"Orlando, FL"},"tampa":{lat:27.9506,lng:-82.4572,city:"Tampa, FL"},"dallas":{lat:32.7767,lng:-96.7970,city:"Dallas, TX"},"phoenix":{lat:33.4484,lng:-112.0740,city:"Phoenix, AZ"},"san diego":{lat:32.7157,lng:-117.1611,city:"San Diego, CA"}};
+  const save=()=>{
+    const key=input.toLowerCase().trim();
+    const found=zipCoords[key]||cityCoords[key];
+    if(found){onUpdate(found);}
+    else if(/^[0-9]{5}$/.test(key)){
+      // Unknown zip - use as label with default coords
+      onUpdate({lat:25.7617,lng:-80.1918,city:`ZIP ${key}`});
+    } else {
+      onUpdate({lat:25.7617,lng:-80.1918,city:input||"Miami, FL"});
+    }
+    setEditing(false);
+  };
   if(editing)return(<div style={{display:"flex",gap:8,alignItems:"center",padding:"8px 14px",background:C.faint,borderBottom:`1px solid ${C.border}`}}>
-    <input style={{...S.input,margin:0,flex:1,padding:"6px 10px",fontSize:12}} placeholder="Enter city (e.g. Miami, FL)" value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&save()} autoFocus/>
+    <input style={{...S.input,margin:0,flex:1,padding:"6px 10px",fontSize:12}} placeholder="City or ZIP code (e.g. 33101)" value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&save()} autoFocus/>
     <button style={{...S.btnSecondary,padding:"6px 10px",fontSize:12}} onClick={detect} disabled={detecting}>{detecting?"...":"📍 Auto"}</button>
     <button style={{...S.btnPrimary,padding:"6px 12px",fontSize:12}} onClick={save}>Set</button>
     <button onClick={()=>setEditing(false)} style={{background:"none",border:"none",color:C.muted,cursor:"pointer",fontSize:16}}>✕</button>
@@ -550,8 +592,10 @@ function VehicleDetailPage({vehicle,user,users,vehicles,setVehicles,listings,set
               {["Excellent","Good","Fair","Poor"].map(c=><option key={c}>{c}</option>)}
             </select>
 
+            <label style={S.label}>Location (City or ZIP)</label>
+            <input style={S.input} placeholder="e.g. Miami, FL or 33101" value={sellForm.zipCity||""} onChange={e=>setSellForm(p=>({...p,zipCity:e.target.value}))}/>
             <label style={S.label}>Description</label>
-            <textarea style={{...S.input,height:65,resize:"none"}} placeholder="Describe your car..." value={sellForm.description} onChange={e=>setSellForm(p=>({...p,description:e.target.value}))}/>
+            <textarea style={{...S.input,height:60,resize:"none"}} placeholder="Describe your car..." value={sellForm.description} onChange={e=>setSellForm(p=>({...p,description:e.target.value}))}/>
 
             {vehicle.services.length>0&&<div style={{display:"flex",alignItems:"center",gap:9,padding:"9px 12px",background:C.faint,borderRadius:8,marginBottom:12,cursor:"pointer"}} onClick={()=>setSellForm(p=>({...p,includeHistory:!p.includeHistory}))}>
               <div style={{width:18,height:18,borderRadius:4,border:`2px solid ${sellForm.includeHistory?C.accent:C.border}`,background:sellForm.includeHistory?C.accent:"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
@@ -771,7 +815,7 @@ function Marketplace({user,listings,setListings,onDM,userLocation}){
       <div style={{display:"flex",gap:8}}><button style={S.btnSecondary} onClick={()=>setOfferTarget(null)}>Cancel</button><button style={{...S.btnPrimary,flex:1}} onClick={sendOffer} disabled={!offerAmt}>Send Offer</button></div></>
       :<div style={{textAlign:"center",padding:"16px 0"}}><div style={{fontSize:42,marginBottom:8}}>🎉</div><div style={{fontWeight:700,fontSize:15,marginBottom:4}}>Offer Sent!</div><div style={{color:C.muted,fontSize:13,marginBottom:14}}>Your offer of <strong style={{color:C.accent}}>${Number(offerAmt).toLocaleString()}</strong> was sent to {offerTarget.sellerName}.</div><button style={S.btnPrimary} onClick={()=>{setOfferTarget(null);setSelected(null);}}>Done</button></div>}
     </div></div>}
-    {showCreate&&<CreateListing user={user} onClose={()=>setShowCreate(false)} onSave={l=>{setListings(p=>[{...l,id:Date.now(),sellerId:user.id,sellerName:user.name,sellerPhoto:user.photo||"😎",verified:user.role==="mechanic"||user.role==="admin",offers:[],listed:new Date().toLocaleDateString(),lat:userLocation?.lat||25.7617,lng:userLocation?.lng||-80.1918,city:userLocation?.city||user.city||"Miami, FL"},...p]);setShowCreate(false);}}/>}
+    {showCreate&&<CreateListing user={user} onClose={()=>setShowCreate(false)} onSave={l=>{setListings(p=>[{...l,id:Date.now(),sellerId:user.id,sellerName:user.name,sellerPhoto:user.photo||"😎",verified:user.role==="mechanic"||user.role==="admin",offers:[],listed:new Date().toLocaleDateString(),lat:userLocation?.lat||25.7617,lng:userLocation?.lng||-80.1918,city:l.zipCity||userLocation?.city||user.city||"Miami, FL",zipCity:l.zipCity},...p]);setShowCreate(false);}}/>}
   </div>);
 }
 
@@ -799,6 +843,7 @@ function CreateListing({user,onClose,onSave}){
     if(!form.mileage){setPublishError("Please enter mileage.");return;}
     setPublishError("");
     onSave({...form,mileage:Number(form.mileage),price:Number(form.price),year:Number(form.year),photos:photos.length>0?photos:["🚗"],features:form.features.split(",").map(f=>f.trim()).filter(Boolean)});
+    onClose();
   };
   return(<div style={S.overlay}><div style={{...S.modal,maxWidth:480}}>
     <div style={S.modalHead}><span style={S.modalTitle}>List Your Car</span><button onClick={onClose} style={S.iconBtn}>✕</button></div>
@@ -863,17 +908,41 @@ function CreateListing({user,onClose,onSave}){
 }
 
 function Messages({user,vehicles,users,initContact=null}){
-  const contacts=user.role==="customer"?users.filter(u=>u.role!=="customer"):users.filter(u=>u.role==="customer");
-  const [active,setActive]=useState(initContact?users.find(u=>u.id===initContact)||contacts[0]:contacts[0]);
+  const allContacts=user.role==="customer"?users.filter(u=>u.role!=="customer"):users.filter(u=>u.role==="customer");
   const [msgs,setMsgs]=useState(INIT_MESSAGES);const [draft,setDraft]=useState("");const bottomRef=useRef();
+
+  // Sort contacts by most recent message
+  const contacts=[...allContacts].sort((a,b)=>{
+    const lastA=msgs.filter(m=>(m.from===user.id&&m.to===a.id)||(m.from===a.id&&m.to===user.id)).slice(-1)[0];
+    const lastB=msgs.filter(m=>(m.from===user.id&&m.to===b.id)||(m.from===b.id&&m.to===user.id)).slice(-1)[0];
+    if(!lastA&&!lastB)return 0;
+    if(!lastA)return 1;
+    if(!lastB)return -1;
+    return lastB.id-lastA.id;
+  });
+
+  const [active,setActive]=useState(initContact?users.find(u=>u.id===initContact)||contacts[0]:contacts[0]);
   const thread=msgs.filter(m=>(m.from===user.id&&m.to===active?.id)||(m.from===active?.id&&m.to===user.id));
-  const send=()=>{if(!draft.trim()||!active)return;setMsgs(p=>[...p,{id:Date.now(),from:user.id,to:active.id,text:draft.trim(),time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:"Today"}]);setDraft("");};
+  const send=()=>{
+    if(!draft.trim()||!active)return;
+    const newMsg={id:Date.now(),from:user.id,to:active.id,text:draft.trim(),time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:"Today"};
+    setMsgs(p=>[...p,newMsg]);
+    setDraft("");
+  };
   useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:"smooth"});},[thread.length,active?.id]);
   const getV=(id)=>vehicles.find(v=>v.customerId===id);
   return(<div style={{display:"flex",height:"calc(100vh - 56px)"}}>
     <div style={{width:205,borderRight:`1px solid ${C.border}`,display:"flex",flexDirection:"column",flexShrink:0}}>
       <div style={{padding:"10px 12px 7px",borderBottom:`1px solid ${C.border}`}}><div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:14,letterSpacing:2,color:C.accent}}>MESSAGES</div></div>
-      <div style={{flex:1,overflow:"auto"}}>{contacts.map(c=>{const v=getV(c.id);const unread=msgs.filter(m=>m.from===c.id&&m.to===user.id).length;return <div key={c.id} onClick={()=>setActive(c)} style={{display:"flex",alignItems:"center",gap:8,padding:"9px 11px",cursor:"pointer",borderBottom:`1px solid ${C.border}`,background:active?.id===c.id?C.faint:"transparent"}}><div style={{fontSize:22}}>{c.photo||"😎"}</div><div style={{flex:1,minWidth:0}}><div style={{fontSize:13,fontWeight:600,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{c.name}</div><div style={{fontSize:11,color:C.muted,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{c.shop||v?.vehicle||""}</div></div>{unread>0&&<Badge count={unread}/>}</div>;})}
+      <div style={{flex:1,overflow:"auto"}}>{contacts.map(c=>{const v=getV(c.id);const unread=msgs.filter(m=>m.from===c.id&&m.to===user.id).length;return <div key={c.id} onClick={()=>setActive(c)} style={{display:"flex",alignItems:"center",gap:8,padding:"9px 11px",cursor:"pointer",borderBottom:`1px solid ${C.border}`,background:active?.id===c.id?C.faint:"transparent"}}>
+              <div style={{position:"relative"}}><div style={{fontSize:22}}>{c.photo||"😎"}</div>{unread>0&&<div style={{position:"absolute",top:-2,right:-2,background:C.red,color:"#000",borderRadius:99,fontSize:9,fontWeight:800,width:14,height:14,display:"flex",alignItems:"center",justifyContent:"center"}}>{unread}</div>}</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:13,fontWeight:unread>0?700:600,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{c.name}</div>
+                <div style={{fontSize:11,color:C.muted,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
+                  {(()=>{const last=msgs.filter(m=>(m.from===user.id&&m.to===c.id)||(m.from===c.id&&m.to===user.id)).slice(-1)[0];return last?`${last.from===user.id?"You: ":""}${last.text.substring(0,28)}${last.text.length>28?"...":""}`:c.shop||v?.vehicle||""})()}
+                </div>
+              </div>
+            </div>;})}
       </div>
     </div>
     <div style={{flex:1,display:"flex",flexDirection:"column"}}>
@@ -925,6 +994,310 @@ function FindMechanic({user,users,onDM,userLocation}){
   </div>);
 }
 
+// ── SHOP MANAGEMENT ──────────────────────────────────────────────────────────
+function ShopManagement({user,users,vehicles}){
+  const [jobs,setJobs]=useState(INIT_JOBS);
+  const [workers,setWorkers]=useState(INIT_WORKERS);
+  const [shops,setShops]=useState(INIT_SHOPS);
+  const [view,setView]=useState("board"); // board | myjobs | workers | add
+  const [showAddJob,setShowAddJob]=useState(false);
+  const [showAddWorker,setShowAddWorker]=useState(false);
+  const [selectedJob,setSelectedJob]=useState(null);
+  const [inviteEmail,setInviteEmail]=useState("");
+  const [inviteSent,setInviteSent]=useState(false);
+  const [newJob,setNewJob]=useState({vehicleName:"",customerName:"",customerPhone:"",service:"",assignedTo:"",priority:"Normal",notes:"",parts:"",estimatedHours:1});
+
+  const myShop=shops.find(s=>s.ownerId===user.id||s.workers.includes(user.id));
+  const isSenior=myShop?.seniorMechanics?.includes(user.id)||myShop?.ownerId===user.id;
+  const isOwner=myShop?.ownerId===user.id;
+  const shopWorkers=workers.filter(w=>w.shopId===myShop?.id);
+  const myWorkerProfile=workers.find(w=>w.userId===user.id);
+  const myJobs=jobs.filter(j=>j.assignedTo===myWorkerProfile?.id&&j.shopId===myShop?.id);
+  const allShopJobs=jobs.filter(j=>j.shopId===myShop?.id);
+
+  const statusCounts=JOB_STATUSES.reduce((acc,s)=>({...acc,[s]:allShopJobs.filter(j=>j.status===s).length}),{});
+  const urgentCount=allShopJobs.filter(j=>j.priority==="Urgent"&&j.status!=="Done"&&j.status!=="Paid").length;
+
+  const updateJobStatus=(jobId,status)=>{
+    setJobs(prev=>prev.map(j=>j.id===jobId?{...j,status,updatedAt:new Date().toLocaleDateString()}:j));
+    if(selectedJob?.id===jobId)setSelectedJob(p=>({...p,status}));
+  };
+
+  const addJob=()=>{
+    if(!newJob.vehicleName||!newJob.service||!newJob.assignedTo)return;
+    const job={id:Date.now(),shopId:myShop?.id,assignedTo:newJob.assignedTo,assignedBy:user.id,
+      customerId:null,vehicleName:newJob.vehicleName,customerName:newJob.customerName,
+      customerPhone:newJob.customerPhone,service:newJob.service,status:"To-do",
+      priority:newJob.priority,notes:newJob.notes,
+      parts:newJob.parts.split(",").map(p=>p.trim()).filter(Boolean),
+      estimatedHours:Number(newJob.estimatedHours),
+      createdAt:new Date().toLocaleDateString(),updatedAt:new Date().toLocaleDateString()};
+    setJobs(prev=>[job,...prev]);
+    setNewJob({vehicleName:"",customerName:"",customerPhone:"",service:"",assignedTo:"",priority:"Normal",notes:"",parts:"",estimatedHours:1});
+    setShowAddJob(false);
+  };
+
+  const getWorkerName=(workerId)=>workers.find(w=>w.id===workerId)?.name||"Unassigned";
+  const getWorkerPhoto=(workerId)=>workers.find(w=>w.id===workerId)?.photo||"🧑‍🔧";
+
+  return(<div style={{padding:"20px 24px",maxWidth:820,animation:"fadeUp 0.25s ease"}}>
+    <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}`}</style>
+
+    {/* Header */}
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:18,flexWrap:"wrap",gap:10}}>
+      <div>
+        <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,letterSpacing:2}}>Shop Management</div>
+        <div style={{color:C.muted,fontSize:12}}>{myShop?.name||"Your Shop"} · {allShopJobs.length} jobs today</div>
+      </div>
+      <div style={{display:"flex",gap:8}}>
+        {isSenior&&<button style={S.btnPrimary} onClick={()=>setShowAddJob(true)}>+ Assign Job</button>}
+        {isOwner&&<button style={{...S.btnSecondary,borderColor:C.accent+"40",color:C.accent}} onClick={()=>setShowAddWorker(true)}>+ Add Worker</button>}
+      </div>
+    </div>
+
+    {/* Stats row */}
+    <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:8,marginBottom:18}}>
+      {JOB_STATUSES.map(s=>(
+        <div key={s} style={{background:C.surface,borderRadius:8,padding:"10px 8px",border:`1px solid ${C.border}`,borderTop:`3px solid ${JOB_STATUS_COLORS[s]}`}}>
+          <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,color:JOB_STATUS_COLORS[s],lineHeight:1}}>{statusCounts[s]||0}</div>
+          <div style={{color:C.muted,fontSize:9,textTransform:"uppercase",letterSpacing:0.5,marginTop:2}}>{s}</div>
+        </div>
+      ))}
+    </div>
+
+    {/* View tabs */}
+    <div style={{display:"flex",gap:2,marginBottom:16,background:C.faint,borderRadius:8,padding:3}}>
+      {[{id:"board",label:"📋 Job Board"},{id:"myjobs",label:`🔧 My Jobs (${myJobs.length})`},{id:"workers",label:"👥 Workers"}].map(t=>(
+        <button key={t.id} onClick={()=>setView(t.id)} style={{flex:1,padding:"7px 0",borderRadius:6,border:"none",cursor:"pointer",fontSize:12,fontWeight:600,background:view===t.id?C.accent:"transparent",color:view===t.id?"#000":C.muted,transition:"all 0.2s"}}>{t.label}</button>
+      ))}
+    </div>
+
+    {/* JOB BOARD */}
+    {view==="board"&&<>
+      {urgentCount>0&&<div style={{background:C.redDim,border:`1px solid ${C.red}33`,borderRadius:8,padding:"8px 12px",marginBottom:14,display:"flex",alignItems:"center",gap:8}}>
+        <span style={{fontSize:16}}>🚨</span>
+        <span style={{color:C.red,fontSize:13,fontWeight:600}}>{urgentCount} urgent job{urgentCount!==1?"s":""} need attention</span>
+      </div>}
+
+      {/* Group by status */}
+      {JOB_STATUSES.filter(s=>s!=="Paid").map(status=>{
+        const statusJobs=allShopJobs.filter(j=>j.status===status);
+        if(statusJobs.length===0)return null;
+        return(<div key={status} style={{marginBottom:20}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+            <div style={{width:10,height:10,borderRadius:99,background:JOB_STATUS_COLORS[status]}}/>
+            <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:14,letterSpacing:1.5,color:JOB_STATUS_COLORS[status]}}>{status.toUpperCase()}</span>
+            <span style={{color:C.muted,fontSize:11}}>({statusJobs.length})</span>
+          </div>
+          {statusJobs.map(job=>(
+            <div key={job.id} style={{background:C.surface,border:`1px solid ${job.priority==="Urgent"?C.red+"44":C.border}`,borderRadius:10,padding:"12px 14px",marginBottom:8,cursor:"pointer",borderLeft:`3px solid ${JOB_STATUS_COLORS[job.status]}`}} onClick={()=>setSelectedJob(job)}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}>
+                <div>
+                  <div style={{fontWeight:700,fontSize:14}}>{job.service}</div>
+                  <div style={{color:C.muted,fontSize:12}}>{job.vehicleName} · {job.customerName}</div>
+                </div>
+                <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:4}}>
+                  {job.priority==="Urgent"&&<span style={{background:C.redDim,color:C.red,borderRadius:99,fontSize:9,fontWeight:700,padding:"2px 7px"}}>🚨 URGENT</span>}
+                  <span style={{background:JOB_STATUS_COLORS[job.status]+"18",color:JOB_STATUS_COLORS[job.status],borderRadius:99,fontSize:10,fontWeight:700,padding:"2px 8px"}}>{job.status}</span>
+                </div>
+              </div>
+              <div style={{display:"flex",alignItems:"center",gap:8,marginTop:6}}>
+                <span style={{fontSize:16}}>{getWorkerPhoto(job.assignedTo)}</span>
+                <span style={{color:C.muted,fontSize:12}}>{getWorkerName(job.assignedTo)}</span>
+                <span style={{color:C.muted,fontSize:11,marginLeft:"auto"}}>⏱ {job.estimatedHours}hr{job.estimatedHours!==1?"s":""}</span>
+                <span style={{color:C.muted,fontSize:11}}>{job.updatedAt}</span>
+              </div>
+              {job.parts.length>0&&<div style={{display:"flex",flexWrap:"wrap",gap:4,marginTop:7}}>
+                {job.parts.map(p=><span key={p} style={{background:C.faint,color:C.muted,borderRadius:99,fontSize:10,padding:"2px 8px"}}>🔩 {p}</span>)}
+              </div>}
+            </div>
+          ))}
+        </div>);
+      })}
+
+      {/* Paid jobs collapsed */}
+      {allShopJobs.filter(j=>j.status==="Paid").length>0&&<div style={{marginBottom:20}}>
+        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10}}>
+          <div style={{width:10,height:10,borderRadius:99,background:C.accent}}/>
+          <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:14,letterSpacing:1.5,color:C.accent}}>PAID</span>
+          <span style={{color:C.muted,fontSize:11}}>({allShopJobs.filter(j=>j.status==="Paid").length} completed today)</span>
+        </div>
+        {allShopJobs.filter(j=>j.status==="Paid").map(job=>(
+          <div key={job.id} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:8,padding:"10px 12px",marginBottom:6,opacity:0.7,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div><div style={{fontWeight:600,fontSize:13}}>{job.service}</div><div style={{color:C.muted,fontSize:11}}>{job.vehicleName} · {job.customerName}</div></div>
+            <span style={{color:C.accent,fontSize:12,fontWeight:700}}>✓ PAID</span>
+          </div>
+        ))}
+      </div>}
+    </>}
+
+    {/* MY JOBS */}
+    {view==="myjobs"&&<>
+      {myJobs.length===0&&<div style={{textAlign:"center",padding:"40px 0",color:C.muted}}><div style={{fontSize:44,marginBottom:10}}>✅</div><div style={{fontSize:14}}>No jobs assigned to you</div></div>}
+      {myJobs.filter(j=>j.status!=="Paid").sort((a,b)=>{const order={"Urgent":0,"Normal":1};return(order[a.priority]||1)-(order[b.priority]||1);}).map(job=>(
+        <div key={job.id} style={{background:C.surface,border:`1px solid ${job.priority==="Urgent"?C.red+"44":C.border}`,borderRadius:10,padding:"14px 16px",marginBottom:10,borderLeft:`3px solid ${JOB_STATUS_COLORS[job.status]}`}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
+            <div>
+              <div style={{fontWeight:700,fontSize:15}}>{job.service}</div>
+              <div style={{color:C.muted,fontSize:12,marginTop:2}}>{job.vehicleName}</div>
+              {job.customerName&&<div style={{color:C.muted,fontSize:12}}>{job.customerName}{job.customerPhone&&` · ${job.customerPhone}`}</div>}
+            </div>
+            {job.priority==="Urgent"&&<span style={{background:C.redDim,color:C.red,borderRadius:99,fontSize:10,fontWeight:700,padding:"2px 8px"}}>🚨 URGENT</span>}
+          </div>
+          {job.notes&&<div style={{color:C.text,fontSize:13,fontStyle:"italic",marginBottom:10,padding:"7px 10px",background:C.faint,borderRadius:6}}>"{job.notes}"</div>}
+          {job.parts.length>0&&<div style={{marginBottom:10}}><div style={{color:C.muted,fontSize:10,textTransform:"uppercase",letterSpacing:1,marginBottom:5}}>Parts Needed</div><div style={{display:"flex",flexWrap:"wrap",gap:4}}>{job.parts.map(p=><span key={p} style={{background:C.faint,color:C.text,borderRadius:6,fontSize:11,padding:"3px 9px"}}>🔩 {p}</span>)}</div></div>}
+          <div style={{color:C.muted,fontSize:11,marginBottom:10}}>⏱ Est. {job.estimatedHours}hr{job.estimatedHours!==1?"s":""} · Assigned {job.createdAt}</div>
+
+          {/* Status update buttons */}
+          <div style={{borderTop:`1px solid ${C.border}`,paddingTop:10}}>
+            <div style={{color:C.muted,fontSize:10,textTransform:"uppercase",letterSpacing:1,marginBottom:7}}>Update Status</div>
+            <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+              {JOB_STATUSES.map(s=>(
+                <button key={s} onClick={()=>updateJobStatus(job.id,s)} style={{padding:"5px 10px",borderRadius:6,border:`1px solid ${job.status===s?JOB_STATUS_COLORS[s]:C.border}`,background:job.status===s?JOB_STATUS_COLORS[s]+"18":"transparent",color:job.status===s?JOB_STATUS_COLORS[s]:C.muted,fontSize:11,fontWeight:job.status===s?700:400,cursor:"pointer"}}>
+                  {s}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      ))}
+    </>}
+
+    {/* WORKERS */}
+    {view==="workers"&&<>
+      {shopWorkers.map(w=>{
+        const workerJobs=allShopJobs.filter(j=>j.assignedTo===w.id);
+        const activeJobs=workerJobs.filter(j=>j.status!=="Done"&&j.status!=="Paid").length;
+        return(<div key={w.id} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,padding:"14px 16px",marginBottom:10}}>
+          <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:10}}>
+            <div style={{fontSize:36}}>{w.photo}</div>
+            <div style={{flex:1}}>
+              <div style={{display:"flex",alignItems:"center",gap:8}}>
+                <span style={{fontWeight:700,fontSize:15}}>{w.name}</span>
+                {w.role==="senior"&&<span style={{background:C.accentDim,color:C.accent,borderRadius:99,fontSize:9,fontWeight:700,padding:"2px 7px"}}>SENIOR</span>}
+              </div>
+              <div style={{color:C.muted,fontSize:12}}>{w.specialty}</div>
+            </div>
+            <div style={{textAlign:"right"}}>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,color:activeJobs>0?C.orange:C.green,lineHeight:1}}>{activeJobs}</div>
+              <div style={{color:C.muted,fontSize:10}}>active jobs</div>
+            </div>
+          </div>
+          <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+            {JOB_STATUSES.map(s=>{const c=workerJobs.filter(j=>j.status===s).length;if(!c)return null;return(
+              <span key={s} style={{background:JOB_STATUS_COLORS[s]+"18",color:JOB_STATUS_COLORS[s],borderRadius:99,fontSize:10,padding:"2px 8px"}}>{c} {s}</span>
+            );})}
+          </div>
+        </div>);
+      })}
+      {shopWorkers.length===0&&<div style={{textAlign:"center",padding:"30px 0",color:C.muted}}><div style={{fontSize:40,marginBottom:8}}>👥</div><div>No workers added yet</div><div style={{fontSize:12,marginTop:4}}>Tap "+ Add Worker" to invite your team</div></div>}
+    </>}
+
+    {/* ADD JOB MODAL */}
+    {showAddJob&&<div style={S.overlay}><div style={{...S.modal,maxWidth:480}}>
+      <div style={S.modalHead}><span style={S.modalTitle}>Assign New Job</span><button onClick={()=>setShowAddJob(false)} style={S.iconBtn}>✕</button></div>
+
+      <label style={S.label}>Assign To *</label>
+      <div style={{display:"flex",gap:7,flexWrap:"wrap",marginBottom:12}}>
+        {shopWorkers.map(w=>(
+          <button key={w.id} onClick={()=>setNewJob(p=>({...p,assignedTo:w.id}))} style={{display:"flex",alignItems:"center",gap:6,padding:"6px 12px",borderRadius:8,border:`1px solid ${newJob.assignedTo===w.id?C.accent:C.border}`,background:newJob.assignedTo===w.id?C.accentDim:"transparent",cursor:"pointer"}}>
+            <span style={{fontSize:18}}>{w.photo}</span>
+            <span style={{fontSize:12,color:newJob.assignedTo===w.id?C.accent:C.text}}>{w.name}</span>
+          </button>
+        ))}
+      </div>
+
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:9}}>
+        <div><label style={S.label}>Vehicle</label><input style={{...S.input,marginBottom:0}} placeholder="e.g. 2021 Honda Civic" value={newJob.vehicleName} onChange={e=>setNewJob(p=>({...p,vehicleName:e.target.value}))}/></div>
+        <div><label style={S.label}>Customer Name</label><input style={{...S.input,marginBottom:0}} placeholder="Full name" value={newJob.customerName} onChange={e=>setNewJob(p=>({...p,customerName:e.target.value}))}/></div>
+        <div><label style={S.label}>Phone</label><input style={{...S.input,marginBottom:0}} placeholder="555-000-0000" value={newJob.customerPhone} onChange={e=>setNewJob(p=>({...p,customerPhone:e.target.value}))}/></div>
+        <div><label style={S.label}>Est. Hours</label><input style={{...S.input,marginBottom:0}} type="number" min="0.5" step="0.5" value={newJob.estimatedHours} onChange={e=>setNewJob(p=>({...p,estimatedHours:e.target.value}))}/></div>
+      </div>
+
+      <label style={{...S.label,marginTop:10}}>Service / Job Description *</label>
+      <input style={S.input} placeholder="e.g. Alternator Replacement, Oil Change..." value={newJob.service} onChange={e=>setNewJob(p=>({...p,service:e.target.value}))}/>
+
+      <label style={S.label}>Priority</label>
+      <div style={{display:"flex",gap:8,marginBottom:12}}>
+        {["Normal","Urgent"].map(p=>(
+          <button key={p} onClick={()=>setNewJob(prev=>({...prev,priority:p}))} style={{flex:1,padding:"7px 0",borderRadius:7,border:`1px solid ${newJob.priority===p?(p==="Urgent"?C.red:C.accent):C.border}`,background:newJob.priority===p?(p==="Urgent"?C.redDim:C.accentDim):"transparent",color:newJob.priority===p?(p==="Urgent"?C.red:C.accent):C.muted,cursor:"pointer",fontSize:13,fontWeight:600}}>
+            {p==="Urgent"?"🚨 Urgent":"✓ Normal"}
+          </button>
+        ))}
+      </div>
+
+      <label style={S.label}>Parts Needed (comma separated)</label>
+      <input style={S.input} placeholder="e.g. Brake Pads, Rotors, Oil Filter" value={newJob.parts} onChange={e=>setNewJob(p=>({...p,parts:e.target.value}))}/>
+
+      <label style={S.label}>Notes for Worker</label>
+      <textarea style={{...S.input,height:60,resize:"none"}} placeholder="Any special instructions..." value={newJob.notes} onChange={e=>setNewJob(p=>({...p,notes:e.target.value}))}/>
+
+      <div style={{display:"flex",gap:8}}>
+        <button style={S.btnSecondary} onClick={()=>setShowAddJob(false)}>Cancel</button>
+        <button style={{...S.btnPrimary,flex:1}} onClick={addJob} disabled={!newJob.vehicleName||!newJob.service||!newJob.assignedTo}>Assign Job</button>
+      </div>
+    </div></div>}
+
+    {/* ADD WORKER MODAL */}
+    {showAddWorker&&<div style={S.overlay}><div style={{...S.modal,maxWidth:420}}>
+      <div style={S.modalHead}><span style={S.modalTitle}>Add Worker</span><button onClick={()=>setShowAddWorker(false)} style={S.iconBtn}>✕</button></div>
+      {!inviteSent?<>
+        <div style={{color:C.muted,fontSize:13,marginBottom:16,lineHeight:1.6}}>Workers can join by searching for your shop in the app, or you can invite them directly by email.</div>
+
+        <div style={{background:C.accentDim,border:`1px solid ${C.accent}22`,borderRadius:8,padding:"10px 12px",marginBottom:16}}>
+          <div style={{color:C.accent,fontSize:11,fontWeight:700,marginBottom:4}}>SHOP INVITE CODE</div>
+          <div style={{fontFamily:"monospace",fontSize:18,color:C.text,letterSpacing:3}}>TORRES-{myShop?.id?.slice(-4).toUpperCase()||"XXXX"}</div>
+          <div style={{color:C.muted,fontSize:11,marginTop:4}}>Workers enter this code in their app to join your shop</div>
+        </div>
+
+        <div style={{textAlign:"center",color:C.muted,fontSize:12,marginBottom:12}}>— or send email invite —</div>
+        <label style={S.label}>Worker Email</label>
+        <input style={S.input} type="email" placeholder="worker@email.com" value={inviteEmail} onChange={e=>setInviteEmail(e.target.value)}/>
+        <div style={{display:"flex",gap:8}}>
+          <button style={S.btnSecondary} onClick={()=>setShowAddWorker(false)}>Cancel</button>
+          <button style={{...S.btnPrimary,flex:1}} onClick={()=>setInviteSent(true)} disabled={!inviteEmail}>📧 Send Invite</button>
+        </div>
+      </>:<div style={{textAlign:"center",padding:"20px 0"}}>
+        <div style={{fontSize:44,marginBottom:10}}>✅</div>
+        <div style={{fontWeight:700,fontSize:16,marginBottom:6}}>Invite Sent!</div>
+        <div style={{color:C.muted,fontSize:13,marginBottom:16}}>Invite sent to <strong>{inviteEmail}</strong>. They will appear in your workers list once they accept.</div>
+        <button style={S.btnPrimary} onClick={()=>{setShowAddWorker(false);setInviteSent(false);setInviteEmail("");}}>Done</button>
+      </div>}
+    </div></div>}
+
+    {/* JOB DETAIL MODAL */}
+    {selectedJob&&<div style={S.overlay}><div style={{...S.modal,maxWidth:460}}>
+      <div style={S.modalHead}>
+        <div>
+          <span style={S.modalTitle}>{selectedJob.service}</span>
+          <div style={{color:C.muted,fontSize:12,marginTop:2}}>{selectedJob.vehicleName} · {selectedJob.customerName}</div>
+        </div>
+        <button onClick={()=>setSelectedJob(null)} style={S.iconBtn}>✕</button>
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:14}}>
+        {[["Assigned To",getWorkerName(selectedJob.assignedTo)],["Priority",selectedJob.priority],["Est. Time",selectedJob.estimatedHours+"hr"+(selectedJob.estimatedHours!==1?"s":"")],["Created",selectedJob.createdAt],["Phone",selectedJob.customerPhone||"—"],["Updated",selectedJob.updatedAt]].map(([l,v])=>(
+          <div key={l} style={{background:C.faint,borderRadius:7,padding:"8px 10px"}}>
+            <div style={{color:C.muted,fontSize:10,textTransform:"uppercase",letterSpacing:1,marginBottom:2}}>{l}</div>
+            <div style={{fontSize:12,fontWeight:600}}>{v}</div>
+          </div>
+        ))}
+      </div>
+      {selectedJob.notes&&<div style={{background:C.faint,borderRadius:7,padding:"8px 10px",marginBottom:12}}><div style={{color:C.muted,fontSize:10,textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>Notes</div><div style={{fontSize:13,fontStyle:"italic"}}>"{selectedJob.notes}"</div></div>}
+      {selectedJob.parts.length>0&&<div style={{marginBottom:14}}><div style={{color:C.muted,fontSize:10,textTransform:"uppercase",letterSpacing:1,marginBottom:6}}>Parts</div><div style={{display:"flex",flexWrap:"wrap",gap:5}}>{selectedJob.parts.map(p=><span key={p} style={{background:C.faint,color:C.text,borderRadius:6,fontSize:11,padding:"3px 9px"}}>🔩 {p}</span>)}</div></div>}
+      <div style={{color:C.muted,fontSize:10,textTransform:"uppercase",letterSpacing:1,marginBottom:8}}>Update Status</div>
+      <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:14}}>
+        {JOB_STATUSES.map(s=>(
+          <button key={s} onClick={()=>updateJobStatus(selectedJob.id,s)} style={{padding:"6px 12px",borderRadius:7,border:`1px solid ${selectedJob.status===s?JOB_STATUS_COLORS[s]:C.border}`,background:selectedJob.status===s?JOB_STATUS_COLORS[s]+"20":"transparent",color:selectedJob.status===s?JOB_STATUS_COLORS[s]:C.muted,fontSize:12,fontWeight:selectedJob.status===s?700:400,cursor:"pointer"}}>
+            {selectedJob.status===s?"✓ ":""}{s}
+          </button>
+        ))}
+      </div>
+      <button style={{...S.btnSecondary,width:"100%"}} onClick={()=>setSelectedJob(null)}>Close</button>
+    </div></div>}
+  </div>);
+}
+
+
 function Community({user}){
   const [posts,setPosts]=useState(INIT_POSTS);const [newPost,setNewPost]=useState({text:"",tag:JOB_TAGS[0]});const [replyText,setReplyText]=useState({});const [showCompose,setShowCompose]=useState(false);const [filter,setFilter]=useState("all");
   const filtered=filter==="all"?posts:posts.filter(p=>p.tag===filter);
@@ -957,7 +1330,7 @@ function CustomerPortal({user,users,setUsers,vehicles,setVehicles,quotes,setQuot
   const handleDM=(id)=>{setDmContact(id);setTab("messages");};
   const respondToQuote=(qid,status,counter)=>setQuotes(p=>p.map(q=>q.id===qid?{...q,status,counterOffer:counter||null}:q));
   const currentUser=users.find(u=>u.id===user.id)||user;
-  useEffect(()=>{if(navigator.geolocation){navigator.geolocation.getCurrentPosition(pos=>setUserLocation({lat:pos.coords.latitude,lng:pos.coords.longitude,city:"Current Location"}),()=>{});}},[]);
+  // Location requested only when user clicks "Auto Detect" in LocationBar
   const acceptPendingService=(vehicleId,serviceId)=>{setVehicles(prev=>prev.map(v=>{if(v.id!==vehicleId)return v;const svc=v.pendingServices.find(s=>s.id===serviceId);if(!svc)return v;return{...v,services:[{...svc,status:"confirmed"},...v.services],pendingServices:v.pendingServices.filter(s=>s.id!==serviceId),lastVisit:svc.date,mileage:svc.mileage};}));};
   const declinePendingService=(vehicleId,serviceId)=>setVehicles(prev=>prev.map(v=>v.id===vehicleId?{...v,pendingServices:v.pendingServices.filter(s=>s.id!==serviceId)}:v));
   const saveCarPhoto=(vehicleId,photo)=>setVehicles(prev=>prev.map(v=>v.id===vehicleId?{...v,carPhoto:photo}:v));
@@ -1062,7 +1435,7 @@ export default function GarageIQ(){
   const [alertSent,setAlertSent]=useState([]);const [search,setSearch]=useState("");const [showProfile,setShowProfile]=useState(false);
   const [quoteTarget,setQuoteTarget]=useState(null);const [completedTarget,setCompletedTarget]=useState(null);
   const [userLocation,setUserLocation]=useState({lat:25.7617,lng:-80.1918,city:"Miami, FL"});
-  useEffect(()=>{if(navigator.geolocation){navigator.geolocation.getCurrentPosition(pos=>setUserLocation({lat:pos.coords.latitude,lng:pos.coords.longitude,city:"Current Location"}),()=>{});}},[]);
+  // Location requested only when user clicks "Auto Detect" in LocationBar
 
   if(!user){
     const LoginScreen=()=>{
@@ -1099,9 +1472,11 @@ export default function GarageIQ(){
   const sendQuote=(q)=>setQuotes(p=>[{id:Date.now(),mechanicId:user.id,...q},...p]);
   const sendCompletedService=(vehicleId,service)=>{setVehicles(p=>p.map(v=>v.id===vehicleId?{...v,pendingServices:[...(v.pendingServices||[]),service]}:v));if(selected?.id===vehicleId)setSelected(p=>({...p,pendingServices:[...(p.pendingServices||[]),service]}));};
 
+  const myWorkerJobs=INIT_JOBS.filter(j=>j.assignedTo===INIT_WORKERS.find(w=>w.userId===user.id)?.id&&(j.status==="To-do"||j.status==="In Progress"||j.status==="Waiting on Parts"));
   const navItems=[
     {id:"dashboard",icon:"◈",label:"Dashboard"},
     {id:"customers",icon:"◉",label:"Customers"},
+    {id:"shop",icon:"🏗",label:"Shop Jobs",badge:myWorkerJobs.length},
     {id:"quotes",icon:"📋",label:"Quotes",badge:myQuotes.filter(q=>q.status==="countered").length},
     {id:"marketplace",icon:"🏪",label:"Marketplace"},
     {id:"alerts",icon:"⚠",label:"Alerts",badge:totalAlerts},
@@ -1186,6 +1561,7 @@ export default function GarageIQ(){
           </div>)}
         </div>}
 
+        {nav==="shop"&&<ShopManagement user={currentUser} users={users} vehicles={vehicles}/>}
         {nav==="board"&&<Community user={currentUser}/>}
         {nav==="messages"&&<Messages user={user} vehicles={vehicles} users={users}/>}
         {nav==="find"&&<FindMechanic user={currentUser} users={users} onDM={()=>setNav("messages")} userLocation={userLocation}/>}
