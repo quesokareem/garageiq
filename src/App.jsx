@@ -22,13 +22,13 @@ const INIT_USERS=[
 ];
 
 const INIT_VEHICLES=[
-  {id:1,customerId:"c1",name:"Marcus Johnson",phone:"555-214-8801",vin:"1HGBH41JXMN109186",vehicle:"2021 Honda Civic",mileage:42000,lastVisit:"2024-11-10",carPhoto:null,
+  {id:1,customerId:"c1",name:"Marcus Johnson",phone:"555-214-8801",vin:"1HGBH41JXMN109186",vehicle:"2021 Honda Civic",year:2021,make:"Honda",model:"Civic",mileage:42000,lastVisit:"2024-11-10",carPhoto:null,forSale:false,
    services:[{type:"Oil Change",date:"2024-11-10",mileage:42000,notes:"",status:"confirmed"},{type:"Tire Rotation",date:"2024-09-05",mileage:39500,notes:"",status:"confirmed"}],
    alerts:[{text:"Brake inspection due",level:"warning"},{text:"Air filter recommended",level:"info"}],pendingServices:[]},
-  {id:2,customerId:"c2",name:"Tanya Rivera",phone:"555-987-3320",vin:"2T1BURHE0JC041234",vehicle:"2018 Toyota Corolla",mileage:67800,lastVisit:"2024-10-22",carPhoto:null,
+  {id:2,customerId:"c2",name:"Tanya Rivera",phone:"555-987-3320",vin:"2T1BURHE0JC041234",vehicle:"2018 Toyota Corolla",year:2018,make:"Toyota",model:"Corolla",mileage:67800,lastVisit:"2024-10-22",carPhoto:null,forSale:false,
    services:[{type:"Oil Change",date:"2024-10-22",mileage:67800,notes:"",status:"confirmed"}],
    alerts:[{text:"Oil change due in 1,200 miles",level:"warning"}],pendingServices:[]},
-  {id:3,customerId:"c3",name:"Derek Williams",phone:"555-441-0092",vin:"3VWF17AT4FM123456",vehicle:"2015 Volkswagen Jetta",mileage:91200,lastVisit:"2024-08-30",carPhoto:null,
+  {id:3,customerId:"c3",name:"Derek Williams",phone:"555-441-0092",vin:"3VWF17AT4FM123456",vehicle:"2015 Volkswagen Jetta",year:2015,make:"Volkswagen",model:"Jetta",mileage:91200,lastVisit:"2024-08-30",carPhoto:null,forSale:false,
    services:[{type:"Transmission Service",date:"2024-08-30",mileage:91200,notes:"",status:"confirmed"}],
    alerts:[{text:"Brake pads critical",level:"critical"},{text:"Coolant flush overdue",level:"warning"}],
    pendingServices:[{id:99,type:"Brake Pad Replacement",date:"2024-11-15",mileage:91500,notes:"Replaced all four brake pads.",mechanicName:"Jake Torres",mechanicShop:"Torres Auto"}]},
@@ -373,6 +373,259 @@ function ProfilePage({user,users,setUsers,onClose}){
   </div></div>);
 }
 
+// ── QR CODE (simple visual) ──────────────────────────────────────────────
+function QRCode({value,size=120}){
+  // Generate a deterministic pattern from the value string
+  const hash=(s)=>{let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}return Math.abs(h);};
+  const h=hash(value);
+  const cells=[];const N=11;
+  for(let r=0;r<N;r++)for(let c=0;c<N;c++){
+    // Finder patterns (corners)
+    const inFinder=(r<3&&c<3)||(r<3&&c>N-4)||(r>N-4&&c<3);
+    // Data cells based on hash
+    const bit=inFinder?1:((h>>(r*N+c)%31)&1);
+    cells.push({r,c,v:bit});
+  }
+  const cell=size/N;
+  return(<svg width={size} height={size} style={{borderRadius:6,background:"#fff",padding:4}}>
+    {cells.map(({r,c,v})=>v?<rect key={`${r}-${c}`} x={c*cell+2} y={r*cell+2} width={cell-1} height={cell-1} fill="#000"/>:null)}
+    <text x={size/2} y={size-2} textAnchor="middle" fontSize="5" fill="#666">GarageIQ</text>
+  </svg>);
+}
+
+// ── VEHICLE DETAIL PAGE ───────────────────────────────────────────────────
+function VehicleDetailPage({vehicle,user,users,vehicles,setVehicles,listings,setListings,userLocation,onBack,onDMSeller}){
+  const [tab,setTab]=useState("overview");
+  const [showQR,setShowQR]=useState(false);
+  const [showSellForm,setShowSellForm]=useState(false);
+  const [sellPhotos,setSellPhotos]=useState([]);
+  const [sellForm,setSellForm]=useState({price:"",condition:"Good",mileage:vehicle.mileage,description:"",features:"",includeHistory:true});
+  const [showSaleConfirm,setShowSaleConfirm]=useState(false);
+  const [buyerSearch,setBuyerSearch]=useState("");
+  const [saleTarget,setSaleTarget]=useState(null);
+  const [saleAccepted,setSaleAccepted]=useState(false);
+  const photoRef=useRef();
+  const qrValue=`garageiq://vehicle/${vehicle.id}/${vehicle.vin}`;
+
+  const handleSellPhotos=(e)=>{
+    const files=Array.from(e.target.files||[]);
+    files.slice(0,15-sellPhotos.length).forEach(file=>{
+      const reader=new FileReader();
+      reader.onload=ev=>setSellPhotos(p=>[...p,ev.target.result].slice(0,15));
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const publishToMarket=()=>{
+    if(!sellForm.price)return;
+    const listing={
+      id:Date.now(),sellerId:user.id,sellerName:user.name,sellerPhoto:user.photo||"😎",
+      verified:user.role==="mechanic"||user.role==="admin",
+      year:vehicle.year||Number((vehicle.vehicle.match(/[0-9]{4}/)||[])[0]||2020),
+      make:vehicle.make||vehicle.vehicle.split(" ")[1]||"Unknown",
+      model:vehicle.model||vehicle.vehicle.split(" ").slice(2).join(" ")||"Unknown",
+      trim:"",color:"",mileage:Number(sellForm.mileage),price:Number(sellForm.price),
+      condition:sellForm.condition,description:sellForm.description,
+      features:sellForm.features.split(",").map(f=>f.trim()).filter(Boolean),
+      serviceHistory:sellForm.includeHistory?vehicle.services:[],
+      photos:sellPhotos.length>0?sellPhotos:vehicle.carPhoto?[vehicle.carPhoto]:["🚗"],
+      city:userLocation?.city||user.city||"Miami, FL",
+      lat:userLocation?.lat||user.lat||25.7617,lng:userLocation?.lng||user.lng||-80.1918,
+      offers:[],listed:new Date().toLocaleDateString(),
+      vehicleId:vehicle.id,ownerId:user.id,
+    };
+    setListings(p=>[listing,...p]);
+    setVehicles(prev=>prev.map(v=>v.id===vehicle.id?{...v,forSale:true,listingId:listing.id}:v));
+    setShowSellForm(false);
+  };
+
+  const confirmSale=(buyerId)=>{
+    // Mark listing as sold, add car to buyer's garage
+    setListings(prev=>prev.map(l=>l.vehicleId===vehicle.id?{...l,status:"sold",buyerId}:l));
+    setVehicles(prev=>prev.map(v=>{
+      if(v.id!==vehicle.id)return v;
+      return{...v,forSale:false,soldTo:buyerId};
+    }));
+    setSaleAccepted(true);
+  };
+
+  const potentialBuyers=users.filter(u=>
+    u.id!==user.id&&(u.name.toLowerCase().includes(buyerSearch.toLowerCase())||u.email.toLowerCase().includes(buyerSearch.toLowerCase()))
+  );
+
+  const tabs=[{id:"overview",label:"Overview"},{id:"history",label:"Service History"},{id:"qr",label:"QR Code"},{id:"sell",label:"Sell Car"}];
+
+  return(<div style={{minHeight:"100vh",background:C.bg,color:C.text,fontFamily:"'DM Sans',sans-serif"}}>
+    <div style={{background:C.surface,borderBottom:`1px solid ${C.border}`,padding:"10px 16px",display:"flex",alignItems:"center",gap:10}}>
+      <button onClick={onBack} style={{background:"none",border:"none",color:C.muted,cursor:"pointer",fontSize:22}}>←</button>
+      <div style={{flex:1}}><div style={{fontWeight:700,fontSize:15}}>{vehicle.vehicle}</div><div style={{color:C.muted,fontSize:11}}>{vehicle.vin}</div></div>
+      {vehicle.forSale&&<span style={{background:C.greenDim,color:C.green,borderRadius:99,fontSize:10,fontWeight:700,padding:"2px 8px"}}>FOR SALE</span>}
+    </div>
+
+    {/* Hero photo */}
+    <div style={{height:180,background:C.faint,overflow:"hidden",position:"relative"}}>
+      {vehicle.carPhoto?<img src={vehicle.carPhoto} alt="Car" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<div style={{height:"100%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:60}}>🚗</div>}
+    </div>
+
+    {/* Tabs */}
+    <div style={{display:"flex",borderBottom:`1px solid ${C.border}`,background:C.surface,overflow:"auto"}}>
+      {tabs.map(t=><button key={t.id} onClick={()=>setTab(t.id)} style={{padding:"10px 16px",border:"none",background:"transparent",color:tab===t.id?C.accent:C.muted,fontSize:12,fontWeight:600,cursor:"pointer",borderBottom:`2px solid ${tab===t.id?C.accent:"transparent"}`,whiteSpace:"nowrap"}}>{t.label}</button>)}
+    </div>
+
+    <div style={{padding:"16px 16px",maxWidth:600,margin:"0 auto"}}>
+
+      {/* OVERVIEW */}
+      {tab==="overview"&&<>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:16}}>
+          {[["Vehicle",vehicle.vehicle],["Mileage",vehicle.mileage.toLocaleString()+" mi"],["VIN",vehicle.vin],["Last Service",vehicle.lastVisit]].map(([l,v])=>(
+            <div key={l} style={{background:C.surface,borderRadius:8,padding:"10px 12px",border:`1px solid ${C.border}`}}>
+              <div style={{color:C.muted,fontSize:10,textTransform:"uppercase",letterSpacing:1,marginBottom:3}}>{l}</div>
+              <div style={{fontSize:12,fontFamily:l==="VIN"?"monospace":"inherit",wordBreak:"break-all"}}>{v}</div>
+            </div>
+          ))}
+        </div>
+        {vehicle.alerts.length>0&&<>
+          <div style={S.sectionTitle}>Alerts</div>
+          {vehicle.alerts.map((a,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:7,padding:"7px 10px",borderRadius:6,background:LEVEL_COLOR[a.level]+"0D",marginBottom:5,border:`1px solid ${LEVEL_COLOR[a.level]}22`}}><span style={{color:LEVEL_COLOR[a.level],fontSize:10}}>●</span><span style={{fontSize:12}}>{a.text}</span><Pill level={a.level}/></div>)}
+        </>}
+      </>}
+
+      {/* SERVICE HISTORY */}
+      {tab==="history"&&<>
+        <div style={S.sectionTitle}>Service History ({vehicle.services.length})</div>
+        {vehicle.services.length===0&&<div style={{color:C.muted,fontSize:13}}>No services logged yet.</div>}
+        {vehicle.services.map((s,i)=>(
+          <div key={i} style={{...S.row,cursor:"default",marginBottom:7}}>
+            <div style={{width:28,height:28,borderRadius:6,background:C.accentDim,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13}}>🔧</div>
+            <div style={{flex:1}}>
+              <div style={{fontWeight:600,fontSize:13}}>{s.type}</div>
+              <div style={{color:C.muted,fontSize:11}}>{s.date} · {Number(s.mileage).toLocaleString()} mi{s.notes?" · "+s.notes:""}</div>
+              {s.mechanicName&&<div style={{color:C.muted,fontSize:11}}>By {s.mechanicName}</div>}
+            </div>
+            <span style={{background:C.greenDim,color:C.green,borderRadius:99,fontSize:9,fontWeight:700,padding:"1px 5px"}}>✓</span>
+          </div>
+        ))}
+      </>}
+
+      {/* QR CODE */}
+      {tab==="qr"&&<>
+        <div style={{textAlign:"center",padding:"20px 0"}}>
+          <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:2,color:C.accent,marginBottom:6}}>VEHICLE QR CODE</div>
+          <div style={{color:C.muted,fontSize:12,marginBottom:20}}>Scan to view, buy, or transfer this vehicle in GarageIQ</div>
+          <div style={{display:"inline-block",padding:16,background:"#fff",borderRadius:12,marginBottom:16}}>
+            <QRCode value={qrValue} size={160}/>
+          </div>
+          <div style={{color:C.muted,fontSize:11,marginBottom:4,fontFamily:"monospace"}}>{qrValue}</div>
+          <div style={{color:C.muted,fontSize:12,marginTop:12,maxWidth:280,margin:"12px auto 0"}}>Share this QR with mechanics, buyers, or anyone who needs to identify this vehicle. Each car has a unique code.</div>
+        </div>
+      </>}
+
+      {/* SELL CAR */}
+      {tab==="sell"&&<>
+        {saleAccepted?<div style={{textAlign:"center",padding:"30px 0"}}>
+          <div style={{fontSize:48,marginBottom:12}}>🎉</div>
+          <div style={{fontWeight:700,fontSize:18,marginBottom:6}}>Sale Confirmed!</div>
+          <div style={{color:C.muted,fontSize:13,marginBottom:20}}>The car has been transferred to the new owner.</div>
+          <button style={S.btnPrimary} onClick={onBack}>Back to Garage</button>
+        </div>:!vehicle.forSale?<>
+          <div style={{color:C.muted,fontSize:13,marginBottom:20,lineHeight:1.6}}>List this car on the GarageIQ Marketplace. Info from your garage is pre-filled — just add a price and photos.</div>
+
+          {!showSellForm?<button style={{...S.btnPrimary,width:"100%",marginBottom:10}} onClick={()=>setShowSellForm(true)}>🏷 List This Car for Sale</button>
+          :<>
+            <div style={{background:C.accentDim,border:`1px solid ${C.accent}22`,borderRadius:8,padding:"10px 12px",marginBottom:14}}>
+              <div style={{color:C.accent,fontSize:11,fontWeight:700,marginBottom:6}}>PRE-FILLED FROM YOUR GARAGE</div>
+              {[["Vehicle",vehicle.vehicle],["Year",vehicle.year||"–"],["VIN",vehicle.vin],["Mileage",vehicle.mileage.toLocaleString()+" mi"]].map(([l,v])=>(
+                <div key={l} style={{display:"flex",justifyContent:"space-between",marginBottom:3}}><span style={{color:C.muted,fontSize:11}}>{l}</span><span style={{fontSize:12}}>{v}</span></div>
+              ))}
+            </div>
+
+            <label style={S.label}>Asking Price ($) *</label>
+            <input style={S.input} type="number" placeholder="e.g. 15000" value={sellForm.price} onChange={e=>setSellForm(p=>({...p,price:e.target.value}))}/>
+
+            <label style={S.label}>Current Mileage</label>
+            <input style={S.input} type="number" value={sellForm.mileage} onChange={e=>setSellForm(p=>({...p,mileage:e.target.value}))}/>
+
+            <label style={S.label}>Condition</label>
+            <select style={S.input} value={sellForm.condition} onChange={e=>setSellForm(p=>({...p,condition:e.target.value}))}>
+              {["Excellent","Good","Fair","Poor"].map(c=><option key={c}>{c}</option>)}
+            </select>
+
+            <label style={S.label}>Description</label>
+            <textarea style={{...S.input,height:65,resize:"none"}} placeholder="Describe your car..." value={sellForm.description} onChange={e=>setSellForm(p=>({...p,description:e.target.value}))}/>
+
+            {vehicle.services.length>0&&<div style={{display:"flex",alignItems:"center",gap:9,padding:"9px 12px",background:C.faint,borderRadius:8,marginBottom:12,cursor:"pointer"}} onClick={()=>setSellForm(p=>({...p,includeHistory:!p.includeHistory}))}>
+              <div style={{width:18,height:18,borderRadius:4,border:`2px solid ${sellForm.includeHistory?C.accent:C.border}`,background:sellForm.includeHistory?C.accent:"transparent",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+                {sellForm.includeHistory&&<span style={{fontSize:11,color:"#000"}}>✓</span>}
+              </div>
+              <div><div style={{fontSize:13,fontWeight:600}}>Include Service History</div><div style={{color:C.muted,fontSize:11}}>{vehicle.services.length} service records will be shared with buyers</div></div>
+            </div>}
+
+            <label style={S.label}>Photos ({sellPhotos.length}/15)</label>
+            <div style={{marginBottom:12}}>
+              <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:6}}>
+                {sellPhotos.map((p,i)=>(
+                  <div key={i} style={{position:"relative",width:68,height:52,borderRadius:6,overflow:"hidden",border:`1px solid ${C.border}`}}>
+                    <img src={p} alt="" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+                    <button onClick={()=>setSellPhotos(prev=>prev.filter((_,j)=>j!==i))} style={{position:"absolute",top:2,right:2,background:"#000000bb",border:"none",color:"#fff",borderRadius:99,width:14,height:14,cursor:"pointer",fontSize:9,display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>
+                  </div>
+                ))}
+                {sellPhotos.length<15&&<div onClick={()=>photoRef.current.click()} style={{width:68,height:52,borderRadius:6,border:`1px dashed ${C.border}`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",cursor:"pointer",background:C.faint,color:C.muted,fontSize:9,gap:2}}>
+                  <span style={{fontSize:16}}>📷</span><span>Add</span>
+                </div>}
+              </div>
+              <input ref={photoRef} type="file" accept="image/*" multiple style={{display:"none"}} onChange={handleSellPhotos}/>
+              {vehicle.carPhoto&&sellPhotos.length===0&&<div style={{color:C.muted,fontSize:11}}>Your garage photo will be used as the cover.</div>}
+            </div>
+
+            <div style={{display:"flex",gap:8}}>
+              <button style={S.btnSecondary} onClick={()=>setShowSellForm(false)}>Cancel</button>
+              <button style={{...S.btnPrimary,flex:1}} onClick={publishToMarket} disabled={!sellForm.price}>📤 Publish to Marketplace</button>
+            </div>
+          </>}
+        </>:<>
+          {/* Car is already listed - show sale confirmation */}
+          <div style={{background:C.greenDim,border:`1px solid ${C.green}30`,borderRadius:8,padding:"10px 14px",marginBottom:16}}>
+            <div style={{color:C.green,fontWeight:700,fontSize:13,marginBottom:2}}>✓ Listed on Marketplace</div>
+            <div style={{color:C.muted,fontSize:12}}>Your car is active on the marketplace.</div>
+          </div>
+
+          <div style={S.sectionTitle}>Confirm Sale</div>
+          <div style={{color:C.muted,fontSize:12,marginBottom:12,lineHeight:1.6}}>Once sold, search for the buyer by name or scan their QR code. Both parties must confirm the transfer.</div>
+
+          <div style={{background:C.accentDim,border:`1px solid ${C.accent}22`,borderRadius:8,padding:"10px 12px",marginBottom:14,display:"flex",alignItems:"center",gap:8}}>
+            <span style={{fontSize:20}}>📷</span>
+            <div><div style={{fontSize:13,fontWeight:600}}>Scan Buyer QR Code</div><div style={{color:C.muted,fontSize:11}}>Ask buyer to show their profile QR</div></div>
+            <button style={{...S.btnPrimary,fontSize:11,padding:"5px 10px",marginLeft:"auto"}} onClick={()=>alert("In the live app, camera opens here to scan buyer QR code.")}>Scan</button>
+          </div>
+
+          <label style={S.label}>Or Search by Name</label>
+          <input style={S.input} placeholder="Search users..." value={buyerSearch} onChange={e=>setBuyerSearch(e.target.value)}/>
+          {buyerSearch&&potentialBuyers.slice(0,5).map(b=>(
+            <div key={b.id} style={{...S.row,cursor:"pointer"}} onClick={()=>setSaleTarget(b)}>
+              <div style={{fontSize:22}}>{b.photo||"😊"}</div>
+              <div style={{flex:1}}><div style={{fontWeight:600,fontSize:13}}>{b.name}</div><div style={{color:C.muted,fontSize:11}}>{b.email}</div></div>
+              {saleTarget?.id===b.id&&<span style={{color:C.accent,fontSize:12}}>Selected ✓</span>}
+            </div>
+          ))}
+
+          {saleTarget&&<>
+            <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:8,padding:"10px 14px",marginBottom:12,marginTop:8}}>
+              <div style={{color:C.muted,fontSize:11,marginBottom:4}}>CONFIRMING SALE TO</div>
+              <div style={{display:"flex",alignItems:"center",gap:8}}>
+                <div style={{fontSize:24}}>{saleTarget.photo||"😊"}</div>
+                <div><div style={{fontWeight:600,fontSize:14}}>{saleTarget.name}</div><div style={{color:C.muted,fontSize:12}}>{saleTarget.email}</div></div>
+              </div>
+            </div>
+            <div style={{color:C.muted,fontSize:12,marginBottom:10}}>⚠️ Both you and {saleTarget.name} must agree. This will transfer the vehicle to their garage.</div>
+            <button style={{...S.btnPrimary,width:"100%",background:C.green,color:"#000"}} onClick={()=>confirmSale(saleTarget.id)}>✓ Confirm Sale to {saleTarget.name}</button>
+          </>}
+        </>}
+      </>}
+    </div>
+  </div>);
+}
+
+
 function Marketplace({user,listings,setListings,onDM,userLocation}){
   const [filters,setFilters]=useState({make:"Any",model:"Any",bodyType:"Any",color:"Any",condition:"Any",minPrice:"",maxPrice:"",minMiles:"",maxMiles:"",minYear:"",maxYear:"",maxDist:50});
   const [sort,setSort]=useState("newest");const [selected,setSelected]=useState(null);const [showCreate,setShowCreate]=useState(false);
@@ -450,8 +703,9 @@ function Marketplace({user,listings,setListings,onDM,userLocation}){
       <div style={{display:"flex",gap:5,marginBottom:8}}><input style={{...S.input,margin:0,fontSize:11,padding:"5px 7px"}} placeholder="Min" value={filters.minPrice} onChange={e=>setF("minPrice",e.target.value)}/><input style={{...S.input,margin:0,fontSize:11,padding:"5px 7px"}} placeholder="Max" value={filters.maxPrice} onChange={e=>setF("maxPrice",e.target.value)}/></div>
       <label style={S.label}>Mileage</label>
       <div style={{display:"flex",gap:5,marginBottom:8}}><input style={{...S.input,margin:0,fontSize:11,padding:"5px 7px"}} placeholder="Min" value={filters.minMiles} onChange={e=>setF("minMiles",e.target.value)}/><input style={{...S.input,margin:0,fontSize:11,padding:"5px 7px"}} placeholder="Max" value={filters.maxMiles} onChange={e=>setF("maxMiles",e.target.value)}/></div>
-      <label style={S.label}>Year</label>
-      <div style={{display:"flex",gap:5,marginBottom:10}}><input style={{...S.input,margin:0,fontSize:11,padding:"5px 7px"}} type="number" placeholder="From" value={filters.minYear} onChange={e=>setF("minYear",e.target.value)}/><input style={{...S.input,margin:0,fontSize:11,padding:"5px 7px"}} type="number" placeholder="To" value={filters.maxYear} onChange={e=>setF("maxYear",e.target.value)}/></div>
+      <label style={S.label}>Year: {filters.minYear||1985} – {filters.maxYear||2027}</label>
+      <div style={{marginBottom:4}}><div style={{fontSize:10,color:C.muted,display:"flex",justifyContent:"space-between",marginBottom:2}}><span>From</span><span>{filters.minYear||1985}</span></div><input type="range" min={1985} max={2027} value={filters.minYear||1985} onChange={e=>setF("minYear",e.target.value)} style={{width:"100%",accentColor:C.accent,marginBottom:6}}/></div>
+      <div style={{marginBottom:10}}><div style={{fontSize:10,color:C.muted,display:"flex",justifyContent:"space-between",marginBottom:2}}><span>To</span><span>{filters.maxYear||2027}</span></div><input type="range" min={1985} max={2027} value={filters.maxYear||2027} onChange={e=>setF("maxYear",e.target.value)} style={{width:"100%",accentColor:C.accent}}/></div>
       <button onClick={()=>{setFilters({make:"Any",model:"Any",bodyType:"Any",color:"Any",condition:"Any",minPrice:"",maxPrice:"",minMiles:"",maxMiles:"",minYear:"",maxYear:"",maxDist:50});setCustomMake(false);setCustomModel(false);}} style={{...S.btnSecondary,width:"100%",fontSize:11,padding:"5px 0"}}>Clear All</button>
     </div>
     <div style={{flex:1,overflow:"auto",padding:"16px 18px"}}>
@@ -523,6 +777,7 @@ function Marketplace({user,listings,setListings,onDM,userLocation}){
 
 function CreateListing({user,onClose,onSave}){
   const [form,setForm]=useState({year:new Date().getFullYear(),make:"Toyota",model:"",trim:"",color:"Black",mileage:"",price:"",condition:"Good",description:"",features:""});
+  const [publishError,setPublishError]=useState("");
   const [customMake,setCustomMake]=useState(false);const [customModel,setCustomModel]=useState(false);
   const [photos,setPhotos]=useState([]);const photoRef=useRef();
   const setF=(k,v)=>setForm(p=>({...p,[k]:v}));
@@ -537,7 +792,14 @@ function CreateListing({user,onClose,onSave}){
     });
   };
   const removePhoto=(idx)=>setPhotos(p=>p.filter((_,i)=>i!==idx));
-  const save=()=>{if(!form.model||!form.price||!form.mileage)return;onSave({...form,mileage:Number(form.mileage),price:Number(form.price),year:Number(form.year),photos:photos.length>0?photos:["🚗"],features:form.features.split(",").map(f=>f.trim()).filter(Boolean)});};
+  const save=()=>{
+    if(!form.make||form.make==="Any"){setPublishError("Please select a make.");return;}
+    if(!form.model){setPublishError("Please enter or select a model.");return;}
+    if(!form.price){setPublishError("Please enter a price.");return;}
+    if(!form.mileage){setPublishError("Please enter mileage.");return;}
+    setPublishError("");
+    onSave({...form,mileage:Number(form.mileage),price:Number(form.price),year:Number(form.year),photos:photos.length>0?photos:["🚗"],features:form.features.split(",").map(f=>f.trim()).filter(Boolean)});
+  };
   return(<div style={S.overlay}><div style={{...S.modal,maxWidth:480}}>
     <div style={S.modalHead}><span style={S.modalTitle}>List Your Car</span><button onClick={onClose} style={S.iconBtn}>✕</button></div>
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:9,marginBottom:10}}>
@@ -595,7 +857,8 @@ function CreateListing({user,onClose,onSave}){
 
     <label style={S.label}>Description</label><textarea style={{...S.input,height:55,resize:"none"}} placeholder="Describe your car..." value={form.description} onChange={e=>setF("description",e.target.value)}/>
     <label style={S.label}>Features (comma separated)</label><input style={S.input} placeholder="e.g. Sunroof, Leather Seats, Backup Camera" value={form.features} onChange={e=>setF("features",e.target.value)}/>
-    <div style={{display:"flex",gap:8}}><button style={S.btnSecondary} onClick={onClose}>Cancel</button><button style={{...S.btnPrimary,flex:1}} onClick={save} disabled={!form.model||!form.price||!form.mileage}>Publish Listing</button></div>
+    {publishError&&<div style={{color:C.red,fontSize:12,marginBottom:8}}>⚠ {publishError}</div>}
+    <div style={{display:"flex",gap:8}}><button style={S.btnSecondary} onClick={onClose}>Cancel</button><button style={{...S.btnPrimary,flex:1}} onClick={save}>Publish Listing</button></div>
   </div></div>);
 }
 
@@ -703,21 +966,80 @@ function CustomerPortal({user,users,setUsers,vehicles,setVehicles,quotes,setQuot
       <div style={{marginLeft:"auto",display:"flex",alignItems:"center",gap:6,flexShrink:0}}><button onClick={()=>setShowProfile(true)} style={{background:"none",border:"none",cursor:"pointer",fontSize:22}}>{currentUser.photo||"😎"}</button><button onClick={onLogout} style={{background:"none",border:"none",color:C.muted,cursor:"pointer",fontSize:11}}>Sign out</button></div>
     </div>
     {(tab==="marketplace"||tab==="find")&&<LocationBar location={userLocation} onUpdate={setUserLocation}/>}
-    {tab==="garage"&&<div style={{padding:"18px 16px",maxWidth:620,margin:"0 auto",animation:"fadeUp 0.3s ease"}}>
-      <div style={{marginBottom:13}}><div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,letterSpacing:1}}>My Garage</div><div style={{color:C.muted,fontSize:12}}>Hey {user.name.split(" ")[0]}!</div></div>
-      {myVehicles.map(v=>{const hasPending=(v.pendingServices?.length||0)>0;return(
-        <div key={v.id} style={{background:C.surface,border:`1px solid ${hasPending?C.orange+"44":C.border}`,borderRadius:12,overflow:"hidden",marginBottom:15}}>
-          <div style={{position:"relative",height:140,background:C.faint,overflow:"hidden",cursor:"pointer"}} onClick={()=>setCarPhotoTarget(v)}>
-            {v.carPhoto?<img src={v.carPhoto} alt="Car" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<div style={{height:"100%",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4}}><div style={{fontSize:40}}>🚗</div><div style={{color:C.muted,fontSize:12}}>Tap to add car photo</div></div>}
-            <div style={{position:"absolute",bottom:7,right:7,background:"#000000aa",borderRadius:5,padding:"3px 6px",fontSize:10,color:C.text}}>📷 {v.carPhoto?"Change":"Add"}</div>
+    {tab==="garage"&&!selectedVehicle&&<div style={{padding:"18px 16px",maxWidth:620,margin:"0 auto",animation:"fadeUp 0.3s ease"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:13}}>
+        <div><div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,letterSpacing:1}}>My Garage</div><div style={{color:C.muted,fontSize:12}}>Hey {user.name.split(" ")[0]}! ({myVehicles.length}/5 cars)</div></div>
+        {myVehicles.length<5&&<button onClick={()=>setShowAddVehicle(true)} style={{width:38,height:38,borderRadius:99,background:C.accent,border:"none",color:"#000",fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700}}>+</button>}
+      </div>
+
+      {showAddVehicle&&<div style={{background:C.surface,border:`1px solid ${C.accent}30`,borderRadius:12,padding:"14px 14px",marginBottom:16}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+          <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:15,letterSpacing:1,color:C.accent}}>ADD A CAR</div>
+          <button onClick={()=>setShowAddVehicle(false)} style={{background:"none",border:"none",color:C.muted,cursor:"pointer",fontSize:16}}>✕</button>
+        </div>
+        <label style={S.label}>VIN (or enter details manually)</label>
+        <input style={S.input} placeholder="Enter 17-char VIN to auto-lookup" value={newVehicleVin} onChange={e=>setNewVehicleVin(e.target.value.toUpperCase())} maxLength={17}/>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+          <div><label style={S.label}>Year</label><input style={{...S.input,marginBottom:0}} type="number" value={newVehicleData.year} onChange={e=>setNewVehicleData(p=>({...p,year:e.target.value}))}/></div>
+          <div><label style={S.label}>Make</label><select style={{...S.input,marginBottom:0}} value={newVehicleData.make} onChange={e=>setNewVehicleData(p=>({...p,make:e.target.value,model:""}))}>
+            {CAR_MAKES.filter(m=>m!=="Any").map(m=><option key={m}>{m}</option>)}
+          </select></div>
+          <div><label style={S.label}>Model</label>
+            {(CAR_MODELS[newVehicleData.make]||[]).length>0
+              ?<select style={{...S.input,marginBottom:0}} value={newVehicleData.model} onChange={e=>setNewVehicleData(p=>({...p,model:e.target.value}))}><option value="">Select...</option>{(CAR_MODELS[newVehicleData.make]||[]).map(m=><option key={m}>{m}</option>)}</select>
+              :<input style={{...S.input,marginBottom:0}} placeholder="Model" value={newVehicleData.model} onChange={e=>setNewVehicleData(p=>({...p,model:e.target.value}))}/>}
           </div>
-          <div style={{padding:"10px 13px",borderBottom:`1px solid ${C.border}`}}><div style={{fontWeight:700,fontSize:15}}>{v.vehicle}</div><div style={{color:C.muted,fontSize:11,fontFamily:"monospace",marginTop:1}}>VIN: {v.vin}</div><div style={{color:C.muted,fontSize:11,marginTop:1}}>{v.mileage.toLocaleString()} mi · Last visit {v.lastVisit}</div></div>
-          {hasPending&&<div style={{padding:"9px 13px",borderBottom:`1px solid ${C.border}`}}><div style={{color:C.orange,fontSize:10,fontWeight:700,marginBottom:5,textTransform:"uppercase",letterSpacing:1}}>🔔 Pending Approval</div>{v.pendingServices.map(svc=><PendingServiceCard key={svc.id} service={svc} onAccept={()=>acceptPendingService(v.id,svc.id)} onDecline={()=>declinePendingService(v.id,svc.id)}/>)}</div>}
-          {v.alerts.length>0&&<div style={{padding:"9px 13px",borderBottom:`1px solid ${C.border}`}}>{v.alerts.map((a,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:7,marginBottom:4}}><span style={{color:LEVEL_COLOR[a.level],fontSize:10}}>●</span><span style={{fontSize:12}}>{a.text}</span><Pill level={a.level}/></div>)}</div>}
-          <div style={{padding:"9px 13px"}}><div style={{color:C.muted,fontSize:10,textTransform:"uppercase",letterSpacing:1,marginBottom:5}}>Recent Services</div>{v.services.slice(0,3).map((s,i)=><div key={i} style={{display:"flex",justifyContent:"space-between",padding:"4px 0",borderBottom:i<Math.min(v.services.length,3)-1?`1px solid ${C.border}`:"none"}}><span style={{fontSize:12}}>{s.type}</span><span style={{color:C.muted,fontSize:11}}>{s.date}</span></div>)}</div>
+          <div><label style={S.label}>Mileage</label><input style={{...S.input,marginBottom:0}} type="number" placeholder="e.g. 45000" value={newVehicleData.mileage} onChange={e=>setNewVehicleData(p=>({...p,mileage:e.target.value}))}/></div>
+        </div>
+        <div style={{display:"flex",gap:8,marginTop:10}}>
+          <button style={S.btnSecondary} onClick={()=>setShowAddVehicle(false)}>Cancel</button>
+          <button style={{...S.btnPrimary,flex:1}} onClick={()=>{
+            if(!newVehicleData.make||!newVehicleData.model)return;
+            const nv={id:Date.now(),customerId:user.id,name:user.name,phone:"",
+              vin:newVehicleVin||"MANUAL-"+Date.now(),
+              vehicle:`${newVehicleData.year} ${newVehicleData.make} ${newVehicleData.model}`,
+              year:Number(newVehicleData.year),make:newVehicleData.make,model:newVehicleData.model,
+              mileage:Number(newVehicleData.mileage)||0,lastVisit:"—",carPhoto:null,forSale:false,
+              services:[],alerts:[],pendingServices:[]};
+            setVehicles(prev=>[...prev,nv]);
+            setUsers(prev=>prev.map(u=>u.id===user.id?{...u,vehicleIds:[...(u.vehicleIds||[]),nv.id]}:u));
+            setShowAddVehicle(false);setNewVehicleVin("");setNewVehicleData({year:new Date().getFullYear(),make:"Toyota",model:"",mileage:""});
+          }}>Add to Garage</button>
+        </div>
+      </div>}
+
+      {myVehicles.map(v=>{const hasPending=(v.pendingServices?.length||0)>0;return(
+        <div key={v.id} style={{background:C.surface,border:`1px solid ${hasPending?C.orange+"44":v.forSale?C.green+"44":C.border}`,borderRadius:12,overflow:"hidden",marginBottom:14,cursor:"pointer"}} onClick={()=>setSelectedVehicle(v)}>
+          <div style={{position:"relative",height:130,background:C.faint,overflow:"hidden"}}>
+            {v.carPhoto?<img src={v.carPhoto} alt="Car" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<div style={{height:"100%",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4}}><div style={{fontSize:38}}>🚗</div><div style={{color:C.muted,fontSize:11}}>Tap to add photo</div></div>}
+            {v.forSale&&<div style={{position:"absolute",top:8,left:8,background:C.green,color:"#000",borderRadius:99,fontSize:10,fontWeight:700,padding:"2px 8px"}}>FOR SALE</div>}
+            {hasPending&&<div style={{position:"absolute",top:8,right:8,background:C.orange,color:"#000",borderRadius:99,fontSize:10,fontWeight:700,padding:"2px 8px"}}>🔔 {v.pendingServices.length}</div>}
+          </div>
+          <div style={{padding:"10px 13px"}}>
+            <div style={{fontWeight:700,fontSize:14}}>{v.vehicle}</div>
+            <div style={{color:C.muted,fontSize:11,display:"flex",justifyContent:"space-between",marginTop:3}}>
+              <span>{v.mileage.toLocaleString()} mi</span>
+              <span>Last visit: {v.lastVisit}</span>
+            </div>
+            {v.alerts.length>0&&<div style={{color:C.red,fontSize:11,marginTop:4}}>⚠ {v.alerts.length} alert{v.alerts.length!==1?"s":""}</div>}
+          </div>
         </div>
       );})}
+      {myVehicles.length===0&&<div style={{textAlign:"center",padding:"40px 0",color:C.muted}}><div style={{fontSize:48,marginBottom:12}}>🚗</div><div style={{fontSize:14,marginBottom:6}}>No cars yet</div><div style={{fontSize:12}}>Tap + to add your first car</div></div>}
     </div>}
+
+    {tab==="garage"&&selectedVehicle&&<VehicleDetailPage
+      vehicle={selectedVehicle}
+      user={currentUser}
+      users={users}
+      vehicles={vehicles}
+      setVehicles={setVehicles}
+      listings={listings}
+      setListings={setListings}
+      userLocation={userLocation}
+      onBack={()=>setSelectedVehicle(null)}
+      onDMSeller={handleDM}
+    />}
     {tab==="quotes"&&<div style={{padding:"18px 16px",maxWidth:620,margin:"0 auto",animation:"fadeUp 0.3s ease"}}><div style={{marginBottom:13}}><div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,letterSpacing:2}}>My Quotes</div></div>{myQuotes.length===0&&<div style={{color:C.muted,fontSize:13}}>No quotes yet.</div>}{myQuotes.map(q=><QuoteCard key={q.id} quote={q} isCustomer={true} onRespond={respondToQuote}/>)}</div>}
     {tab==="marketplace"&&<Marketplace user={currentUser} listings={listings} setListings={setListings} onDM={handleDM} userLocation={userLocation}/>}
     {tab==="find"&&<FindMechanic user={currentUser} users={users} onDM={handleDM} userLocation={userLocation}/>}
