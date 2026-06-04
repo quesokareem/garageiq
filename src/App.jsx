@@ -949,6 +949,10 @@ function CustomerPortal({user,users,setUsers,vehicles,setVehicles,quotes,setQuot
   const myVehicles=vehicles.filter(v=>user.vehicleIds?.includes(v.id));const myQuotes=quotes.filter(q=>q.customerId===user.id);
   const totalPending=myVehicles.reduce((a,v)=>a+(v.pendingServices?.length||0),0);
   const [tab,setTab]=useState("garage");const [dmContact,setDmContact]=useState(null);const [showProfile,setShowProfile]=useState(false);const [carPhotoTarget,setCarPhotoTarget]=useState(null);
+  const [selectedVehicle,setSelectedVehicle]=useState(null);
+  const [showAddVehicle,setShowAddVehicle]=useState(false);
+  const [newVehicleVin,setNewVehicleVin]=useState("");
+  const [newVehicleData,setNewVehicleData]=useState({year:new Date().getFullYear(),make:"Toyota",model:"",mileage:""});
   const [userLocation,setUserLocation]=useState({lat:user.lat||25.7617,lng:user.lng||-80.1918,city:user.city||"Miami, FL"});
   const handleDM=(id)=>{setDmContact(id);setTab("messages");};
   const respondToQuote=(qid,status,counter)=>setQuotes(p=>p.map(q=>q.id===qid?{...q,status,counterOffer:counter||null}:q));
