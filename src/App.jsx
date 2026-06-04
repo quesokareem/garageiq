@@ -78,54 +78,61 @@ const INIT_REVIEWS=[
 
 const SERVICE_TYPES=["Oil Change","Tire Rotation","Brake Pad Replacement","Air Filter","Transmission Service","Coolant Flush","Battery Replacement","Wheel Alignment","Spark Plugs","Full Inspection"];
 const JOB_TAGS=["Oil Change","Brakes","Alternator","AC","Transmission","Electrical","Tires","Engine","Battery","Other"];
-const CAR_MAKES=["Any","Ford","Toyota","Honda","Chevrolet","GMC","RAM","Jeep","Dodge","Nissan","Hyundai","Kia","Subaru","Mazda","Volkswagen","BMW","Mercedes-Benz","Lexus","Audi","Cadillac","Buick","Lincoln","Acura","Infiniti","Volvo","Tesla","Genesis","Mitsubishi","Other"];
+const CAR_MAKES=["Any","Ford","Chevrolet","Toyota","Honda","Nissan","Hyundai","Kia","Jeep","Ram","GMC","Subaru","Tesla","BMW","Mercedes-Benz","Lexus","Acura","Audi","Volkswagen","Mazda","Volvo","Dodge","Chrysler","Buick","Cadillac","Infiniti","Lincoln","Mitsubishi","Mini","Land Rover","Jaguar","Porsche","Genesis","Other"];
 
 const CAR_MODELS={
-  Ford:["F-150","F-250","F-350","Mustang","Explorer","Escape","Edge","Bronco","Bronco Sport","Ranger","Maverick","Expedition","Transit","Transit Connect","EcoSport","Fusion","Taurus","Focus","Fiesta"],
-  Toyota:["Camry","Corolla","RAV4","Tacoma","Tundra","Highlander","4Runner","Sienna","Prius","Venza","Avalon","C-HR","Sequoia","Land Cruiser","GR86","Supra","bZ4X","Yaris"],
-  Honda:["Civic","Accord","CR-V","Pilot","Odyssey","HR-V","Passport","Ridgeline","Fit","Insight","Element","Prologue","Jazz"],
-  Chevrolet:["Silverado 1500","Silverado 2500","Equinox","Tahoe","Suburban","Traverse","Colorado","Blazer","Trax","Malibu","Camaro","Corvette","Trailblazer","Express","Spark","Sonic"],
-  GMC:["Sierra 1500","Sierra 2500","Yukon","Yukon XL","Acadia","Terrain","Canyon","Envoy","Safari"],
-  RAM:["1500","2500","3500","ProMaster","ProMaster City"],
-  Jeep:["Wrangler","Grand Cherokee","Cherokee","Compass","Gladiator","Renegade","Wagoneer","Grand Wagoneer"],
-  Dodge:["Challenger","Charger","Durango","Journey","Grand Caravan","Dart","Viper"],
-  Nissan:["Altima","Rogue","Sentra","Frontier","Pathfinder","Murano","Titan","Kicks","Armada","Maxima","Versa","370Z","GT-R","Leaf"],
-  Hyundai:["Elantra","Tucson","Santa Fe","Sonata","Kona","Palisade","Ioniq 5","Ioniq 6","Venue","Accent","Veloster","Genesis Coupe"],
-  Kia:["Sorento","Sportage","Forte","Telluride","Soul","Carnival","Stinger","EV6","Niro","Seltos","K5","Rio","Cadenza"],
-  Subaru:["Outback","Forester","Crosstrek","Impreza","Legacy","Ascent","WRX","BRZ","Solterra"],
-  Mazda:["CX-5","Mazda3","CX-30","CX-50","CX-90","Mazda6","MX-5 Miata","CX-9","CX-3"],
-  Volkswagen:["Jetta","Tiguan","Atlas","Passat","Golf","GTI","Taos","ID.4","Touareg","Arteon"],
-  BMW:["3 Series","5 Series","7 Series","X1","X3","X5","X7","4 Series","2 Series","M3","M5","i4","iX","Z4"],
-  "Mercedes-Benz":["C-Class","E-Class","S-Class","GLC","GLE","GLS","A-Class","CLA","GLA","GLB","AMG GT","EQS","EQE"],
-  Lexus:["RX","ES","NX","GX","IS","UX","LX","LS","LC","RC","TX"],
-  Audi:["A4","A6","Q5","Q7","Q3","A3","A8","Q8","TT","R8","e-tron","Q4 e-tron"],
-  Cadillac:["Escalade","XT5","CT5","XT4","CT4","Lyriq","Celestiq"],
-  Buick:["Enclave","Encore","Encore GX","Envision","LaCrosse"],
-  Lincoln:["Navigator","Nautilus","Corsair","Aviator","Continental"],
-  Acura:["MDX","RDX","TLX","ILX","NSX","Integra"],
-  Infiniti:["QX60","QX80","QX50","Q50","QX55","Q60"],
-  Volvo:["XC90","XC60","XC40","S90","S60","V90","V60","C40"],
-  Tesla:["Model 3","Model Y","Model S","Model X","Cybertruck"],
-  Genesis:["GV80","GV70","G80","GV60","G70","G90"],
-  Mitsubishi:["Outlander","Eclipse Cross","Outlander Sport","Galant","Lancer","Mirage"],
+  Ford:["F-150","F-150 Lightning","F-250 Super Duty","F-350 Super Duty","F-450 Super Duty","Ranger","Maverick","Bronco","Bronco Sport","Escape","Edge","Explorer","Expedition","Expedition MAX","Mustang","Mustang Mach-E","Transit Cargo Van","Transit Passenger Van","Transit Connect","Fusion","Focus","Fiesta","Taurus","Flex"],
+  Chevrolet:["Silverado 1500","Silverado 1500 LTD","Silverado 2500HD","Silverado 3500HD","Colorado","Blazer","Trailblazer","Equinox","Traverse","Tahoe","Suburban","Trax","Malibu","Impala","Camaro","Corvette","Bolt EV","Bolt EUV","Spark","Sonic","Cruze","Volt","Express Cargo Van","Express Passenger Van"],
+  Toyota:["Camry","Corolla","Corolla Hatchback","Corolla Cross","RAV4","RAV4 Hybrid","Highlander","Grand Highlander","Tacoma","Tundra","4Runner","Sequoia","Sienna","Prius","Prius Prime","Venza","Crown","GR86","Supra","Land Cruiser","Avalon","bZ4X","C-HR","Matrix","Yaris"],
+  Honda:["Civic","Civic Si","Civic Type R","Accord","CR-V","HR-V","Pilot","Passport","Odyssey","Ridgeline","Insight","Fit","CR-Z","Crosstour","Element","Prelude"],
+  Nissan:["Altima","Sentra","Versa","Maxima","Rogue","Rogue Sport","Murano","Pathfinder","Armada","Frontier","Titan","Titan XD","Kicks","Juke","Leaf","Ariya","Z","GT-R","NV Cargo","NV Passenger","Quest"],
+  Hyundai:["Elantra","Sonata","Accent","Venue","Kona","Kona Electric","Tucson","Santa Fe","Palisade","Santa Cruz","Ioniq","Ioniq Hybrid","Ioniq Plug-in","Ioniq 5","Ioniq 6","Azera","Veloster"],
+  Kia:["Forte","K4","K5","Rio","Soul","Seltos","Sportage","Sorento","Telluride","Carnival","Niro","Niro EV","EV6","EV9","Stinger","Cadenza","Amanti"],
+  Jeep:["Wrangler","Wrangler Unlimited","Gladiator","Cherokee","Grand Cherokee","Grand Cherokee L","Compass","Renegade","Wagoneer","Grand Wagoneer","Patriot","Liberty"],
+  Ram:["1500","1500 Classic","2500","3500","ProMaster Cargo Van","ProMaster City","ProMaster Window Van","Chassis Cab 3500","Chassis Cab 4500","Chassis Cab 5500"],
+  GMC:["Sierra 1500","Sierra 2500HD","Sierra 3500HD","Canyon","Terrain","Acadia","Yukon","Yukon XL","Hummer EV Pickup","Hummer EV SUV","Savana Cargo","Savana Passenger"],
+  Subaru:["Impreza","Legacy","WRX","BRZ","Crosstrek","Forester","Outback","Ascent","Solterra","Baja"],
+  Tesla:["Model 3","Model Y","Model S","Model X","Cybertruck","Roadster"],
+  BMW:["2 Series","3 Series","4 Series","5 Series","7 Series","8 Series","X1","X2","X3","X4","X5","X6","X7","XM","Z4","i3","i4","i5","i7","i8","iX"],
+  "Mercedes-Benz":["A-Class","C-Class","CLA","CLS","E-Class","S-Class","GLA","GLB","GLC","GLE","GLS","G-Class","EQB","EQE","EQS","SL","AMG GT","Metris"],
+  Lexus:["IS","ES","GS","LS","RC","LC","UX","NX","RX","TX","GX","LX","RZ"],
+  Acura:["ILX","Integra","TLX","RLX","RDX","MDX","NSX"],
+  Audi:["A3","A4","A5","A6","A7","A8","Q3","Q4 e-tron","Q5","Q7","Q8","e-tron","TT","R8","S4","RS5"],
+  Volkswagen:["Jetta","Passat","Golf","Golf GTI","Golf R","Tiguan","Taos","Atlas","Atlas Cross Sport","ID.4","Arteon","Beetle","CC"],
+  Mazda:["Mazda2","Mazda3","Mazda6","CX-3","CX-30","CX-5","CX-50","CX-7","CX-9","CX-90","MX-5 Miata","RX-8"],
+  Volvo:["S60","S90","V60","V90","XC40","XC60","XC90","C40 Recharge"],
+  Dodge:["Charger","Challenger","Durango","Hornet","Dart","Journey","Magnum","Caliber","Neon","Viper"],
+  Chrysler:["300","Pacifica","Voyager","Town & Country","Sebring"],
+  Buick:["Encore","Encore GX","Envision","Enclave","Regal","LaCrosse","Verano"],
+  Cadillac:["CT4","CT5","CT6","ATS","CTS","Escalade","Escalade ESV","XT4","XT5","XT6","Lyriq","XTS"],
+  Infiniti:["Q50","Q60","Q70","QX30","QX50","QX55","QX60","QX80"],
+  Lincoln:["Corsair","Nautilus","Aviator","Navigator","MKC","MKX","MKZ","Continental"],
+  Mitsubishi:["Mirage","Mirage G4","Lancer","Outlander","Outlander Sport","Eclipse Cross","Galant","Endeavor"],
+  Mini:["Cooper","Cooper S","Clubman","Countryman","Convertible"],
+  "Land Rover":["Range Rover","Range Rover Sport","Range Rover Velar","Range Rover Evoque","Defender","Discovery","Discovery Sport"],
+  Jaguar:["XE","XF","XJ","F-Type","F-Pace","E-Pace","I-Pace"],
+  Porsche:["911","Cayenne","Macan","Panamera","Taycan","718 Boxster","718 Cayman"],
+  Genesis:["G70","G80","G90","GV60","GV70","GV80"],
   Other:[],
 };
 
 const MODEL_TYPES={
   // Sedans
-  "Camry":"Sedan","Corolla":"Sedan","Civic":"Sedan","Accord":"Sedan","Altima":"Sedan","Sentra":"Sedan","Maxima":"Sedan","Elantra":"Sedan","Sonata":"Sedan","Malibu":"Sedan","Fusion":"Sedan","Taurus":"Sedan","Passat":"Sedan","Jetta":"Sedan","A4":"Sedan","A6":"Sedan","3 Series":"Sedan","5 Series":"Sedan","7 Series":"Sedan","C-Class":"Sedan","E-Class":"Sedan","S-Class":"Sedan","ES":"Sedan","IS":"Sedan","LS":"Sedan","RX":"Sedan","CT5":"Sedan","CT4":"Sedan","Forte":"Sedan","K5":"Sedan","Rio":"Sedan","Impreza":"Sedan","Legacy":"Sedan","Mazda3":"Sedan","Mazda6":"Sedan","Q50":"Sedan","Stinger":"Sedan","TLX":"Sedan","ILX":"Sedan","G80":"Sedan","G70":"Sedan","G90":"Sedan","S90":"Sedan","S60":"Sedan","Model 3":"Sedan","Model S":"Sedan","LaCrosse":"Sedan","Continental":"Sedan","Cadenza":"Sedan","Versa":"Sedan","Accent":"Sedan","Dart":"Sedan","Lancer":"Sedan","Galant":"Sedan","Mirage":"Sedan","Avalon":"Sedan",
+  "Camry":"Sedan","Corolla":"Sedan","Civic":"Sedan","Civic Si":"Sedan","Accord":"Sedan","Altima":"Sedan","Sentra":"Sedan","Maxima":"Sedan","Versa":"Sedan","Elantra":"Sedan","Sonata":"Sedan","Accent":"Sedan","Malibu":"Sedan","Fusion":"Sedan","Taurus":"Sedan","Passat":"Sedan","Jetta":"Sedan","A3":"Sedan","A4":"Sedan","A6":"Sedan","A7":"Sedan","A8":"Sedan","3 Series":"Sedan","5 Series":"Sedan","7 Series":"Sedan","C-Class":"Sedan","E-Class":"Sedan","S-Class":"Sedan","A-Class":"Sedan","CLS":"Sedan","ES":"Sedan","IS":"Sedan","GS":"Sedan","LS":"Sedan","ILX":"Sedan","TLX":"Sedan","RLX":"Sedan","Integra":"Sedan","G70":"Sedan","G80":"Sedan","G90":"Sedan","S60":"Sedan","S90":"Sedan","Mazda3":"Sedan","Mazda6":"Sedan","Q50":"Sedan","Q60":"Sedan","Q70":"Sedan","Stinger":"Sedan","Cadenza":"Sedan","Amanti":"Sedan","K5":"Sedan","K4":"Sedan","Forte":"Sedan","Rio":"Sedan","300":"Sedan","Sebring":"Sedan","CT4":"Sedan","CT5":"Sedan","CT6":"Sedan","ATS":"Sedan","CTS":"Sedan","XTS":"Sedan","Regal":"Sedan","LaCrosse":"Sedan","Verano":"Sedan","MKZ":"Sedan","Continental":"Sedan","Lancer":"Sedan","Galant":"Sedan","Mirage G4":"Sedan","Crown":"Sedan","Avalon":"Sedan","Impala":"Sedan","Cruze":"Sedan","Dart":"Sedan","Neon":"Sedan","Caliber":"Sedan","Azera":"Sedan","XE":"Sedan","XF":"Sedan","XJ":"Sedan","Panamera":"Sedan","CC":"Sedan","Arteon":"Sedan","Mazda2":"Sedan",
+  // Hatchbacks
+  "Corolla Hatchback":"Hatchback","Civic Type R":"Hatchback","Golf":"Hatchback","Golf GTI":"Hatchback","Golf R":"Hatchback","Fit":"Hatchback","Yaris":"Hatchback","Bolt EV":"Hatchback","Bolt EUV":"Hatchback","Spark":"Hatchback","Sonic":"Hatchback","Focus":"Hatchback","Fiesta":"Hatchback","Prius":"Hatchback","Prius Prime":"Hatchback","Matrix":"Hatchback","Veloster":"Hatchback","Ioniq":"Hatchback","Ioniq Hybrid":"Hatchback","Ioniq Plug-in":"Hatchback","i3":"Hatchback","Leaf":"Hatchback","Mazda2":"Hatchback","Beetle":"Hatchback","Cooper":"Hatchback","Cooper S":"Hatchback","CR-Z":"Hatchback","Insight":"Hatchback","Volt":"Hatchback","Clubman":"Hatchback","Impreza":"Hatchback","WRX":"Hatchback",
   // SUVs / Crossovers
-  "CR-V":"SUV","RAV4":"SUV","Rogue":"SUV","Equinox":"SUV","Explorer":"SUV","Escape":"SUV","Tiguan":"SUV","Tucson":"SUV","Santa Fe":"SUV","Sorento":"SUV","Sportage":"SUV","Outlander":"SUV","Forester":"SUV","Outback":"SUV","Crosstrek":"SUV","CX-5":"SUV","CX-30":"SUV","CX-50":"SUV","CX-90":"SUV","CX-9":"SUV","CX-3":"SUV","Pilot":"SUV","HR-V":"SUV","Passport":"SUV","Atlas":"SUV","Taos":"SUV","ID.4":"SUV","Kona":"SUV","Venue":"SUV","Seltos":"SUV","Niro":"SUV","Soul":"SUV","Edge":"SUV","Bronco Sport":"SUV","EcoSport":"SUV","Terrain":"SUV","Acadia":"SUV","Trax":"SUV","Blazer":"SUV","Trailblazer":"SUV","Traverse":"SUV","Highlander":"SUV","4Runner":"SUV","Venza":"SUV","C-HR":"SUV","Sequoia":"SUV","Tahoe":"SUV","Suburban":"SUV","Expedition":"SUV","Yukon":"SUV","Yukon XL":"SUV","Escalade":"SUV","Navigator":"SUV","Aviator":"SUV","Corsair":"SUV","Nautilus":"SUV","GX":"SUV","NX":"SUV","UX":"SUV","LX":"SUV","RX":"SUV","TX":"SUV","Q5":"SUV","Q7":"SUV","Q3":"SUV","Q8":"SUV","e-tron":"SUV","Q4 e-tron":"SUV","X1":"SUV","X3":"SUV","X5":"SUV","X7":"SUV","GLC":"SUV","GLE":"SUV","GLS":"SUV","GLA":"SUV","GLB":"SUV","EQS":"SUV","EQE":"SUV","Murano":"SUV","Pathfinder":"SUV","Armada":"SUV","Kicks":"SUV","QX60":"SUV","QX80":"SUV","QX50":"SUV","QX55":"SUV","XC90":"SUV","XC60":"SUV","XC40":"SUV","C40":"SUV","V90":"SUV","V60":"SUV","MDX":"SUV","RDX":"SUV","Enclave":"SUV","Encore":"SUV","Encore GX":"SUV","Envision":"SUV","XT5":"SUV","XT4":"SUV","Lyriq":"SUV","Palisade":"SUV","Ioniq 5":"SUV","Ioniq 6":"SUV","EV6":"SUV","GV80":"SUV","GV70":"SUV","GV60":"SUV","Model Y":"SUV","Model X":"SUV","Bravada":"SUV","Envoy":"SUV","Wagoneer":"SUV","Grand Wagoneer":"SUV","Grand Cherokee":"SUV","Cherokee":"SUV","Compass":"SUV","Renegade":"SUV","Durango":"SUV","Journey":"SUV","Subaru XV":"SUV","Ascent":"SUV","Eclipse Cross":"SUV","Outlander Sport":"SUV","Solterra":"SUV","Prologue":"SUV","bZ4X":"SUV","Ioniq":"SUV",
+  "CR-V":"SUV","RAV4":"SUV","RAV4 Hybrid":"SUV","Rogue":"SUV","Rogue Sport":"SUV","Equinox":"SUV","Explorer":"SUV","Escape":"SUV","Tiguan":"SUV","Taos":"SUV","Atlas":"SUV","Atlas Cross Sport":"SUV","ID.4":"SUV","Tucson":"SUV","Santa Fe":"SUV","Sorento":"SUV","Sportage":"SUV","Outlander":"SUV","Outlander Sport":"SUV","Eclipse Cross":"SUV","Forester":"SUV","Outback":"SUV","Crosstrek":"SUV","Ascent":"SUV","Solterra":"SUV","CX-3":"SUV","CX-30":"SUV","CX-5":"SUV","CX-50":"SUV","CX-7":"SUV","CX-9":"SUV","CX-90":"SUV","Pilot":"SUV","HR-V":"SUV","Passport":"SUV","Crosstour":"SUV","Element":"SUV","Kona":"SUV","Kona Electric":"SUV","Venue":"SUV","Palisade":"SUV","Santa Cruz":"SUV","Soul":"SUV","Seltos":"SUV","Niro":"SUV","Niro EV":"SUV","Kicks":"SUV","Juke":"SUV","Murano":"SUV","Pathfinder":"SUV","Armada":"SUV","Ariya":"SUV","Ioniq 5":"SUV","Ioniq 6":"SUV","EV6":"SUV","EV9":"SUV","Highlander":"SUV","Grand Highlander":"SUV","4Runner":"SUV","Sequoia":"SUV","Land Cruiser":"SUV","Venza":"SUV","bZ4X":"SUV","C-HR":"SUV","Edge":"SUV","Bronco Sport":"SUV","Expedition":"SUV","Expedition MAX":"SUV","Mustang Mach-E":"SUV","Blazer":"SUV","Trailblazer":"SUV","Traverse":"SUV","Tahoe":"SUV","Suburban":"SUV","Trax":"SUV","Terrain":"SUV","Acadia":"SUV","Yukon":"SUV","Yukon XL":"SUV","Hummer EV SUV":"SUV","Escalade":"SUV","Escalade ESV":"SUV","XT4":"SUV","XT5":"SUV","XT6":"SUV","Lyriq":"SUV","Cherokee":"SUV","Grand Cherokee":"SUV","Grand Cherokee L":"SUV","Compass":"SUV","Renegade":"SUV","Wagoneer":"SUV","Grand Wagoneer":"SUV","Patriot":"SUV","Liberty":"SUV","GX":"SUV","NX":"SUV","UX":"SUV","LX":"SUV","RX":"SUV","TX":"SUV","RZ":"SUV","LC":"SUV","Q3":"SUV","Q4 e-tron":"SUV","Q5":"SUV","Q7":"SUV","Q8":"SUV","e-tron":"SUV","X1":"SUV","X2":"SUV","X3":"SUV","X4":"SUV","X5":"SUV","X6":"SUV","X7":"SUV","XM":"SUV","iX":"SUV","GLA":"SUV","GLB":"SUV","GLC":"SUV","GLE":"SUV","GLS":"SUV","G-Class":"SUV","EQB":"SUV","EQE":"SUV","EQS":"SUV","MDX":"SUV","RDX":"SUV","Enclave":"SUV","Encore":"SUV","Encore GX":"SUV","Envision":"SUV","QX30":"SUV","QX50":"SUV","QX55":"SUV","QX60":"SUV","QX80":"SUV","Corsair":"SUV","Nautilus":"SUV","Aviator":"SUV","Navigator":"SUV","MKC":"SUV","MKX":"SUV","Countryman":"SUV","Range Rover":"SUV","Range Rover Sport":"SUV","Range Rover Velar":"SUV","Range Rover Evoque":"SUV","Defender":"SUV","Discovery":"SUV","Discovery Sport":"SUV","F-Pace":"SUV","E-Pace":"SUV","I-Pace":"SUV","Cayenne":"SUV","Macan":"SUV","GV60":"SUV","GV70":"SUV","GV80":"SUV","XC40":"SUV","XC60":"SUV","XC90":"SUV","C40 Recharge":"SUV","Model X":"SUV","Model Y":"SUV","Durango":"SUV","Hornet":"SUV","Journey":"SUV","Voyager":"SUV","Pacifica":"SUV","Endeavor":"SUV","Corolla Cross":"SUV",
   // Trucks
-  "F-150":"Truck","F-250":"Truck","F-350":"Truck","Silverado 1500":"Truck","Silverado 2500":"Truck","Sierra 1500":"Truck","Sierra 2500":"Truck","RAM 1500":"Truck","1500":"Truck","2500":"Truck","3500":"Truck","Tacoma":"Truck","Tundra":"Truck","Ranger":"Truck","Maverick":"Truck","Colorado":"Truck","Canyon":"Truck","Frontier":"Truck","Titan":"Truck","Ridgeline":"Truck","Gladiator":"Truck","Cybertruck":"Truck",
+  "F-150":"Truck","F-150 Lightning":"Truck","F-250 Super Duty":"Truck","F-350 Super Duty":"Truck","F-450 Super Duty":"Truck","Ranger":"Truck","Maverick":"Truck","Silverado 1500":"Truck","Silverado 1500 LTD":"Truck","Silverado 2500HD":"Truck","Silverado 3500HD":"Truck","Colorado":"Truck","Sierra 1500":"Truck","Sierra 2500HD":"Truck","Sierra 3500HD":"Truck","Canyon":"Truck","Hummer EV Pickup":"Truck","Tacoma":"Truck","Tundra":"Truck","Frontier":"Truck","Titan":"Truck","Titan XD":"Truck","Ridgeline":"Truck","Gladiator":"Truck","1500":"Truck","1500 Classic":"Truck","2500":"Truck","3500":"Truck","Chassis Cab 3500":"Truck","Chassis Cab 4500":"Truck","Chassis Cab 5500":"Truck","Cybertruck":"Truck","Baja":"Truck","Santa Cruz":"Truck",
   // Minivans
-  "Odyssey":"Minivan","Sienna":"Minivan","Carnival":"Minivan","Grand Caravan":"Minivan","Pacifica":"Minivan","Transit Connect":"Minivan","ProMaster City":"Minivan",
+  "Odyssey":"Minivan","Sienna":"Minivan","Carnival":"Minivan","Quest":"Minivan","Town & Country":"Minivan","Pacifica":"Minivan","Voyager":"Minivan","Savana Passenger":"Van","Metris":"Van",
   // Vans
-  "Transit":"Van","ProMaster":"Van","Express":"Van","Sprinter":"Van","Safari":"Van","Savana":"Van",
+  "Transit Cargo Van":"Van","Transit Passenger Van":"Van","Transit Connect":"Van","Express Cargo Van":"Van","Express Passenger Van":"Van","NV Cargo":"Van","NV Passenger":"Van","ProMaster Cargo Van":"Van","ProMaster Window Van":"Van","ProMaster City":"Van","Savana Cargo":"Van",
   // Sports/Coupes
-  "Mustang":"Coupe","Camaro":"Coupe","Challenger":"Coupe","Charger":"Coupe","Corvette":"Coupe","Supra":"Coupe","GR86":"Coupe","BRZ":"Coupe","MX-5 Miata":"Convertible","Z4":"Convertible","370Z":"Coupe","GT-R":"Coupe","WRX":"Sedan","Impreza":"Sedan","A3":"Sedan","CLA":"Sedan","A-Class":"Sedan","4 Series":"Coupe","2 Series":"Coupe","AMG GT":"Coupe","M3":"Sedan","M5":"Sedan","LC":"Coupe","RC":"Coupe","TT":"Coupe","R8":"Coupe","NSX":"Coupe","Integra":"Sedan","Veloster":"Hatchback","Golf":"Hatchback","GTI":"Hatchback","Focus":"Hatchback","Fiesta":"Hatchback","Fit":"Hatchback","Jazz":"Hatchback","Spark":"Hatchback","Sonic":"Hatchback","Yaris":"Hatchback","Prius":"Hatchback","Insight":"Hatchback","Leaf":"Hatchback",
-  // SUV/Luxury
-  "Bronco":"SUV","Wrangler":"SUV","Jeep":"SUV",
+  "Mustang":"Coupe","Camaro":"Coupe","Challenger":"Coupe","Charger":"Coupe","Corvette":"Coupe","Supra":"Coupe","GR86":"Coupe","BRZ":"Coupe","Z":"Coupe","GT-R":"Coupe","Magnum":"Coupe","4 Series":"Coupe","2 Series":"Coupe","8 Series":"Coupe","AMG GT":"Coupe","RC":"Coupe","LC":"Coupe","TT":"Coupe","R8":"Coupe","RS5":"Coupe","A5":"Coupe","S4":"Coupe","NSX":"Coupe","CLA":"Coupe","911":"Coupe","718 Cayman":"Coupe","Taycan":"Coupe","Roadster":"Coupe","i8":"Coupe","F-Type":"Coupe","XE":"Coupe","Viper":"Coupe",
+  // Convertibles
+  "MX-5 Miata":"Convertible","Z4":"Convertible","718 Boxster":"Convertible","SL":"Convertible","Convertible":"Convertible","RX-8":"Coupe","CLA":"Sedan",
 };
 
 const BODY_TYPES=["Any","Sedan","SUV","Truck","Minivan","Van","Coupe","Convertible","Hatchback"];
@@ -367,7 +374,7 @@ function ProfilePage({user,users,setUsers,onClose}){
 }
 
 function Marketplace({user,listings,setListings,onDM,userLocation}){
-  const [filters,setFilters]=useState({make:"Any",model:"Any",bodyType:"Any",color:"Any",condition:"Any",minPrice:"",maxPrice:"",minMiles:"",maxMiles:"",maxDist:50});
+  const [filters,setFilters]=useState({make:"Any",model:"Any",bodyType:"Any",color:"Any",condition:"Any",minPrice:"",maxPrice:"",minMiles:"",maxMiles:"",minYear:"",maxYear:"",maxDist:50});
   const [sort,setSort]=useState("newest");const [selected,setSelected]=useState(null);const [showCreate,setShowCreate]=useState(false);
   const [offerTarget,setOfferTarget]=useState(null);const [offerAmt,setOfferAmt]=useState("");const [offerMsg,setOfferMsg]=useState("");const [offerSent,setOfferSent]=useState(false);
   const [customMake,setCustomMake]=useState(false);const [customModel,setCustomModel]=useState(false);
@@ -383,6 +390,8 @@ function Marketplace({user,listings,setListings,onDM,userLocation}){
     if(filters.maxPrice&&l.price>Number(filters.maxPrice))return false;
     if(filters.minMiles&&l.mileage<Number(filters.minMiles))return false;
     if(filters.maxMiles&&l.mileage>Number(filters.maxMiles))return false;
+    if(filters.minYear&&l.year<Number(filters.minYear))return false;
+    if(filters.maxYear&&l.year>Number(filters.maxYear))return false;
     if(userLocation){const d=distanceMiles(userLocation.lat,userLocation.lng,l.lat,l.lng);if(d>Number(filters.maxDist))return false;}
     return true;
   }).sort((a,b)=>{
@@ -440,8 +449,10 @@ function Marketplace({user,listings,setListings,onDM,userLocation}){
       <label style={S.label}>Price ($)</label>
       <div style={{display:"flex",gap:5,marginBottom:8}}><input style={{...S.input,margin:0,fontSize:11,padding:"5px 7px"}} placeholder="Min" value={filters.minPrice} onChange={e=>setF("minPrice",e.target.value)}/><input style={{...S.input,margin:0,fontSize:11,padding:"5px 7px"}} placeholder="Max" value={filters.maxPrice} onChange={e=>setF("maxPrice",e.target.value)}/></div>
       <label style={S.label}>Mileage</label>
-      <div style={{display:"flex",gap:5,marginBottom:10}}><input style={{...S.input,margin:0,fontSize:11,padding:"5px 7px"}} placeholder="Min" value={filters.minMiles} onChange={e=>setF("minMiles",e.target.value)}/><input style={{...S.input,margin:0,fontSize:11,padding:"5px 7px"}} placeholder="Max" value={filters.maxMiles} onChange={e=>setF("maxMiles",e.target.value)}/></div>
-      <button onClick={()=>{setFilters({make:"Any",model:"Any",bodyType:"Any",color:"Any",condition:"Any",minPrice:"",maxPrice:"",minMiles:"",maxMiles:"",maxDist:50});setCustomMake(false);setCustomModel(false);}} style={{...S.btnSecondary,width:"100%",fontSize:11,padding:"5px 0"}}>Clear All</button>
+      <div style={{display:"flex",gap:5,marginBottom:8}}><input style={{...S.input,margin:0,fontSize:11,padding:"5px 7px"}} placeholder="Min" value={filters.minMiles} onChange={e=>setF("minMiles",e.target.value)}/><input style={{...S.input,margin:0,fontSize:11,padding:"5px 7px"}} placeholder="Max" value={filters.maxMiles} onChange={e=>setF("maxMiles",e.target.value)}/></div>
+      <label style={S.label}>Year</label>
+      <div style={{display:"flex",gap:5,marginBottom:10}}><input style={{...S.input,margin:0,fontSize:11,padding:"5px 7px"}} type="number" placeholder="From" value={filters.minYear} onChange={e=>setF("minYear",e.target.value)}/><input style={{...S.input,margin:0,fontSize:11,padding:"5px 7px"}} type="number" placeholder="To" value={filters.maxYear} onChange={e=>setF("maxYear",e.target.value)}/></div>
+      <button onClick={()=>{setFilters({make:"Any",model:"Any",bodyType:"Any",color:"Any",condition:"Any",minPrice:"",maxPrice:"",minMiles:"",maxMiles:"",minYear:"",maxYear:"",maxDist:50});setCustomMake(false);setCustomModel(false);}} style={{...S.btnSecondary,width:"100%",fontSize:11,padding:"5px 0"}}>Clear All</button>
     </div>
     <div style={{flex:1,overflow:"auto",padding:"16px 18px"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,flexWrap:"wrap",gap:8}}>
@@ -457,7 +468,9 @@ function Marketplace({user,listings,setListings,onDM,userLocation}){
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(250px,1fr))",gap:12}}>
         {filtered.map(l=>{const dist=userLocation?distanceMiles(userLocation.lat,userLocation.lng,l.lat,l.lng):null;return(
           <div key={l.id} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:11,overflow:"hidden",cursor:"pointer"}} onClick={()=>setSelected(l)}>
-            <div style={{height:135,background:C.faint,display:"flex",alignItems:"center",justifyContent:"center",fontSize:56,borderBottom:`1px solid ${C.border}`}}>{l.photos[0]}</div>
+            <div style={{height:135,background:C.faint,display:"flex",alignItems:"center",justifyContent:"center",fontSize:56,borderBottom:`1px solid ${C.border}`,overflow:"hidden"}}>
+              {l.photos[0]&&l.photos[0].startsWith("data:")?<img src={l.photos[0]} alt="Car" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<span style={{fontSize:56}}>{l.photos[0]||"🚗"}</span>}
+            </div>
             <div style={{padding:"10px 12px"}}>
               <div style={{display:"flex",justifyContent:"space-between",marginBottom:2}}><div style={{fontWeight:700,fontSize:14}}>{l.year} {l.make} {l.model}</div><div style={{fontWeight:700,fontSize:14,color:C.accent}}>${l.price.toLocaleString()}</div></div>
               <div style={{color:C.muted,fontSize:11,marginBottom:4}}>{l.trim} · {l.color} · {l.condition}</div>
@@ -470,9 +483,19 @@ function Marketplace({user,listings,setListings,onDM,userLocation}){
     </div>
     {selected&&<div style={{position:"fixed",inset:0,background:"#00000099",zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
       <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:14,width:"100%",maxWidth:520,maxHeight:"90vh",overflow:"auto"}}>
-        <div style={{height:190,background:C.faint,display:"flex",alignItems:"center",justifyContent:"center",fontSize:70,borderBottom:`1px solid ${C.border}`,position:"relative"}}>
-          {selected.photos[0]}<button onClick={()=>setSelected(null)} style={{position:"absolute",top:10,right:10,background:"#000000aa",border:"none",color:"#fff",borderRadius:99,width:27,height:27,cursor:"pointer",fontSize:14}}>✕</button>
+        <div style={{height:220,background:C.faint,display:"flex",alignItems:"center",justifyContent:"center",fontSize:70,borderBottom:`1px solid ${C.border}`,position:"relative",overflow:"hidden"}}>
+          {selected.photos[0]&&selected.photos[0].startsWith("data:")?<img src={selected.photos[0]} alt="Car" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<span style={{fontSize:70}}>{selected.photos[0]||"🚗"}</span>}
+          <button onClick={()=>setSelected(null)} style={{position:"absolute",top:10,right:10,background:"#000000aa",border:"none",color:"#fff",borderRadius:99,width:27,height:27,cursor:"pointer",fontSize:14}}>✕</button>
         </div>
+        {selected.photos.length>1&&(
+          <div style={{display:"flex",gap:6,padding:"8px 12px",background:C.faint,borderBottom:`1px solid ${C.border}`,overflowX:"auto"}}>
+            {selected.photos.map((p,i)=>(
+              <div key={i} style={{width:60,height:44,borderRadius:6,overflow:"hidden",flexShrink:0,border:`1px solid ${C.border}`}}>
+                {p.startsWith("data:")?<img src={p} alt="Car" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<div style={{width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,background:C.surface}}>{p}</div>}
+              </div>
+            ))}
+          </div>
+        )}
         <div style={{padding:"16px 18px"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}><div><div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,letterSpacing:1}}>{selected.year} {selected.make} {selected.model}</div><div style={{color:C.muted,fontSize:12}}>{selected.trim} · {selected.color} · {selected.condition}</div></div><div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,color:C.accent}}>${selected.price.toLocaleString()}</div></div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginBottom:11}}>{[["Mileage",selected.mileage.toLocaleString()+" mi"],["Location",selected.city],["Listed",selected.listed],["Condition",selected.condition]].map(([l,v])=><div key={l} style={{background:C.faint,borderRadius:6,padding:"6px 8px"}}><div style={{color:C.muted,fontSize:10,textTransform:"uppercase",letterSpacing:1,marginBottom:1}}>{l}</div><div style={{fontSize:12}}>{v}</div></div>)}</div>
@@ -501,10 +524,20 @@ function Marketplace({user,listings,setListings,onDM,userLocation}){
 function CreateListing({user,onClose,onSave}){
   const [form,setForm]=useState({year:new Date().getFullYear(),make:"Toyota",model:"",trim:"",color:"Black",mileage:"",price:"",condition:"Good",description:"",features:""});
   const [customMake,setCustomMake]=useState(false);const [customModel,setCustomModel]=useState(false);
+  const [photos,setPhotos]=useState([]);const photoRef=useRef();
   const setF=(k,v)=>setForm(p=>({...p,[k]:v}));
   const availableModels=CAR_MODELS[form.make]||[];
   const bodyType=MODEL_TYPES[form.model]||"";
-  const save=()=>{if(!form.model||!form.price||!form.mileage)return;onSave({...form,mileage:Number(form.mileage),price:Number(form.price),year:Number(form.year),photos:["🚗"],features:form.features.split(",").map(f=>f.trim()).filter(Boolean)});};
+  const handlePhotoAdd=(e)=>{
+    const files=Array.from(e.target.files||[]);
+    files.slice(0,15-photos.length).forEach(file=>{
+      const reader=new FileReader();
+      reader.onload=ev=>setPhotos(p=>[...p,ev.target.result].slice(0,15));
+      reader.readAsDataURL(file);
+    });
+  };
+  const removePhoto=(idx)=>setPhotos(p=>p.filter((_,i)=>i!==idx));
+  const save=()=>{if(!form.model||!form.price||!form.mileage)return;onSave({...form,mileage:Number(form.mileage),price:Number(form.price),year:Number(form.year),photos:photos.length>0?photos:["🚗"],features:form.features.split(",").map(f=>f.trim()).filter(Boolean)});};
   return(<div style={S.overlay}><div style={{...S.modal,maxWidth:480}}>
     <div style={S.modalHead}><span style={S.modalTitle}>List Your Car</span><button onClick={onClose} style={S.iconBtn}>✕</button></div>
     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:9,marginBottom:10}}>
@@ -542,7 +575,25 @@ function CreateListing({user,onClose,onSave}){
       <div><label style={S.label}>Condition</label><select style={{...S.input,marginBottom:0}} value={form.condition} onChange={e=>setF("condition",e.target.value)}>{["Excellent","Good","Fair","Poor"].map(c=><option key={c}>{c}</option>)}</select></div>
     </div>
     {bodyType&&<div style={{background:C.accentDim,border:`1px solid ${C.accent}22`,borderRadius:6,padding:"5px 10px",marginBottom:10,fontSize:12,color:C.accent}}>Body type: <strong>{bodyType}</strong> (auto-detected)</div>}
-    <label style={S.label}>Description</label><textarea style={{...S.input,height:58,resize:"none"}} placeholder="Describe your car..." value={form.description} onChange={e=>setF("description",e.target.value)}/>
+
+    <label style={S.label}>Photos ({photos.length}/15)</label>
+    <div style={{marginBottom:12}}>
+      <div style={{display:"flex",flexWrap:"wrap",gap:7,marginBottom:7}}>
+        {photos.map((p,i)=>(
+          <div key={i} style={{position:"relative",width:76,height:58,borderRadius:7,overflow:"hidden",border:`1px solid ${C.border}`}}>
+            <img src={p} alt="Car" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+            <button onClick={()=>removePhoto(i)} style={{position:"absolute",top:2,right:2,background:"#000000bb",border:"none",color:"#fff",borderRadius:99,width:16,height:16,cursor:"pointer",fontSize:10,display:"flex",alignItems:"center",justifyContent:"center"}}>✕</button>
+          </div>
+        ))}
+        {photos.length<15&&<div onClick={()=>photoRef.current.click()} style={{width:76,height:58,borderRadius:7,border:`1px dashed ${C.border}`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",cursor:"pointer",background:C.faint,color:C.muted,fontSize:10,gap:3}}>
+          <span style={{fontSize:18}}>📷</span><span>Add Photo</span>
+        </div>}
+      </div>
+      <input ref={photoRef} type="file" accept="image/*" multiple style={{display:"none"}} onChange={handlePhotoAdd}/>
+      {photos.length===0&&<div style={{color:C.muted,fontSize:11}}>Add up to 15 photos. First photo will be the cover.</div>}
+    </div>
+
+    <label style={S.label}>Description</label><textarea style={{...S.input,height:55,resize:"none"}} placeholder="Describe your car..." value={form.description} onChange={e=>setF("description",e.target.value)}/>
     <label style={S.label}>Features (comma separated)</label><input style={S.input} placeholder="e.g. Sunroof, Leather Seats, Backup Camera" value={form.features} onChange={e=>setF("features",e.target.value)}/>
     <div style={{display:"flex",gap:8}}><button style={S.btnSecondary} onClick={onClose}>Cancel</button><button style={{...S.btnPrimary,flex:1}} onClick={save} disabled={!form.model||!form.price||!form.mileage}>Publish Listing</button></div>
   </div></div>);
