@@ -793,7 +793,7 @@ function Marketplace({user,users,listings,setListings,onDM,userLocation}){
     return 0;
   });
   const sendOffer=()=>{if(!offerAmt)return;setListings(prev=>prev.map(l=>l.id===offerTarget.id?{...l,offers:[...l.offers,{id:Date.now(),buyerId:user.id,buyerName:user.name,amount:Number(offerAmt),message:offerMsg,status:"pending",time:"Just now"}]}:l));setOfferSent(true);};
-  return(<div style={{display:"flex",height:"calc(100vh - 120px)",overflow:"hidden"}}>
+  return(<div style={{display:"flex",height:"calc(var(--app-height, 100vh) - 120px)",minHeight:"calc(100vh - 200px)",overflow:"hidden"}}>
     <div style={{width:218,borderRight:`1px solid ${C.border}`,padding:"14px 12px",overflow:"auto",flexShrink:0,background:C.surface}}>
       <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:15,letterSpacing:2,color:C.accent,marginBottom:12}}>FILTERS</div>
 
@@ -1018,7 +1018,7 @@ function CreateListing({user,onClose,onSave}){
 
 function Messages({user,vehicles,users,initContact=null}){
   const allContacts=user.role==="customer"?users.filter(u=>u.role!=="customer"):users.filter(u=>u.role==="customer");
-  const [msgs,setMsgs]=useState(INIT_MESSAGES);const [draft,setDraft]=useState("");const bottomRef=useRef();
+  const [msgs,setMsgs]=useState(INIT_MESSAGES);const [draft,setDraft]=useState("");const [readContacts,setReadContacts]=useState(new Set());const bottomRef=useRef();
 
   // Sort contacts by most recent message
   const contacts=[...allContacts].sort((a,b)=>{
@@ -1031,17 +1031,28 @@ function Messages({user,vehicles,users,initContact=null}){
   });
 
   const [active,setActive]=useState(initContact?users.find(u=>u.id===initContact)||contacts[0]:contacts[0]);
+  // Mark contact as read when switching to them
+  const openContact=(c)=>{
+    setActive(c);
+    setReadContacts(prev=>new Set([...prev,c.id]));
+  };
+  // Also mark initial contact as read on mount
+  useEffect(()=>{
+    if(active) setReadContacts(prev=>new Set([...prev,active.id]));
+  },[]);
   const thread=msgs.filter(m=>(m.from===user.id&&m.to===active?.id)||(m.from===active?.id&&m.to===user.id));
   const send=()=>{
     if(!draft.trim()||!active)return;
     const newMsg={id:Date.now(),from:user.id,to:active.id,text:draft.trim(),time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:"Today"};
     setMsgs(p=>[...p,newMsg]);
+    // Mark as read when you send a message
+    setReadContacts(prev=>new Set([...prev,active.id]));
     setDraft("");
   };
   useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:"smooth"});},[thread.length,active?.id]);
   const getV=(id)=>vehicles.find(v=>v.customerId===id);
-  return(<div style={{display:"flex",height:"calc(100vh - 120px)"}}>
-    <div style={{width:205,borderRight:`1px solid ${C.border}`,display:"flex",flexDirection:"column",flexShrink:0}}>
+  return(<div style={{display:"flex",height:"calc(100vh - 120px)",minHeight:300}}>
+    <div style={{width:"min(205px, 38vw)",borderRight:`1px solid ${C.border}`,display:"flex",flexDirection:"column",flexShrink:0}}>
       <div style={{padding:"10px 12px 7px",borderBottom:`1px solid ${C.border}`}}><div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:14,letterSpacing:2,color:C.accent}}>MESSAGES</div></div>
       {/* Mobile top bar - only shows on mobile */}
       <div className="mobile-top-bar" style={{display:"none"}}>
@@ -1053,7 +1064,7 @@ function Messages({user,vehicles,users,initContact=null}){
           <button onClick={()=>setUser(null)} style={{background:"none",border:"none",color:C.muted,cursor:"pointer",fontSize:11}}>out</button>
         </div>
       </div>
-      <div style={{flex:1,overflow:"auto"}}>{contacts.map(c=>{const v=getV(c.id);const unread=msgs.filter(m=>m.from===c.id&&m.to===user.id).length;return <div key={c.id} onClick={()=>setActive(c)} style={{display:"flex",alignItems:"center",gap:8,padding:"9px 11px",cursor:"pointer",borderBottom:`1px solid ${C.border}`,background:active?.id===c.id?C.faint:"transparent"}}>
+      <div style={{flex:1,overflow:"auto"}}>{contacts.map(c=>{const v=getV(c.id);const unread=readContacts.has(c.id)?0:msgs.filter(m=>m.from===c.id&&m.to===user.id).length;return <div key={c.id} onClick={()=>openContact(c)} style={{display:"flex",alignItems:"center",gap:8,padding:"9px 11px",cursor:"pointer",borderBottom:`1px solid ${C.border}`,background:active?.id===c.id?C.faint:"transparent"}}>
               <div style={{position:"relative"}}><div style={{fontSize:22}}>{c.photo||"😎"}</div>{unread>0&&<div style={{position:"absolute",top:-2,right:-2,background:C.red,color:"#000",borderRadius:99,fontSize:9,fontWeight:800,width:14,height:14,display:"flex",alignItems:"center",justifyContent:"center"}}>{unread}</div>}</div>
               <div style={{flex:1,minWidth:0}}>
                 <div style={{fontSize:13,fontWeight:unread>0?700:600,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{c.name}</div>
@@ -1479,14 +1490,16 @@ function CustomerPortal({user,users,setUsers,vehicles,setVehicles,quotes,setQuot
       </div>
     </div>
     {/* Bottom Nav */}
-    <div style={{position:"fixed",bottom:0,left:0,right:0,background:C.surface,borderTop:`1px solid ${C.border}`,display:"flex",zIndex:100}}>
-      {tabs.map(t=><button key={t.id} onClick={()=>{setDmContact(null);setTab(t.id);setSelectedVehicle(null);}} style={{flex:1,padding:"7px 2px 8px",border:"none",background:"transparent",color:tab===t.id?C.accent:C.muted,fontSize:9,fontWeight:600,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:2,position:"relative",transition:"color 0.15s"}}>
-        <span style={{fontSize:20}}>{t.icon}</span>
-        <span>{t.label}</span>
-        {t.badge>0&&<div style={{position:"absolute",top:5,right:"18%",background:C.red,color:"#fff",borderRadius:99,fontSize:8,fontWeight:800,width:14,height:14,display:"flex",alignItems:"center",justifyContent:"center"}}>{t.badge}</div>}
-      </button>)}
+    <div style={{position:"fixed",bottom:0,left:0,right:0,background:C.surface,borderTop:`1px solid ${C.border}`,display:"flex",zIndex:100,paddingBottom:"env(safe-area-inset-bottom)"}}>
+      {tabs.map(t=>(
+        <button key={t.id} onClick={()=>{setDmContact(null);setTab(t.id);setSelectedVehicle(null);}} style={{flex:1,paddingTop:10,paddingBottom:10,border:"none",background:"transparent",color:tab===t.id?C.accent:C.muted,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3,position:"relative",transition:"color 0.15s",minHeight:60}}>
+          <span style={{fontSize:22}}>{t.icon}</span>
+          <span style={{fontSize:10,fontWeight:600,whiteSpace:"nowrap"}}>{t.label}</span>
+          {t.badge>0&&<div style={{position:"absolute",top:6,right:"22%",background:C.red,color:"#fff",borderRadius:99,fontSize:9,fontWeight:800,minWidth:16,height:16,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 3px"}}>{t.badge}</div>}
+        </button>
+      ))}
     </div>
-    <div style={{height:65}}/>
+    <div style={{height:70}}/>
 
     {(tab==="marketplace"||tab==="find")&&<LocationBar location={userLocation} onUpdate={setUserLocation}/>}
     {tab==="garage"&&!selectedVehicle&&<div style={{padding:"18px 16px",maxWidth:620,margin:"0 auto",animation:"fadeUp 0.3s ease"}}>
@@ -1667,10 +1680,12 @@ function GarageIQApp({theme,toggleTheme}){
   .sidebar{display:flex!important;}
   .mobile-bottom-nav{display:none!important;}
   .main-content{margin-bottom:0!important;}
+  .mobile-top-bar{display:none!important;}
   @media(max-width:768px){
     .sidebar{display:none!important;}
     .mobile-bottom-nav{display:flex!important;}
-    .main-content{margin-bottom:65px!important;}
+    .mobile-top-bar{display:flex!important;}
+    .main-content{margin-bottom:70px!important;}
   }
 `}</style>
 
@@ -1786,13 +1801,19 @@ function GarageIQApp({theme,toggleTheme}){
       </div>
     </div>
 
-    {/* Mobile Bottom Nav */}
-    <div className="mobile-bottom-nav" style={{position:"fixed",bottom:0,left:0,right:0,background:C.surface,borderTop:`1px solid ${C.border}`,display:"none",zIndex:100}}>
-      {navItems.map(item=>(
-        <button key={item.id} onClick={()=>{setNav(item.id);setSelected(null);}} style={{flex:1,padding:"7px 2px 8px",border:"none",background:"transparent",color:nav===item.id?C.accent:C.muted,fontSize:9,fontWeight:600,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:2,position:"relative",transition:"color 0.15s"}}>
-          <span style={{fontSize:18}}>{item.icon}</span>
-          <span style={{whiteSpace:"nowrap",overflow:"hidden",maxWidth:"100%"}}>{item.label}</span>
-          {item.badge>0&&<div style={{position:"absolute",top:4,right:"18%",background:C.red,color:"#fff",borderRadius:99,fontSize:8,fontWeight:800,width:14,height:14,display:"flex",alignItems:"center",justifyContent:"center"}}>{item.badge}</div>}
+    {/* Mobile Bottom Nav - 5 items max */}
+    <div className="mobile-bottom-nav" style={{position:"fixed",bottom:0,left:0,right:0,background:C.surface,borderTop:`1px solid ${C.border}`,display:"none",zIndex:100,paddingBottom:"env(safe-area-inset-bottom)"}}>
+      {[
+        {id:"dashboard",icon:"🏠",label:"Home"},
+        {id:"customers",icon:"👥",label:"Customers"},
+        {id:"shop",icon:"🏗",label:"Jobs",badge:myWorkerJobs.length},
+        {id:"marketplace",icon:"🏪",label:"Market"},
+        {id:"messages",icon:"✉️",label:"Messages",badge:0},
+      ].map(item=>(
+        <button key={item.id} onClick={()=>{setNav(item.id);setSelected(null);}} style={{flex:1,paddingTop:10,paddingBottom:10,border:"none",background:"transparent",color:nav===item.id?C.accent:C.muted,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3,position:"relative",transition:"color 0.15s",minHeight:60}}>
+          <span style={{fontSize:22}}>{item.icon}</span>
+          <span style={{fontSize:10,fontWeight:600,whiteSpace:"nowrap"}}>{item.label}</span>
+          {item.badge>0&&<div style={{position:"absolute",top:6,right:"22%",background:C.red,color:"#fff",borderRadius:99,fontSize:9,fontWeight:800,minWidth:16,height:16,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 3px"}}>{item.badge}</div>}
         </button>
       ))}
     </div>
