@@ -1043,6 +1043,16 @@ function Messages({user,vehicles,users,initContact=null}){
   return(<div style={{display:"flex",height:"calc(100vh - 120px)"}}>
     <div style={{width:205,borderRight:`1px solid ${C.border}`,display:"flex",flexDirection:"column",flexShrink:0}}>
       <div style={{padding:"10px 12px 7px",borderBottom:`1px solid ${C.border}`}}><div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:14,letterSpacing:2,color:C.accent}}>MESSAGES</div></div>
+      {/* Mobile top bar - only shows on mobile */}
+      <div className="mobile-top-bar" style={{display:"none"}}>
+        <style>{`@media(max-width:768px){.mobile-top-bar{display:flex!important;align-items:center;justify-content:space-between;padding:10px 14px;background:${C.surface};border-bottom:1px solid ${C.border};position:sticky;top:0;z-index:50;}}`}</style>
+        <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22}}><span style={{color:C.accent}}>G</span><span style={{color:C.text}}>ARAGEIQ</span></div>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <button onClick={toggleTheme} style={{background:C.faint,border:`1px solid ${C.border}`,borderRadius:99,width:32,height:32,cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"}}>{C.isDark?"☀️":"🌙"}</button>
+          <button onClick={()=>setShowProfile(true)} style={{background:"none",border:"none",cursor:"pointer",fontSize:22}}>{currentUser.photo||"🧑‍🔧"}</button>
+          <button onClick={()=>setUser(null)} style={{background:"none",border:"none",color:C.muted,cursor:"pointer",fontSize:11}}>out</button>
+        </div>
+      </div>
       <div style={{flex:1,overflow:"auto"}}>{contacts.map(c=>{const v=getV(c.id);const unread=msgs.filter(m=>m.from===c.id&&m.to===user.id).length;return <div key={c.id} onClick={()=>setActive(c)} style={{display:"flex",alignItems:"center",gap:8,padding:"9px 11px",cursor:"pointer",borderBottom:`1px solid ${C.border}`,background:active?.id===c.id?C.faint:"transparent"}}>
               <div style={{position:"relative"}}><div style={{fontSize:22}}>{c.photo||"😎"}</div>{unread>0&&<div style={{position:"absolute",top:-2,right:-2,background:C.red,color:"#000",borderRadius:99,fontSize:9,fontWeight:800,width:14,height:14,display:"flex",alignItems:"center",justifyContent:"center"}}>{unread}</div>}</div>
               <div style={{flex:1,minWidth:0}}>
@@ -1449,7 +1459,14 @@ function CustomerPortal({user,users,setUsers,vehicles,setVehicles,quotes,setQuot
   const saveCarPhoto=(vehicleId,photo)=>setVehicles(prev=>prev.map(v=>v.id===vehicleId?{...v,carPhoto:photo}:v));
   const tabs=[{id:"garage",label:"Garage",icon:"🚗",badge:totalPending},{id:"quotes",label:"Quotes",icon:"📋",badge:myQuotes.filter(q=>q.status==="pending").length},{id:"marketplace",label:"Market",icon:"🏪"},{id:"find",label:"Mechanics",icon:"🔧"},{id:"board",label:"Community",icon:"💬"},{id:"messages",label:"Messages",icon:"✉️"}];
   return(<div style={{minHeight:"100vh",background:C.bg,fontFamily:"'DM Sans',sans-serif",color:C.text}}>
-    <style>{`@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');*{box-sizing:border-box;margin:0;padding:0}::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#333;border-radius:2px}@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}`}</style>
+    <style>{`
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  ::-webkit-scrollbar{width:4px}
+  ::-webkit-scrollbar-thumb{background:#333;border-radius:2px}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+  body{overflow-x:hidden;}
+`}</style>
         {/* Top Bar */}
     <div style={{background:C.surface,borderBottom:`1px solid ${C.border}`,padding:"0 14px",display:"flex",alignItems:"center",height:50,position:"sticky",top:0,zIndex:50}}>
       <div onClick={()=>{setTab("garage");setSelectedVehicle(null);setDmContact(null);}} style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,flexShrink:0,cursor:"pointer"}}><span style={{color:C.accent}}>G</span><span style={{color:C.text}}>ARAGEIQ</span></div>
@@ -1641,9 +1658,23 @@ function GarageIQApp({theme,toggleTheme}){
   ];
 
   return(<div style={{display:"flex",height:"100vh",background:C.bg,fontFamily:"'DM Sans',sans-serif",color:C.text,overflow:"hidden"}}>
-    <style>{`@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');*{box-sizing:border-box;margin:0;padding:0}::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#333;border-radius:2px}@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}`}</style>
+    <style>{`
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  ::-webkit-scrollbar{width:4px}
+  ::-webkit-scrollbar-thumb{background:#333;border-radius:2px}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+  .sidebar{display:flex!important;}
+  .mobile-bottom-nav{display:none!important;}
+  .main-content{margin-bottom:0!important;}
+  @media(max-width:768px){
+    .sidebar{display:none!important;}
+    .mobile-bottom-nav{display:flex!important;}
+    .main-content{margin-bottom:65px!important;}
+  }
+`}</style>
 
-    <div style={{width:186,background:C.surface,borderRight:`1px solid ${C.border}`,display:"flex",flexDirection:"column",padding:"14px 0",flexShrink:0}}>
+    <div className="sidebar" style={{width:186,background:C.surface,borderRight:`1px solid ${C.border}`,display:"flex",flexDirection:"column",padding:"14px 0",flexShrink:0}}>
       <div style={{padding:"0 12px 18px",display:"flex",alignItems:"baseline",gap:2}}><span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,color:C.accent,lineHeight:1}}>G</span><span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,letterSpacing:3}}>ARAGEIQ</span></div>
       <nav style={{flex:1,padding:"0 7px",display:"flex",flexDirection:"column",gap:1}}>
         {navItems.map(item=><button key={item.id} onClick={()=>{setNav(item.id);setSelected(null);}} style={{display:"flex",alignItems:"center",gap:7,padding:"7px 9px",borderRadius:7,border:"none",cursor:"pointer",fontSize:12,background:nav===item.id?C.accentDim:"transparent",color:nav===item.id?C.accent:C.muted,borderLeft:`2px solid ${nav===item.id?C.accent:"transparent"}`,fontWeight:nav===item.id?600:400,transition:"all 0.15s",textAlign:"left"}}>
@@ -1665,7 +1696,7 @@ function GarageIQApp({theme,toggleTheme}){
       </div>
     </div>
 
-    <div style={{flex:1,overflow:"auto",display:"flex",flexDirection:"column"}}>
+    <div className="main-content" style={{flex:1,overflow:"auto",display:"flex",flexDirection:"column"}}>
       {(nav==="marketplace"||nav==="find")&&<LocationBar location={userLocation} onUpdate={setUserLocation}/>}
       <div style={{flex:1,overflow:"auto"}}>
 
@@ -1753,6 +1784,17 @@ function GarageIQApp({theme,toggleTheme}){
           </div>)}
         </div>}
       </div>
+    </div>
+
+    {/* Mobile Bottom Nav */}
+    <div className="mobile-bottom-nav" style={{position:"fixed",bottom:0,left:0,right:0,background:C.surface,borderTop:`1px solid ${C.border}`,display:"none",zIndex:100}}>
+      {navItems.map(item=>(
+        <button key={item.id} onClick={()=>{setNav(item.id);setSelected(null);}} style={{flex:1,padding:"7px 2px 8px",border:"none",background:"transparent",color:nav===item.id?C.accent:C.muted,fontSize:9,fontWeight:600,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:2,position:"relative",transition:"color 0.15s"}}>
+          <span style={{fontSize:18}}>{item.icon}</span>
+          <span style={{whiteSpace:"nowrap",overflow:"hidden",maxWidth:"100%"}}>{item.label}</span>
+          {item.badge>0&&<div style={{position:"absolute",top:4,right:"18%",background:C.red,color:"#fff",borderRadius:99,fontSize:8,fontWeight:800,width:14,height:14,display:"flex",alignItems:"center",justifyContent:"center"}}>{item.badge}</div>}
+        </button>
+      ))}
     </div>
 
     {modal==="vin"&&<VINModal onClose={()=>setModal(null)} onAdd={addVehicle}/>}
