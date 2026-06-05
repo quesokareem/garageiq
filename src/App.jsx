@@ -793,7 +793,7 @@ function Marketplace({user,users,listings,setListings,onDM,userLocation}){
     return 0;
   });
   const sendOffer=()=>{if(!offerAmt)return;setListings(prev=>prev.map(l=>l.id===offerTarget.id?{...l,offers:[...l.offers,{id:Date.now(),buyerId:user.id,buyerName:user.name,amount:Number(offerAmt),message:offerMsg,status:"pending",time:"Just now"}]}:l));setOfferSent(true);};
-  return(<div style={{display:"flex",height:"calc(100vh - 56px)",overflow:"hidden"}}>
+  return(<div style={{display:"flex",height:"calc(100vh - 120px)",overflow:"hidden"}}>
     <div style={{width:218,borderRight:`1px solid ${C.border}`,padding:"14px 12px",overflow:"auto",flexShrink:0,background:C.surface}}>
       <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:15,letterSpacing:2,color:C.accent,marginBottom:12}}>FILTERS</div>
 
@@ -1040,7 +1040,7 @@ function Messages({user,vehicles,users,initContact=null}){
   };
   useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:"smooth"});},[thread.length,active?.id]);
   const getV=(id)=>vehicles.find(v=>v.customerId===id);
-  return(<div style={{display:"flex",height:"calc(100vh - 56px)"}}>
+  return(<div style={{display:"flex",height:"calc(100vh - 120px)"}}>
     <div style={{width:205,borderRight:`1px solid ${C.border}`,display:"flex",flexDirection:"column",flexShrink:0}}>
       <div style={{padding:"10px 12px 7px",borderBottom:`1px solid ${C.border}`}}><div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:14,letterSpacing:2,color:C.accent}}>MESSAGES</div></div>
       <div style={{flex:1,overflow:"auto"}}>{contacts.map(c=>{const v=getV(c.id);const unread=msgs.filter(m=>m.from===c.id&&m.to===user.id).length;return <div key={c.id} onClick={()=>setActive(c)} style={{display:"flex",alignItems:"center",gap:8,padding:"9px 11px",cursor:"pointer",borderBottom:`1px solid ${C.border}`,background:active?.id===c.id?C.faint:"transparent"}}>
@@ -1056,9 +1056,12 @@ function Messages({user,vehicles,users,initContact=null}){
     </div>
     <div style={{flex:1,display:"flex",flexDirection:"column"}}>
       {active?<><div style={{padding:"9px 13px",borderBottom:`1px solid ${C.border}`,display:"flex",alignItems:"center",gap:8}}><div style={{fontSize:22}}>{active.photo||"😎"}</div><div><div style={{fontWeight:600,fontSize:13}}>{active.name}</div><div style={{color:C.muted,fontSize:11}}>{active.shop||getV(active.id)?.vehicle||""}</div></div></div>
-      <div style={{flex:1,overflow:"auto",padding:"12px 13px",display:"flex",flexDirection:"column",gap:7}}>{thread.length===0&&<div style={{color:C.muted,fontSize:13,textAlign:"center",marginTop:32}}>No messages yet 👋</div>}{thread.map(m=>{const mine=m.from===user.id;return <div key={m.id} style={{display:"flex",justifyContent:mine?"flex-end":"flex-start"}}><div style={{maxWidth:"68%",background:mine?C.accent:C.surface,color:mine?"#000":C.text,borderRadius:mine?"14px 14px 3px 14px":"14px 14px 14px 3px",padding:"7px 11px",fontSize:13,border:mine?"none":`1px solid ${C.border}`}}><div>{m.text}</div><div style={{fontSize:10,marginTop:2,opacity:0.5,textAlign:"right"}}>{m.time}</div></div></div>;})}
+      <div style={{flex:1,overflow:"auto",padding:"12px 13px 16px",display:"flex",flexDirection:"column",gap:7}}>{thread.length===0&&<div style={{color:C.muted,fontSize:13,textAlign:"center",marginTop:32}}>No messages yet 👋</div>}{thread.map(m=>{const mine=m.from===user.id;return <div key={m.id} style={{display:"flex",justifyContent:mine?"flex-end":"flex-start"}}><div style={{maxWidth:"68%",background:mine?C.accent:C.surface,color:mine?"#000":C.text,borderRadius:mine?"14px 14px 3px 14px":"14px 14px 14px 3px",padding:"7px 11px",fontSize:13,border:mine?"none":`1px solid ${C.border}`}}><div>{m.text}</div><div style={{fontSize:10,marginTop:2,opacity:0.5,textAlign:"right"}}>{m.time}</div></div></div>;})}
       <div ref={bottomRef}/></div>
-      <div style={{padding:"9px 11px",borderTop:`1px solid ${C.border}`,display:"flex",gap:7}}><input style={{...S.input,margin:0,flex:1}} placeholder="Type a message..." value={draft} onChange={e=>setDraft(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()}/><button style={S.btnPrimary} onClick={send}>Send</button></div>
+      <div style={{padding:"9px 11px 14px",borderTop:`1px solid ${C.border}`,display:"flex",gap:7,background:C.surface}}>
+        <input style={{...S.input,margin:0,flex:1}} placeholder="Type a message and press Enter or tap Send..." value={draft} onChange={e=>setDraft(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()}/>
+        <button style={{...S.btnPrimary,padding:"9px 16px"}} onClick={send}>Send</button>
+      </div>
       </>:<div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",color:C.muted}}>Select a conversation</div>}
     </div>
   </div>);
@@ -1449,7 +1452,7 @@ function CustomerPortal({user,users,setUsers,vehicles,setVehicles,quotes,setQuot
     <style>{`@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');*{box-sizing:border-box;margin:0;padding:0}::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#333;border-radius:2px}@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}`}</style>
         {/* Top Bar */}
     <div style={{background:C.surface,borderBottom:`1px solid ${C.border}`,padding:"0 14px",display:"flex",alignItems:"center",height:50,position:"sticky",top:0,zIndex:50}}>
-      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,flexShrink:0}}><span style={{color:C.accent}}>G</span><span style={{color:C.text}}>ARAGEIQ</span></div>
+      <div onClick={()=>{setTab("garage");setSelectedVehicle(null);setDmContact(null);}} style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,flexShrink:0,cursor:"pointer"}}><span style={{color:C.accent}}>G</span><span style={{color:C.text}}>ARAGEIQ</span></div>
       <div style={{marginLeft:"auto",display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
         <button onClick={toggleTheme} style={{background:C.faint,border:`1px solid ${C.border}`,borderRadius:99,width:34,height:34,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}} title="Toggle theme">
           {C.isDark?"☀️":"🌙"}
@@ -1527,7 +1530,19 @@ function CustomerPortal({user,users,setUsers,vehicles,setVehicles,quotes,setQuot
       {myVehicles.map(v=>{const hasPending=(v.pendingServices?.length||0)>0;return(
         <div key={v.id} style={{background:C.surface,border:`1px solid ${hasPending?C.orange+"44":v.forSale?C.green+"44":C.border}`,borderRadius:12,overflow:"hidden",marginBottom:14,cursor:"pointer"}} onClick={()=>setSelectedVehicle(v)}>
           <div style={{position:"relative",height:130,background:C.faint,overflow:"hidden"}}>
-            {v.carPhoto?<img src={v.carPhoto} alt="Car" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<div style={{height:"100%",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4}}><div style={{fontSize:38}}>🚗</div><div style={{color:C.muted,fontSize:11}}>Tap to add photo</div></div>}
+            {v.carPhoto
+              ?<img src={v.carPhoto} alt="Car" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+              :<div style={{height:"100%",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4}}>
+                <div style={{fontSize:38}}>🚗</div>
+                <div style={{color:C.muted,fontSize:11}}>No photo yet</div>
+              </div>
+            }
+            {/* Camera button — always visible, stops propagation so card click still works */}
+            <button
+              onClick={(e)=>{e.stopPropagation();setCarPhotoTarget(v);}}
+              style={{position:"absolute",bottom:8,right:8,background:"#000000cc",border:"none",borderRadius:7,padding:"5px 9px",cursor:"pointer",display:"flex",alignItems:"center",gap:5,color:"#fff",fontSize:11,fontWeight:600}}>
+              📷 {v.carPhoto?"Change Photo":"Add Photo"}
+            </button>
             {v.forSale&&<div style={{position:"absolute",top:8,left:8,background:C.green,color:"#000",borderRadius:99,fontSize:10,fontWeight:700,padding:"2px 8px"}}>FOR SALE</div>}
             {hasPending&&<div style={{position:"absolute",top:8,right:8,background:C.orange,color:"#000",borderRadius:99,fontSize:10,fontWeight:700,padding:"2px 8px"}}>🔔 {v.pendingServices.length}</div>}
           </div>
