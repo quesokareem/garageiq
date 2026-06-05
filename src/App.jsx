@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 
-const C = {
+const DARK_THEME = {
   bg:"#0C0C0E",surface:"#141417",border:"#222228",
   accent:"#C8F135",accentDim:"#C8F13520",
   red:"#FF4D4D",redDim:"#FF4D4D18",
@@ -8,9 +8,27 @@ const C = {
   blue:"#4FC3F7",blueDim:"#4FC3F718",
   green:"#4ADE80",greenDim:"#4ADE8018",
   purple:"#C084FC",purpleDim:"#C084FC18",
+  gold:"#F59E0B",goldDim:"#F59E0B18",
   text:"#F0F0F0",muted:"#666670",faint:"#1E1E24",
+  isDark:true,
 };
+const LIGHT_THEME = {
+  bg:"#F4F4F6",surface:"#FFFFFF",border:"#E0E0E6",
+  accent:"#5B9E00",accentDim:"#5B9E0015",
+  red:"#E03535",redDim:"#E0353510",
+  orange:"#D4760A",orangeDim:"#D4760A10",
+  blue:"#0284C7",blueDim:"#0284C710",
+  green:"#16A34A",greenDim:"#16A34A10",
+  purple:"#9333EA",purpleDim:"#9333EA10",
+  gold:"#D97706",goldDim:"#D9770610",
+  text:"#111118",muted:"#888890",faint:"#EDEDF2",
+  isDark:false,
+};
+// C will be set dynamically based on theme - initialize to dark
+let C = {...DARK_THEME};
 const LEVEL_COLOR={critical:C.red,warning:C.orange,info:C.blue};
+const getRoleColor=(role)=>role==="dealership"?"#F59E0B":role==="mechanic"||role==="admin"?C.green:C.blue;
+const getRoleLabel=(role)=>role==="dealership"?"🏢 DEALER":role==="mechanic"||role==="admin"?"🔧 MECHANIC":"USER";
 
 const INIT_USERS=[
   {id:"m1",role:"mechanic",name:"Jake Torres",email:"jake@garageiq.com",password:"mechanic123",shop:"Torres Auto",specialty:"Engine & Transmission",rating:4.9,reviews:47,available:true,bio:"ASE certified, 12 years exp.",photo:"🧑‍🔧",logo:"🔧",signature:"Jake Torres",city:"Miami, FL",lat:25.7617,lng:-80.1918},
@@ -19,6 +37,8 @@ const INIT_USERS=[
   {id:"c1",role:"customer",name:"Marcus Johnson",email:"marcus@email.com",password:"customer123",vehicleIds:[1],bio:"Car enthusiast.",photo:"😎",city:"Miami, FL",lat:25.7617,lng:-80.1918},
   {id:"c2",role:"customer",name:"Tanya Rivera",email:"tanya@email.com",password:"customer123",vehicleIds:[2],bio:"Just need reliable wheels.",photo:"👩",city:"Miami Beach, FL",lat:25.7907,lng:-80.1300},
   {id:"c3",role:"customer",name:"Derek Williams",email:"derek@email.com",password:"customer123",vehicleIds:[3],bio:"Weekend driver.",photo:"🧑",city:"Coral Gables, FL",lat:25.7215,lng:-80.2684},
+  {id:"d1",role:"dealership",name:"Miami Auto Group",email:"miami@autodealer.com",password:"dealer123",shop:"Miami Auto Group",specialty:"New & Pre-Owned Vehicles",rating:4.3,reviews:124,available:true,bio:"South Florida's premier auto dealership. Over 500 vehicles in stock. Financing available for all credit types.",photo:"🏢",logo:"🚘",city:"Miami, FL",lat:25.7800,lng:-80.2100,verified:true,dealerLicense:"FL-DLR-2024-1892",established:"2008",website:"miamiautogroup.com"},
+  {id:"d2",role:"dealership",name:"Sunshine Motors",email:"sunshine@motors.com",password:"dealer123",shop:"Sunshine Motors",specialty:"Certified Pre-Owned Specialists",rating:4.6,reviews:89,available:true,bio:"Specializing in certified pre-owned vehicles with full inspection reports. Trade-ins welcome.",photo:"☀️",logo:"🏅",city:"Coral Gables, FL",lat:25.7300,lng:-80.2600,verified:true,dealerLicense:"FL-DLR-2024-0445",established:"2015",website:"sunshinemotors.com"},
 ];
 
 const INIT_VEHICLES=[
@@ -55,6 +75,21 @@ const INIT_LISTINGS=[
    condition:"Excellent",description:"One owner, garage kept. Full service history. Mechanic owned.",
    photos:["🚗"],city:"Miami, FL",lat:25.7745,lng:-80.2100,
    features:["V6 Engine","Sport Package","JBL Audio"],offers:[],listed:"2024-11-12"},
+  {id:5,sellerId:"d1",sellerName:"Miami Auto Group",sellerPhoto:"🏢",verified:true,isDealer:true,
+   year:2023,make:"Honda",model:"Accord",trim:"Sport",color:"Sonic Gray",mileage:8200,price:28900,
+   condition:"Excellent",description:"One owner rental return. Like new condition. Full warranty available. Financing from 4.9% APR.",
+   photos:["🚗"],city:"Miami, FL",lat:25.7800,lng:-80.2100,
+   features:["Honda Sensing","Wireless CarPlay","Heated Seats","Blind Spot Monitor"],offers:[],listed:"2024-11-13"},
+  {id:6,sellerId:"d1",sellerName:"Miami Auto Group",sellerPhoto:"🏢",verified:true,isDealer:true,
+   year:2022,make:"Toyota",model:"RAV4",trim:"XLE Premium",color:"Blueprint Blue",mileage:19500,price:34500,
+   condition:"Excellent",description:"Certified Pre-Owned with Toyota 7yr/100k warranty. One owner, no accidents.",
+   photos:["🚙"],city:"Miami, FL",lat:25.7800,lng:-80.2100,
+   features:["CPO Warranty","AWD","Sunroof","Power Liftgate","JBL Premium Audio"],offers:[],listed:"2024-11-11"},
+  {id:7,sellerId:"d2",sellerName:"Sunshine Motors",sellerPhoto:"☀️",verified:true,isDealer:true,
+   year:2021,make:"Ford",model:"F-150",trim:"XLT SuperCrew",color:"Iconic Silver",mileage:31000,price:38900,
+   condition:"Good",description:"Clean CARFAX. Well maintained. All service records available. Trade-ins welcome.",
+   photos:["🚘"],city:"Coral Gables, FL",lat:25.7300,lng:-80.2600,
+   features:["4x4","Tow Package","FordPass Connect","Backup Camera"],offers:[],listed:"2024-11-10"},
 ];
 
 const INIT_SHOPS=[
@@ -670,10 +705,69 @@ function VehicleDetailPage({vehicle,user,users,vehicles,setVehicles,listings,set
 }
 
 
-function Marketplace({user,listings,setListings,onDM,userLocation}){
+// ── DEALERSHIP PROFILE ────────────────────────────────────────────────────────
+function DealerProfile({dealer,listings,onClose,onDM,userLocation}){
+  const dealerListings=listings.filter(l=>l.sellerId===dealer.id&&l.isDealer);
+  const [selectedListing,setSelectedListing]=useState(null);
+  return(<div style={S.overlay}>
+    <div style={{...S.modal,maxWidth:540,maxHeight:"90vh"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:0}}>
+        <div/>
+        <button onClick={onClose} style={S.iconBtn}>✕</button>
+      </div>
+
+      {/* Dealer header */}
+      <div style={{background:`linear-gradient(135deg,#1a1a2e,#16213e)`,borderRadius:10,padding:"18px 16px",marginBottom:14,border:`1px solid #F59E0B33`}}>
+        <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:10}}>
+          <div style={{fontSize:44}}>{dealer.photo||"🏢"}</div>
+          <div style={{flex:1}}>
+            <div style={{fontWeight:700,fontSize:17,color:"#F0F0F0"}}>{dealer.name}</div>
+            <div style={{display:"flex",alignItems:"center",gap:6,marginTop:3}}>
+              <span style={{background:"#F59E0B18",color:"#F59E0B",borderRadius:99,fontSize:10,fontWeight:700,padding:"2px 8px"}}>🏢 VERIFIED DEALER</span>
+              <Stars rating={dealer.rating} size={11}/>
+              <span style={{color:"#888",fontSize:11}}>({dealer.reviews})</span>
+            </div>
+          </div>
+          <button style={{...S.btnPrimary,fontSize:12,padding:"6px 12px"}} onClick={()=>onDM(dealer.id)}>💬 Contact</button>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+          {[["Specialty",dealer.specialty],["Est.",dealer.established],["License",dealer.dealerLicense],["Location",dealer.city]].map(([l,v])=>(
+            <div key={l} style={{background:"#ffffff10",borderRadius:6,padding:"6px 8px"}}>
+              <div style={{color:"#888",fontSize:9,textTransform:"uppercase",letterSpacing:1,marginBottom:1}}>{l}</div>
+              <div style={{fontSize:11,color:"#F0F0F0"}}>{v}</div>
+            </div>
+          ))}
+        </div>
+        {dealer.bio&&<div style={{color:"#aaa",fontSize:12,marginTop:10,lineHeight:1.6}}>{dealer.bio}</div>}
+      </div>
+
+      {/* Inventory */}
+      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,letterSpacing:2,color:"#F59E0B",marginBottom:10}}>INVENTORY ({dealerListings.length})</div>
+      {dealerListings.length===0&&<div style={{color:C.muted,fontSize:13,textAlign:"center",padding:"20px 0"}}>No listings currently available</div>}
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,maxHeight:300,overflow:"auto"}}>
+        {dealerListings.map(l=>(
+          <div key={l.id} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:8,overflow:"hidden",cursor:"pointer"}} onClick={()=>setSelectedListing(l)}>
+            <div style={{height:80,background:C.faint,display:"flex",alignItems:"center",justifyContent:"center",fontSize:36}}>
+              {l.photos[0]&&l.photos[0].startsWith("data:")?<img src={l.photos[0]} alt="Car" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<span>{l.photos[0]||"🚗"}</span>}
+            </div>
+            <div style={{padding:"7px 8px"}}>
+              <div style={{fontWeight:700,fontSize:12}}>{l.year} {l.make} {l.model}</div>
+              <div style={{color:"#F59E0B",fontSize:12,fontWeight:700}}>${l.price.toLocaleString()}</div>
+              <div style={{color:C.muted,fontSize:10}}>{l.mileage.toLocaleString()} mi · {l.condition}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>);
+}
+
+
+function Marketplace({user,users,listings,setListings,onDM,userLocation}){
   const [filters,setFilters]=useState({make:"Any",model:"Any",bodyType:"Any",color:"Any",condition:"Any",minPrice:"",maxPrice:"",minMiles:"",maxMiles:"",minYear:"",maxYear:"",maxDist:50});
   const [sort,setSort]=useState("newest");const [selected,setSelected]=useState(null);const [showCreate,setShowCreate]=useState(false);
   const [offerTarget,setOfferTarget]=useState(null);const [offerAmt,setOfferAmt]=useState("");const [offerMsg,setOfferMsg]=useState("");const [offerSent,setOfferSent]=useState(false);
+  const [viewDealerProfile,setViewDealerProfile]=useState(null);
   const [customMake,setCustomMake]=useState(false);const [customModel,setCustomModel]=useState(false);
   const setF=(k,v)=>setFilters(p=>({...p,[k]:v}));
   const availableModels=(CAR_MODELS[filters.make]||[]);
@@ -773,7 +867,11 @@ function Marketplace({user,listings,setListings,onDM,userLocation}){
               <div style={{display:"flex",justifyContent:"space-between",marginBottom:2}}><div style={{fontWeight:700,fontSize:14}}>{l.year} {l.make} {l.model}</div><div style={{fontWeight:700,fontSize:14,color:C.accent}}>${l.price.toLocaleString()}</div></div>
               <div style={{color:C.muted,fontSize:11,marginBottom:4}}>{l.trim} · {l.color} · {l.condition}</div>
               <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><span style={{color:C.muted,fontSize:11}}>🔢 {l.mileage.toLocaleString()} mi</span>{dist!=null&&<span style={{color:C.muted,fontSize:11}}>📍 {dist<1?"<1":dist.toFixed(1)} mi</span>}</div>
-              <div style={{display:"flex",alignItems:"center",gap:5}}><div style={{fontSize:14}}>{l.sellerPhoto}</div><span style={{fontSize:11,color:C.muted}}>{l.sellerName}</span>{l.verified&&<span style={{background:C.greenDim,color:C.green,fontSize:9,fontWeight:700,padding:"1px 5px",borderRadius:99}}>✓ MECH</span>}</div>
+              <div style={{display:"flex",alignItems:"center",gap:5}}>
+                <div style={{fontSize:14}}>{l.sellerPhoto}</div>
+                <span style={{fontSize:11,color:C.muted}}>{l.sellerName}</span>
+                {l.isDealer?<span style={{background:"#F59E0B18",color:"#F59E0B",fontSize:9,fontWeight:700,padding:"1px 6px",borderRadius:99}}>🏢 DEALER</span>:l.verified&&<span style={{background:C.greenDim,color:C.green,fontSize:9,fontWeight:700,padding:"1px 5px",borderRadius:99}}>🔧 MECH</span>}
+              </div>
             </div>
           </div>
         );})}
@@ -800,7 +898,17 @@ function Marketplace({user,listings,setListings,onDM,userLocation}){
           {userLocation&&<div style={{color:C.muted,fontSize:12,marginBottom:8}}>📍 {distanceMiles(userLocation.lat,userLocation.lng,selected.lat,selected.lng).toFixed(1)} miles away</div>}
           <div style={{color:C.text,fontSize:13,lineHeight:1.6,marginBottom:11}}>{selected.description}</div>
           {selected.features?.length>0&&<div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:11}}>{selected.features.map(f=><span key={f} style={{background:C.accentDim,color:C.accent,borderRadius:99,fontSize:11,padding:"2px 8px"}}>{f}</span>)}</div>}
-          <div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 10px",background:C.faint,borderRadius:8,marginBottom:11}}><div style={{fontSize:24}}>{selected.sellerPhoto}</div><div style={{flex:1}}><div style={{fontWeight:600,fontSize:13}}>{selected.sellerName}</div><div style={{color:C.muted,fontSize:11}}>{selected.verified?"Verified Mechanic":"Private Seller"}</div></div>{selected.verified&&<span style={{background:C.greenDim,color:C.green,fontSize:9,fontWeight:700,padding:"2px 6px",borderRadius:99}}>✓ VERIFIED</span>}</div>
+          <div style={{background:C.faint,borderRadius:8,padding:"10px 12px",marginBottom:11}}>
+            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:selected.isDealer?8:0}}>
+              <div style={{fontSize:24}}>{selected.sellerPhoto}</div>
+              <div style={{flex:1}}>
+                <div style={{fontWeight:600,fontSize:13}}>{selected.sellerName}</div>
+                <div style={{color:C.muted,fontSize:11}}>{selected.isDealer?"Licensed Dealership":selected.verified?"Verified Mechanic":"Private Seller"}</div>
+              </div>
+              {selected.isDealer?<span style={{background:"#F59E0B18",color:"#F59E0B",fontSize:9,fontWeight:700,padding:"2px 8px",borderRadius:99}}>🏢 DEALER</span>:selected.verified&&<span style={{background:C.greenDim,color:C.green,fontSize:9,fontWeight:700,padding:"2px 6px",borderRadius:99}}>🔧 VERIFIED</span>}
+            </div>
+            {selected.isDealer&&<button style={{...S.btnSecondary,width:"100%",fontSize:12,padding:"6px 0",borderColor:"#F59E0B44",color:"#F59E0B"}} onClick={()=>setViewDealerProfile(selected.sellerId)}>🏢 View Dealer Profile & Full Inventory →</button>}
+          </div>
           {selected.offers.filter(o=>o.buyerId===user.id).length>0&&<div style={{background:C.accentDim,border:`1px solid ${C.accent}22`,borderRadius:7,padding:"6px 10px",marginBottom:9}}><div style={{color:C.accent,fontSize:10,fontWeight:700,marginBottom:1}}>YOUR OFFER</div>{selected.offers.filter(o=>o.buyerId===user.id).map(o=><div key={o.id} style={{fontSize:12}}>${o.amount.toLocaleString()} — <span style={{color:o.status==="pending"?C.orange:C.green}}>{o.status.toUpperCase()}</span></div>)}</div>}
           {selected.sellerId!==user.id&&<div style={{display:"flex",gap:8}}><button style={{...S.btnSecondary,flex:1}} onClick={()=>{onDM(selected.sellerId);setSelected(null);}}>💬 Message</button><button style={{...S.btnPrimary,flex:1}} onClick={()=>{setOfferTarget(selected);setOfferSent(false);}}>💰 Make Offer</button></div>}
           {selected.sellerId===user.id&&<div style={{textAlign:"center",color:C.muted,fontSize:12,padding:"6px 0"}}>Your listing · {selected.offers.length} offer{selected.offers.length!==1?"s":""}</div>}
@@ -815,6 +923,7 @@ function Marketplace({user,listings,setListings,onDM,userLocation}){
       <div style={{display:"flex",gap:8}}><button style={S.btnSecondary} onClick={()=>setOfferTarget(null)}>Cancel</button><button style={{...S.btnPrimary,flex:1}} onClick={sendOffer} disabled={!offerAmt}>Send Offer</button></div></>
       :<div style={{textAlign:"center",padding:"16px 0"}}><div style={{fontSize:42,marginBottom:8}}>🎉</div><div style={{fontWeight:700,fontSize:15,marginBottom:4}}>Offer Sent!</div><div style={{color:C.muted,fontSize:13,marginBottom:14}}>Your offer of <strong style={{color:C.accent}}>${Number(offerAmt).toLocaleString()}</strong> was sent to {offerTarget.sellerName}.</div><button style={S.btnPrimary} onClick={()=>{setOfferTarget(null);setSelected(null);}}>Done</button></div>}
     </div></div>}
+    {viewDealerProfile&&(()=>{const dealer=users?.find?.(u=>u.id===viewDealerProfile)||{id:viewDealerProfile,name:"Dealership",photo:"🏢",specialty:"Auto Dealer",rating:4.5,reviews:50,established:"2010",dealerLicense:"FL-DLR-2024",city:"Miami, FL",bio:""};return <DealerProfile dealer={dealer} listings={listings} onClose={()=>setViewDealerProfile(null)} onDM={onDM} userLocation={userLocation}/>;})()}
     {showCreate&&<CreateListing user={user} onClose={()=>setShowCreate(false)} onSave={l=>{setListings(p=>[{...l,id:Date.now(),sellerId:user.id,sellerName:user.name,sellerPhoto:user.photo||"😎",verified:user.role==="mechanic"||user.role==="admin",offers:[],listed:new Date().toLocaleDateString(),lat:userLocation?.lat||25.7617,lng:userLocation?.lng||-80.1918,city:l.zipCity||userLocation?.city||user.city||"Miami, FL",zipCity:l.zipCity},...p]);setShowCreate(false);}}/>}
   </div>);
 }
@@ -1318,12 +1427,13 @@ function Community({user}){
   </div>);
 }
 
-function CustomerPortal({user,users,setUsers,vehicles,setVehicles,quotes,setQuotes,listings,setListings,onLogout}){
+function CustomerPortal({user,users,setUsers,vehicles,setVehicles,quotes,setQuotes,listings,setListings,onLogout,toggleTheme}){
   const myVehicles=vehicles.filter(v=>user.vehicleIds?.includes(v.id));const myQuotes=quotes.filter(q=>q.customerId===user.id);
   const totalPending=myVehicles.reduce((a,v)=>a+(v.pendingServices?.length||0),0);
   const [tab,setTab]=useState("garage");const [dmContact,setDmContact]=useState(null);const [showProfile,setShowProfile]=useState(false);const [carPhotoTarget,setCarPhotoTarget]=useState(null);
   const [selectedVehicle,setSelectedVehicle]=useState(null);
   const [showAddVehicle,setShowAddVehicle]=useState(false);
+  const [garagePublic,setGaragePublic]=useState(false);
   const [newVehicleVin,setNewVehicleVin]=useState("");
   const [newVehicleData,setNewVehicleData]=useState({year:new Date().getFullYear(),make:"Toyota",model:"",mileage:""});
   const [userLocation,setUserLocation]=useState({lat:user.lat||25.7617,lng:user.lng||-80.1918,city:user.city||"Miami, FL"});
@@ -1334,20 +1444,49 @@ function CustomerPortal({user,users,setUsers,vehicles,setVehicles,quotes,setQuot
   const acceptPendingService=(vehicleId,serviceId)=>{setVehicles(prev=>prev.map(v=>{if(v.id!==vehicleId)return v;const svc=v.pendingServices.find(s=>s.id===serviceId);if(!svc)return v;return{...v,services:[{...svc,status:"confirmed"},...v.services],pendingServices:v.pendingServices.filter(s=>s.id!==serviceId),lastVisit:svc.date,mileage:svc.mileage};}));};
   const declinePendingService=(vehicleId,serviceId)=>setVehicles(prev=>prev.map(v=>v.id===vehicleId?{...v,pendingServices:v.pendingServices.filter(s=>s.id!==serviceId)}:v));
   const saveCarPhoto=(vehicleId,photo)=>setVehicles(prev=>prev.map(v=>v.id===vehicleId?{...v,carPhoto:photo}:v));
-  const tabs=[{id:"garage",label:"My Garage",badge:totalPending},{id:"quotes",label:"Quotes",badge:myQuotes.filter(q=>q.status==="pending").length},{id:"marketplace",label:"Marketplace"},{id:"find",label:"Find Mechanic"},{id:"board",label:"Community"},{id:"messages",label:"Messages"}];
+  const tabs=[{id:"garage",label:"Garage",icon:"🚗",badge:totalPending},{id:"quotes",label:"Quotes",icon:"📋",badge:myQuotes.filter(q=>q.status==="pending").length},{id:"marketplace",label:"Market",icon:"🏪"},{id:"find",label:"Mechanics",icon:"🔧"},{id:"board",label:"Community",icon:"💬"},{id:"messages",label:"Messages",icon:"✉️"}];
   return(<div style={{minHeight:"100vh",background:C.bg,fontFamily:"'DM Sans',sans-serif",color:C.text}}>
     <style>{`@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');*{box-sizing:border-box;margin:0;padding:0}::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#333;border-radius:2px}@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}`}</style>
-    <div style={{background:C.surface,borderBottom:`1px solid ${C.border}`,padding:"0 12px",display:"flex",alignItems:"center",height:50,overflow:"auto"}}>
-      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:19,marginRight:12,flexShrink:0}}><span style={{color:C.accent}}>G</span><span>ARAGEIQ</span></div>
-      {tabs.map(t=><button key={t.id} onClick={()=>{setDmContact(null);setTab(t.id);}} style={{padding:"0 9px",height:"100%",border:"none",background:"transparent",color:tab===t.id?C.accent:C.muted,fontSize:11,fontWeight:600,cursor:"pointer",borderBottom:`2px solid ${tab===t.id?C.accent:"transparent"}`,display:"flex",alignItems:"center",gap:4,flexShrink:0,whiteSpace:"nowrap"}}>{t.label}{t.badge>0&&<Badge count={t.badge}/>}</button>)}
-      <div style={{marginLeft:"auto",display:"flex",alignItems:"center",gap:6,flexShrink:0}}><button onClick={()=>setShowProfile(true)} style={{background:"none",border:"none",cursor:"pointer",fontSize:22}}>{currentUser.photo||"😎"}</button><button onClick={onLogout} style={{background:"none",border:"none",color:C.muted,cursor:"pointer",fontSize:11}}>Sign out</button></div>
+        {/* Top Bar */}
+    <div style={{background:C.surface,borderBottom:`1px solid ${C.border}`,padding:"0 14px",display:"flex",alignItems:"center",height:50,position:"sticky",top:0,zIndex:50}}>
+      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,flexShrink:0}}><span style={{color:C.accent}}>G</span><span style={{color:C.text}}>ARAGEIQ</span></div>
+      <div style={{marginLeft:"auto",display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
+        <button onClick={toggleTheme} style={{background:C.faint,border:`1px solid ${C.border}`,borderRadius:99,width:34,height:34,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}} title="Toggle theme">
+          {C.isDark?"☀️":"🌙"}
+        </button>
+        <button onClick={()=>setShowProfile(true)} style={{background:"none",border:"none",cursor:"pointer",fontSize:24}}>{currentUser.photo||"😎"}</button>
+        <button onClick={onLogout} style={{background:"none",border:"none",color:C.muted,cursor:"pointer",fontSize:11}}>out</button>
+      </div>
     </div>
+    {/* Bottom Nav */}
+    <div style={{position:"fixed",bottom:0,left:0,right:0,background:C.surface,borderTop:`1px solid ${C.border}`,display:"flex",zIndex:100}}>
+      {tabs.map(t=><button key={t.id} onClick={()=>{setDmContact(null);setTab(t.id);setSelectedVehicle(null);}} style={{flex:1,padding:"7px 2px 8px",border:"none",background:"transparent",color:tab===t.id?C.accent:C.muted,fontSize:9,fontWeight:600,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:2,position:"relative",transition:"color 0.15s"}}>
+        <span style={{fontSize:20}}>{t.icon}</span>
+        <span>{t.label}</span>
+        {t.badge>0&&<div style={{position:"absolute",top:5,right:"18%",background:C.red,color:"#fff",borderRadius:99,fontSize:8,fontWeight:800,width:14,height:14,display:"flex",alignItems:"center",justifyContent:"center"}}>{t.badge}</div>}
+      </button>)}
+    </div>
+    <div style={{height:65}}/>
+
     {(tab==="marketplace"||tab==="find")&&<LocationBar location={userLocation} onUpdate={setUserLocation}/>}
     {tab==="garage"&&!selectedVehicle&&<div style={{padding:"18px 16px",maxWidth:620,margin:"0 auto",animation:"fadeUp 0.3s ease"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:13}}>
-        <div><div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,letterSpacing:1}}>My Garage</div><div style={{color:C.muted,fontSize:12}}>Hey {user.name.split(" ")[0]}! ({myVehicles.length}/5 cars)</div></div>
-        {myVehicles.length<5&&<button onClick={()=>setShowAddVehicle(true)} style={{width:38,height:38,borderRadius:99,background:C.accent,border:"none",color:"#000",fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700}}>+</button>}
+        <div>
+          <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,letterSpacing:1}}>My Garage</div>
+          <div style={{color:C.muted,fontSize:12}}>Hey {user.name.split(" ")[0]}! ({myVehicles.length}/5 cars)</div>
+        </div>
+        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+          {/* Public/Private toggle */}
+          <button onClick={()=>setGaragePublic(p=>!p)} style={{display:"flex",alignItems:"center",gap:5,padding:"6px 12px",borderRadius:99,border:`1px solid ${garagePublic?C.green:C.border}`,background:garagePublic?C.greenDim:"transparent",cursor:"pointer",fontSize:11,fontWeight:600,color:garagePublic?C.green:C.muted}}>
+            {garagePublic?"🌐 Public":"🔒 Private"}
+          </button>
+          {myVehicles.length<5&&<button onClick={()=>setShowAddVehicle(true)} style={{width:36,height:36,borderRadius:99,background:C.accent,border:"none",color:"#000",fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:700}}>+</button>}
+        </div>
       </div>
+      {garagePublic&&<div style={{background:C.greenDim,border:`1px solid ${C.green}30`,borderRadius:8,padding:"8px 12px",marginBottom:12,display:"flex",alignItems:"center",gap:7}}>
+        <span style={{fontSize:14}}>🌐</span>
+        <div><div style={{color:C.green,fontSize:12,fontWeight:600}}>Garage is Public</div><div style={{color:C.muted,fontSize:11}}>Your cars and service history are visible to other users and appear on marketplace listings</div></div>
+      </div>}
 
       {showAddVehicle&&<div style={{background:C.surface,border:`1px solid ${C.accent}30`,borderRadius:12,padding:"14px 14px",marginBottom:16}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
@@ -1418,7 +1557,7 @@ function CustomerPortal({user,users,setUsers,vehicles,setVehicles,quotes,setQuot
       onDMSeller={handleDM}
     />}
     {tab==="quotes"&&<div style={{padding:"18px 16px",maxWidth:620,margin:"0 auto",animation:"fadeUp 0.3s ease"}}><div style={{marginBottom:13}}><div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,letterSpacing:2}}>My Quotes</div></div>{myQuotes.length===0&&<div style={{color:C.muted,fontSize:13}}>No quotes yet.</div>}{myQuotes.map(q=><QuoteCard key={q.id} quote={q} isCustomer={true} onRespond={respondToQuote}/>)}</div>}
-    {tab==="marketplace"&&<Marketplace user={currentUser} listings={listings} setListings={setListings} onDM={handleDM} userLocation={userLocation}/>}
+    {tab==="marketplace"&&<Marketplace user={currentUser} users={users} listings={listings} setListings={setListings} onDM={handleDM} userLocation={userLocation}/>}
     {tab==="find"&&<FindMechanic user={currentUser} users={users} onDM={handleDM} userLocation={userLocation}/>}
     {tab==="board"&&<Community user={currentUser}/>}
     {tab==="messages"&&<Messages user={user} vehicles={vehicles} users={users} initContact={dmContact}/>}
@@ -1426,7 +1565,9 @@ function CustomerPortal({user,users,setUsers,vehicles,setVehicles,quotes,setQuot
     {showProfile&&<ProfilePage user={currentUser} users={users} setUsers={setUsers} onClose={()=>setShowProfile(false)}/>}
   </div>);
 }
-export default function GarageIQ(){
+function GarageIQApp({theme,toggleTheme}){
+  // Update global C with current theme
+  Object.assign(C, theme);
   const [users,setUsers]=useState(INIT_USERS);const [user,setUser]=useState(null);
   const [vehicles,setVehicles]=useState(INIT_VEHICLES);const [quotes,setQuotes]=useState(INIT_QUOTES);
   const [listings,setListings]=useState(INIT_LISTINGS);
@@ -1441,7 +1582,7 @@ export default function GarageIQ(){
     const LoginScreen=()=>{
       const [email,setEmail]=useState("");const [pass,setPass]=useState("");const [err,setErr]=useState("");const [tab,setTab]=useState("mechanic");
       const handle=()=>{const u=users.find(u=>u.email===email&&u.password===pass);if(!u){setErr("Invalid credentials.");return;}const map={mechanic:["mechanic","admin"],customer:["customer"]};if(!map[tab].includes(u.role)){setErr(`Not a ${tab} account.`);return;}setUser(u);};
-      const hints={mechanic:[{label:"Mechanic",e:"jake@garageiq.com",p:"mechanic123"},{label:"Admin",e:"admin@garageiq.com",p:"admin123"}],customer:[{label:"Customer",e:"marcus@email.com",p:"customer123"}]};
+      const hints={mechanic:[{label:"Mechanic",e:"jake@garageiq.com",p:"mechanic123"},{label:"Admin",e:"admin@garageiq.com",p:"admin123"}],customer:[{label:"Customer",e:"marcus@email.com",p:"customer123"},{label:"Dealer",e:"miami@autodealer.com",p:"dealer123"}]};
       return <div style={{minHeight:"100vh",background:C.bg,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'DM Sans',sans-serif",padding:20}}>
         <style>{`@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');*{box-sizing:border-box;margin:0;padding:0}@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}`}</style>
         <div style={{width:"100%",maxWidth:400,animation:"fadeUp 0.4s ease"}}>
@@ -1461,7 +1602,7 @@ export default function GarageIQ(){
   }
 
   const currentUser=users.find(u=>u.id===user.id)||user;
-  if(currentUser.role==="customer") return <CustomerPortal user={currentUser} users={users} setUsers={setUsers} vehicles={vehicles} setVehicles={setVehicles} quotes={quotes} setQuotes={setQuotes} listings={listings} setListings={setListings} onLogout={()=>setUser(null)}/>;
+  if(currentUser.role==="customer"||currentUser.role==="dealership") return <CustomerPortal user={currentUser} users={users} setUsers={setUsers} vehicles={vehicles} setVehicles={setVehicles} quotes={quotes} setQuotes={setQuotes} listings={listings} setListings={setListings} onLogout={()=>setUser(null)} toggleTheme={toggleTheme}/>;
 
   const totalAlerts=vehicles.reduce((a,v)=>a+v.alerts.length,0);
   const criticals=vehicles.filter(v=>v.alerts.some(a=>a.level==="critical"));
@@ -1502,6 +1643,9 @@ export default function GarageIQ(){
           <div style={{fontSize:22}}>{currentUser.photo||"🧑‍🔧"}</div>
           <div style={{minWidth:0,textAlign:"left"}}><div style={{fontSize:11,fontWeight:600,color:C.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{currentUser.name}</div><div style={{fontSize:9,color:C.muted,textTransform:"capitalize"}}>{currentUser.role}</div></div>
           <button onClick={(e)=>{e.stopPropagation();setUser(null);}} style={{background:"none",border:"none",color:C.muted,cursor:"pointer",fontSize:9,marginLeft:"auto"}}>out</button>
+        </button>
+        <button onClick={toggleTheme} style={{width:"100%",background:C.faint,border:`1px solid ${C.border}`,borderRadius:7,color:C.text,padding:"5px 0",cursor:"pointer",fontSize:10,marginTop:7,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}>
+          {C.isDark?"☀️ Light":"🌙 Dark"}
         </button>
       </div>
     </div>
@@ -1551,7 +1695,7 @@ export default function GarageIQ(){
           {myQuotes.map(q=>{const v=vehicles.find(vv=>vv.id===q.vehicleId);return <QuoteCard key={q.id} quote={{...q,name:v?.name}} isCustomer={false} onRespond={()=>{}}/>;}) }
         </div>}
 
-        {nav==="marketplace"&&<Marketplace user={currentUser} listings={listings} setListings={setListings} onDM={()=>setNav("messages")} userLocation={userLocation}/>}
+        {nav==="marketplace"&&<Marketplace user={currentUser} users={users} listings={listings} setListings={setListings} onDM={()=>setNav("messages")} userLocation={userLocation}/>}
 
         {nav==="alerts"&&<div style={{padding:"20px 24px",maxWidth:740,animation:"fadeUp 0.25s ease"}}>
           <div style={{marginBottom:13}}><div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,letterSpacing:2}}>Alerts</div><div style={{color:C.muted,fontSize:12}}>{totalAlerts} active</div></div>
@@ -1645,3 +1789,14 @@ const S={
   modalTitle:{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,letterSpacing:1,color:C.accent},
   iconBtn:{background:"none",border:"none",color:C.muted,fontSize:18,cursor:"pointer"},
 };
+
+// ── THEME WRAPPER ─────────────────────────────────────────────────────────────
+export default function GarageIQ(){
+  const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const [isDark,setIsDark]=useState(prefersDark);
+  const theme=isDark?DARK_THEME:LIGHT_THEME;
+  // Keep C in sync
+  Object.assign(C,theme);
+  const toggleTheme=()=>{setIsDark(p=>!p);};
+  return <GarageIQApp theme={theme} toggleTheme={toggleTheme}/>;
+}
