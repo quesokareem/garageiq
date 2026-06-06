@@ -31,8 +31,8 @@ const getRoleColor=(role)=>role==="dealership"?"#F59E0B":role==="mechanic"||role
 const getRoleLabel=(role)=>role==="dealership"?"🏢 DEALER":role==="mechanic"||role==="admin"?"🔧 MECHANIC":"USER";
 
 const INIT_USERS=[
-  {id:"m1",role:"mechanic",name:"Jake Torres",email:"jake@garageiq.com",password:"mechanic123",shop:"Torres Auto",specialty:"Engine & Transmission",rating:4.9,reviews:47,available:true,bio:"ASE certified, 12 years exp.",photo:"🧑‍🔧",logo:"🔧",signature:"Jake Torres",city:"Miami, FL",lat:25.7617,lng:-80.1918},
-  {id:"m2",role:"admin",name:"Sandra Lee",email:"admin@garageiq.com",password:"admin123",shop:"Lee's Auto Care",specialty:"Full Service",rating:4.7,reviews:83,available:true,bio:"Family owned since 2005.",photo:"👩‍🔧",logo:"⭐",signature:"Sandra Lee",city:"Miami, FL",lat:25.7745,lng:-80.2100},
+  {id:"m1",role:"mechanic",name:"Jake Torres",email:"jake@garageiq.com",password:"mechanic123",shop:"Torres Auto",specialty:"Engine & Transmission",rating:4.9,reviews:47,available:true,isOnline:true,workingHours:{mon:"8:00 AM",monEnd:"6:00 PM",tue:"8:00 AM",tueEnd:"6:00 PM",wed:"8:00 AM",wedEnd:"6:00 PM",thu:"8:00 AM",thuEnd:"6:00 PM",fri:"8:00 AM",friEnd:"5:00 PM",sat:"9:00 AM",satEnd:"3:00 PM",sun:"Closed",sunEnd:""},showOnline:true,bio:"ASE certified, 12 years exp.",photo:"🧑‍🔧",logo:"🔧",signature:"Jake Torres",city:"Miami, FL",lat:25.7617,lng:-80.1918},
+  {id:"m2",role:"admin",name:"Sandra Lee",email:"admin@garageiq.com",password:"admin123",shop:"Lee's Auto Care",specialty:"Full Service",rating:4.7,reviews:83,available:true,isOnline:true,workingHours:{mon:"9:00 AM",monEnd:"5:00 PM",tue:"9:00 AM",tueEnd:"5:00 PM",wed:"9:00 AM",wedEnd:"5:00 PM",thu:"9:00 AM",thuEnd:"5:00 PM",fri:"9:00 AM",friEnd:"4:00 PM",sat:"Closed",satEnd:"",sun:"Closed",sunEnd:""},showOnline:true,bio:"Family owned since 2005.",photo:"👩‍🔧",logo:"⭐",signature:"Sandra Lee",city:"Miami, FL",lat:25.7745,lng:-80.2100},
   {id:"m3",role:"mechanic",name:"Carlos Mendez",email:"carlos@garageiq.com",password:"mechanic123",shop:"Mendez Motors",specialty:"Electrical & AC",rating:4.6,reviews:31,available:false,bio:"Electrical & AC specialist.",photo:"👨‍🔧",logo:"⚡",signature:"Carlos Mendez",city:"Hialeah, FL",lat:25.8576,lng:-80.2781},
   {id:"c1",role:"customer",name:"Marcus Johnson",email:"marcus@email.com",password:"customer123",vehicleIds:[1],bio:"Car enthusiast.",photo:"😎",city:"Miami, FL",lat:25.7617,lng:-80.1918},
   {id:"c2",role:"customer",name:"Tanya Rivera",email:"tanya@email.com",password:"customer123",vehicleIds:[2],bio:"Just need reliable wheels.",photo:"👩",city:"Miami Beach, FL",lat:25.7907,lng:-80.1300},
@@ -57,17 +57,17 @@ const INIT_VEHICLES=[
 const INIT_LISTINGS=[
   {id:1,sellerId:"m1",sellerName:"Jake Torres",sellerPhoto:"🧑‍🔧",verified:true,
    year:2019,make:"Ford",model:"Mustang",trim:"GT",color:"Race Red",mileage:38000,price:32500,
-   condition:"Excellent",description:"Well maintained Mustang GT. Recent full service, new tires, no accidents.",
+   titleStatus:"Clean Title",condition:"Excellent",description:"Well maintained Mustang GT. Recent full service, new tires, no accidents.",
    photos:["🚗"],city:"Miami, FL",lat:25.7617,lng:-80.1918,
    features:["V8 Engine","6-Speed Manual","Leather Seats","Backup Camera"],offers:[],listed:"2024-11-10"},
   {id:2,sellerId:"c2",sellerName:"Tanya Rivera",sellerPhoto:"👩",verified:false,
    year:2017,make:"Honda",model:"Accord",trim:"EX",color:"Lunar Silver",mileage:62000,price:16900,
-   condition:"Good",description:"Reliable Accord, regularly serviced. One owner, clean title.",
+   titleStatus:"Clean Title",condition:"Good",description:"Reliable Accord, regularly serviced. One owner, clean title.",
    photos:["🚙"],city:"Miami Beach, FL",lat:25.7907,lng:-80.1300,
    features:["Honda Sensing","Sunroof","Apple CarPlay"],offers:[],listed:"2024-11-08"},
   {id:3,sellerId:"c3",sellerName:"Derek Williams",sellerPhoto:"🧑",verified:false,
    year:2015,make:"Volkswagen",model:"Jetta",trim:"SE",color:"Platinum Gray",mileage:91200,price:9500,
-   condition:"Fair",description:"Solid commuter. Needs some TLC but runs great. Priced to sell.",
+   titleStatus:"Rebuilt",condition:"Fair",description:"Solid commuter. Needs some TLC but runs great. Priced to sell.",
    photos:["🚘"],city:"Coral Gables, FL",lat:25.7215,lng:-80.2684,
    features:["Turbocharged","Bluetooth","Heated Seats"],offers:[],listed:"2024-11-05"},
   {id:4,sellerId:"m2",sellerName:"Sandra Lee",sellerPhoto:"👩‍🔧",verified:true,
@@ -764,7 +764,7 @@ function DealerProfile({dealer,listings,onClose,onDM,userLocation}){
 
 
 function Marketplace({user,users,listings,setListings,onDM,userLocation}){
-  const [filters,setFilters]=useState({make:"Any",model:"Any",bodyType:"Any",color:"Any",condition:"Any",minPrice:"",maxPrice:"",minMiles:"",maxMiles:"",minYear:"",maxYear:"",maxDist:50});
+  const [filters,setFilters]=useState({make:"Any",model:"Any",bodyType:"Any",color:"Any",condition:"Any",titleStatus:"Any",minPrice:"",maxPrice:"",minMiles:"",maxMiles:"",minYear:"",maxYear:"",maxDist:50});
   const [sort,setSort]=useState("newest");const [selected,setSelected]=useState(null);const [showCreate,setShowCreate]=useState(false);
   const [offerTarget,setOfferTarget]=useState(null);const [offerAmt,setOfferAmt]=useState("");const [offerMsg,setOfferMsg]=useState("");const [offerSent,setOfferSent]=useState(false);
   const [viewDealerProfile,setViewDealerProfile]=useState(null);
@@ -783,6 +783,7 @@ function Marketplace({user,users,listings,setListings,onDM,userLocation}){
     if(filters.maxMiles&&l.mileage>Number(filters.maxMiles))return false;
     if(filters.minYear&&l.year<Number(filters.minYear))return false;
     if(filters.maxYear&&l.year>Number(filters.maxYear))return false;
+    if(filters.titleStatus&&filters.titleStatus!=="Any"&&l.titleStatus!==filters.titleStatus)return false;
     if(userLocation){const d=distanceMiles(userLocation.lat,userLocation.lng,l.lat,l.lng);if(d>Number(filters.maxDist))return false;}
     return true;
   }).sort((a,b)=>{
@@ -844,7 +845,7 @@ function Marketplace({user,users,listings,setListings,onDM,userLocation}){
       <label style={S.label}>Year: {filters.minYear||1985} – {filters.maxYear||2027}</label>
       <div style={{marginBottom:4}}><div style={{fontSize:10,color:C.muted,display:"flex",justifyContent:"space-between",marginBottom:2}}><span>From</span><span>{filters.minYear||1985}</span></div><input type="range" min={1985} max={2027} value={filters.minYear||1985} onChange={e=>setF("minYear",e.target.value)} style={{width:"100%",accentColor:C.accent,marginBottom:6}}/></div>
       <div style={{marginBottom:10}}><div style={{fontSize:10,color:C.muted,display:"flex",justifyContent:"space-between",marginBottom:2}}><span>To</span><span>{filters.maxYear||2027}</span></div><input type="range" min={1985} max={2027} value={filters.maxYear||2027} onChange={e=>setF("maxYear",e.target.value)} style={{width:"100%",accentColor:C.accent}}/></div>
-      <button onClick={()=>{setFilters({make:"Any",model:"Any",bodyType:"Any",color:"Any",condition:"Any",minPrice:"",maxPrice:"",minMiles:"",maxMiles:"",minYear:"",maxYear:"",maxDist:50});setCustomMake(false);setCustomModel(false);}} style={{...S.btnSecondary,width:"100%",fontSize:11,padding:"5px 0"}}>Clear All</button>
+      <button onClick={()=>{setFilters({make:"Any",model:"Any",bodyType:"Any",color:"Any",condition:"Any",titleStatus:"Any",minPrice:"",maxPrice:"",minMiles:"",maxMiles:"",minYear:"",maxYear:"",maxDist:50});setCustomMake(false);setCustomModel(false);}} style={{...S.btnSecondary,width:"100%",fontSize:11,padding:"5px 0"}}>Clear All</button>
     </div>
     <div style={{flex:1,overflow:"auto",padding:"16px 18px"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,flexWrap:"wrap",gap:8}}>
@@ -1145,7 +1146,8 @@ function FindMechanic({user,users,onDM,userLocation}){
       <div key={m.id} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:11,padding:"12px 14px",marginBottom:9}}>
         <div style={{display:"flex",alignItems:"flex-start",gap:10}}>
           <div style={{fontSize:38}}>{m.photo||"🧑‍🔧"}</div>
-          <div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:7,flexWrap:"wrap"}}><span style={{fontWeight:700,fontSize:14}}>{m.name}</span>{m.available?<span style={{background:C.greenDim,color:C.green,borderRadius:99,fontSize:10,fontWeight:700,padding:"2px 7px"}}>● AVAILABLE</span>:<span style={{background:C.faint,color:C.muted,borderRadius:99,fontSize:10,fontWeight:700,padding:"2px 7px"}}>BUSY</span>}</div>
+          <div style={{flex:1}}><div style={{display:"flex",alignItems:"center",gap:7,flexWrap:"wrap"}}><span style={{fontWeight:700,fontSize:14}}>{m.name}</span>{m.available?<span style={{background:C.greenDim,color:C.green,borderRadius:99,fontSize:10,fontWeight:700,padding:"2px 7px"}}>● AVAILABLE</span>:<span style={{background:C.faint,color:C.muted,borderRadius:99,fontSize:10,fontWeight:700,padding:"2px 7px"}}>BUSY</span>}
+              {m.isOnline&&m.showOnline!==false&&<span style={{background:C.greenDim,color:C.green,borderRadius:99,fontSize:9,fontWeight:700,padding:"2px 8px",marginLeft:4,display:"inline-flex",alignItems:"center",gap:3}}><span style={{width:6,height:6,borderRadius:99,background:C.green,display:"inline-block"}}/>ONLINE</span>}</div>
           <div style={{color:C.muted,fontSize:12,marginTop:1}}>{m.logo&&<span style={{marginRight:3}}>{m.logo}</span>}{m.shop} · {m.specialty}</div>
           <div style={{color:C.muted,fontSize:12}}>📍 {m.city}{m.dist!=null&&` · ${m.dist<1?"<1":m.dist.toFixed(1)} mi away`}</div>
           {avg&&<div style={{display:"flex",alignItems:"center",gap:5,marginTop:3}}><Stars rating={parseFloat(avg)} size={12}/><span style={{fontSize:12,fontWeight:600}}>{avg}</span><span style={{color:C.muted,fontSize:11}}>({r.length} reviews)</span></div>}
@@ -1468,6 +1470,264 @@ function ShopManagement({user,users,vehicles}){
 }
 
 
+// ── AVAILABILITY SETTINGS ─────────────────────────────────────────────────────
+function AvailabilitySettings({user,users,setUsers,onClose}){
+  const currentUser=users.find(u=>u.id===user.id)||user;
+  const [available,setAvailable]=useState(currentUser.available||false);
+  const [isOnline,setIsOnline]=useState(currentUser.isOnline||false);
+  const [showOnline,setShowOnline]=useState(currentUser.showOnline!==false);
+  const DAYS=["mon","tue","wed","thu","fri","sat","sun"];
+  const DAY_LABELS={mon:"Monday",tue:"Tuesday",wed:"Wednesday",thu:"Thursday",fri:"Friday",sat:"Saturday",sun:"Sunday"};
+  const TIMES=["Closed","6:00 AM","7:00 AM","8:00 AM","9:00 AM","10:00 AM","11:00 AM","12:00 PM","1:00 PM","2:00 PM","3:00 PM","4:00 PM","5:00 PM","6:00 PM","7:00 PM","8:00 PM","9:00 PM"];
+  const [hours,setHours]=useState(currentUser.workingHours||{mon:"9:00 AM",monEnd:"5:00 PM",tue:"9:00 AM",tueEnd:"5:00 PM",wed:"9:00 AM",wedEnd:"5:00 PM",thu:"9:00 AM",thuEnd:"5:00 PM",fri:"9:00 AM",friEnd:"5:00 PM",sat:"Closed",satEnd:"",sun:"Closed",sunEnd:""});
+
+  const save=()=>{
+    setUsers(prev=>prev.map(u=>u.id===user.id?{...u,available,isOnline,showOnline,workingHours:hours}:u));
+    onClose();
+  };
+
+  return(<div style={S.overlay}><div style={{...S.modal,maxWidth:440}}>
+    <div style={S.modalHead}><span style={S.modalTitle}>Availability</span><button onClick={onClose} style={S.iconBtn}>✕</button></div>
+
+    {/* Online status */}
+    <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,padding:"14px 16px",marginBottom:14}}>
+      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:13,letterSpacing:1.5,color:C.accent,marginBottom:10}}>ONLINE STATUS</div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+        <div>
+          <div style={{fontSize:14,fontWeight:600}}>Show as Online</div>
+          <div style={{color:C.muted,fontSize:12}}>Customers can see when you're active</div>
+        </div>
+        <div onClick={()=>setIsOnline(p=>!p)} style={{width:46,height:26,borderRadius:99,background:isOnline?C.green:C.faint,cursor:"pointer",position:"relative",transition:"background 0.2s",border:`1px solid ${isOnline?C.green:C.border}`}}>
+          <div style={{position:"absolute",top:2,left:isOnline?22:2,width:20,height:20,borderRadius:99,background:isOnline?"#000":C.muted,transition:"left 0.2s"}}/>
+        </div>
+      </div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+        <div>
+          <div style={{fontSize:14,fontWeight:600}}>Available for Jobs</div>
+          <div style={{color:C.muted,fontSize:12}}>Show "Available Now" badge to customers</div>
+        </div>
+        <div onClick={()=>setAvailable(p=>!p)} style={{width:46,height:26,borderRadius:99,background:available?C.accent:C.faint,cursor:"pointer",position:"relative",transition:"background 0.2s",border:`1px solid ${available?C.accent:C.border}`}}>
+          <div style={{position:"absolute",top:2,left:available?22:2,width:20,height:20,borderRadius:99,background:available?"#000":C.muted,transition:"left 0.2s"}}/>
+        </div>
+      </div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <div>
+          <div style={{fontSize:14,fontWeight:600}}>Show Online Indicator</div>
+          <div style={{color:C.muted,fontSize:12}}>Display green dot on your profile</div>
+        </div>
+        <div onClick={()=>setShowOnline(p=>!p)} style={{width:46,height:26,borderRadius:99,background:showOnline?C.blue:C.faint,cursor:"pointer",position:"relative",transition:"background 0.2s",border:`1px solid ${showOnline?C.blue:C.border}`}}>
+          <div style={{position:"absolute",top:2,left:showOnline?22:2,width:20,height:20,borderRadius:99,background:showOnline?"#000":C.muted,transition:"left 0.2s"}}/>
+        </div>
+      </div>
+    </div>
+
+    {/* Working hours */}
+    <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:10,padding:"14px 16px",marginBottom:14}}>
+      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:13,letterSpacing:1.5,color:C.accent,marginBottom:10}}>WORKING HOURS</div>
+      {DAYS.map(day=>(
+        <div key={day} style={{display:"grid",gridTemplateColumns:"80px 1fr 1fr",gap:6,alignItems:"center",marginBottom:7}}>
+          <div style={{fontSize:12,fontWeight:600,color:C.text}}>{DAY_LABELS[day].slice(0,3)}</div>
+          <select style={{...S.input,margin:0,fontSize:11,padding:"5px 6px"}} value={hours[day]||"Closed"} onChange={e=>setHours(p=>({...p,[day]:e.target.value,[day+"End"]:e.target.value==="Closed"?"":p[day+"End"]||"5:00 PM"}))}>
+            {TIMES.map(t=><option key={t}>{t}</option>)}
+          </select>
+          {hours[day]!=="Closed"
+            ?<select style={{...S.input,margin:0,fontSize:11,padding:"5px 6px"}} value={hours[day+"End"]||"5:00 PM"} onChange={e=>setHours(p=>({...p,[day+"End"]:e.target.value}))}>
+                {TIMES.filter(t=>t!=="Closed").map(t=><option key={t}>{t}</option>)}
+              </select>
+            :<div style={{color:C.muted,fontSize:11,textAlign:"center"}}>—</div>
+          }
+        </div>
+      ))}
+    </div>
+
+    <div style={{display:"flex",gap:8}}>
+      <button style={S.btnSecondary} onClick={onClose}>Cancel</button>
+      <button style={{...S.btnPrimary,flex:1}} onClick={save}>Save Availability</button>
+    </div>
+  </div></div>);
+}
+
+
+// ── SETTINGS PAGE ─────────────────────────────────────────────────────────────
+function SettingsPage({user,users,setUsers,onLogout,toggleTheme,onClose}){
+  const currentUser=users.find(u=>u.id===user.id)||user;
+  const [view,setView]=useState("main"); // main | profile | availability | terms
+  const [showAvailability,setShowAvailability]=useState(false);
+  const isMech=currentUser.role==="mechanic"||currentUser.role==="admin";
+
+  // Profile edit state
+  const [username,setUsername]=useState(currentUser.username||currentUser.name.replace(" ","").toLowerCase());
+  const [displayName,setDisplayName]=useState(currentUser.name||"");
+  const [bio,setBio]=useState(currentUser.bio||"");
+  const [profilePhoto,setProfilePhoto]=useState(currentUser.profilePhoto||null);
+  const [saving,setSaving]=useState(false);
+  const photoRef=useRef();
+  const videoRef=useRef();
+  const streamRef=useRef();
+  const [cameraOn,setCameraOn]=useState(false);
+
+  const startCamera=async()=>{
+    setCameraOn(true);
+    try{const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:"user"}});streamRef.current=s;if(videoRef.current)videoRef.current.srcObject=s;}
+    catch{alert("Camera access denied.");setCameraOn(false);}
+  };
+  const takePhoto=()=>{
+    const c=document.createElement("canvas");c.width=videoRef.current.videoWidth;c.height=videoRef.current.videoHeight;
+    c.getContext("2d").drawImage(videoRef.current,0,0);
+    setProfilePhoto(c.toDataURL("image/jpeg",0.8));
+    streamRef.current?.getTracks().forEach(t=>t.stop());setCameraOn(false);
+  };
+  const handleFilePhoto=(e)=>{
+    const f=e.target.files[0];if(!f)return;
+    const r=new FileReader();r.onload=ev=>setProfilePhoto(ev.target.result);r.readAsDataURL(f);
+  };
+  useEffect(()=>()=>streamRef.current?.getTracks().forEach(t=>t.stop()),[]);
+
+  const saveProfile=()=>{
+    setSaving(true);
+    setUsers(prev=>prev.map(u=>u.id===user.id?{...u,username,name:displayName,bio,profilePhoto}:u));
+    setTimeout(()=>{setSaving(false);setView("main");},800);
+  };
+
+  if(showAvailability&&isMech) return <AvailabilitySettings user={currentUser} users={users} setUsers={setUsers} onClose={()=>setShowAvailability(false)}/>;
+
+  return(<div style={{minHeight:"100vh",background:C.bg,color:C.text,fontFamily:"'DM Sans',sans-serif"}}>
+    <div style={{background:C.surface,borderBottom:`1px solid ${C.border}`,padding:"12px 16px",display:"flex",alignItems:"center",gap:10,position:"sticky",top:0,zIndex:50}}>
+      <button onClick={view==="main"?onClose:()=>setView("main")} style={{background:"none",border:"none",color:C.muted,cursor:"pointer",fontSize:22}}>←</button>
+      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,letterSpacing:2,color:C.text}}>
+        {view==="main"?"SETTINGS":view==="profile"?"EDIT PROFILE":view==="terms"?"TERMS OF SERVICE":"SETTINGS"}
+      </div>
+    </div>
+
+    {/* MAIN SETTINGS */}
+    {view==="main"&&<div style={{padding:"16px"}}>
+
+      {/* Profile preview */}
+      <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:"16px",marginBottom:14,display:"flex",alignItems:"center",gap:12,cursor:"pointer"}} onClick={()=>setView("profile")}>
+        <div style={{width:56,height:56,borderRadius:99,overflow:"hidden",flexShrink:0,background:C.faint,display:"flex",alignItems:"center",justifyContent:"center"}}>
+          {currentUser.profilePhoto?<img src={currentUser.profilePhoto} alt="Profile" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<div style={{fontSize:32}}>{currentUser.photo||"😎"}</div>}
+        </div>
+        <div style={{flex:1}}>
+          <div style={{fontWeight:700,fontSize:16}}>{currentUser.name}</div>
+          <div style={{color:C.muted,fontSize:12}}>@{currentUser.username||currentUser.name.replace(" ","").toLowerCase()}</div>
+          <div style={{color:C.accent,fontSize:12,marginTop:2}}>Edit Profile →</div>
+        </div>
+      </div>
+
+      {/* Settings sections */}
+      {[
+        {section:"ACCOUNT",items:[
+          {icon:"👤",label:"Edit Profile",sub:"Name, username, bio, photo",action:()=>setView("profile")},
+          ...(isMech?[{icon:"🕐",label:"Availability & Hours",sub:"Set working hours and online status",action:()=>setShowAvailability(true)}]:[]),
+          {icon:"🔔",label:"Notifications",sub:"Push alerts and reminders",action:()=>alert("Notifications settings coming soon!")},
+        ]},
+        {section:"APPEARANCE",items:[
+          {icon:C.isDark?"☀️":"🌙",label:C.isDark?"Switch to Light Mode":"Switch to Dark Mode",sub:"Currently "+(C.isDark?"Dark":"Light")+" mode",action:toggleTheme},
+        ]},
+        {section:"LEGAL",items:[
+          {icon:"📄",label:"Terms of Service",sub:"Read our terms and conditions",action:()=>setView("terms")},
+          {icon:"🔒",label:"Privacy Policy",sub:"How we handle your data",action:()=>alert("Privacy policy coming soon!")},
+          {icon:"🛡",label:"Safety Center",sub:"Report issues and stay safe",action:()=>alert("Safety center coming soon!")},
+        ]},
+        {section:"SUPPORT",items:[
+          {icon:"❓",label:"Help & FAQ",sub:"Get answers to common questions",action:()=>alert("Help center coming soon!")},
+          {icon:"📧",label:"Contact Support",sub:"Reach our team",action:()=>alert("support@garageiq.com")},
+          {icon:"⭐",label:"Rate GarageIQ",sub:"Leave us a review on the App Store",action:()=>alert("Thank you! Redirecting to App Store...")},
+        ]},
+        {section:"ACCOUNT ACTIONS",items:[
+          {icon:"🚪",label:"Sign Out",sub:"Sign out of your account",action:onLogout,danger:true},
+          {icon:"🗑",label:"Delete Account",sub:"Permanently delete your account",action:()=>alert("Please contact support to delete your account."),danger:true},
+        ]},
+      ].map(({section,items})=>(
+        <div key={section} style={{marginBottom:14}}>
+          <div style={{color:C.muted,fontSize:10,textTransform:"uppercase",letterSpacing:1.5,marginBottom:6,paddingLeft:4}}>{section}</div>
+          <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,overflow:"hidden"}}>
+            {items.map((item,i)=>(
+              <div key={item.label} onClick={item.action} style={{display:"flex",alignItems:"center",gap:12,padding:"13px 16px",cursor:"pointer",borderBottom:i<items.length-1?`1px solid ${C.border}`:"none",background:"transparent"}}>
+                <div style={{width:36,height:36,borderRadius:9,background:item.danger?C.redDim:C.accentDim,display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>{item.icon}</div>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:14,fontWeight:500,color:item.danger?C.red:C.text}}>{item.label}</div>
+                  <div style={{fontSize:11,color:C.muted,marginTop:1}}>{item.sub}</div>
+                </div>
+                <span style={{color:C.muted,fontSize:16}}>›</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+      <div style={{textAlign:"center",color:C.muted,fontSize:11,padding:"16px 0"}}>GarageIQ v1.0 Beta · Made with ❤️</div>
+    </div>}
+
+    {/* EDIT PROFILE */}
+    {view==="profile"&&<div style={{padding:"16px"}}>
+      {/* Profile photo */}
+      <div style={{textAlign:"center",marginBottom:20}}>
+        <div style={{position:"relative",display:"inline-block"}}>
+          <div style={{width:100,height:100,borderRadius:99,overflow:"hidden",background:C.faint,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto",border:`3px solid ${C.accent}`}}>
+            {profilePhoto?<img src={profilePhoto} alt="Profile" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:currentUser.profilePhoto?<img src={currentUser.profilePhoto} alt="Profile" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<div style={{fontSize:48}}>{currentUser.photo||"😎"}</div>}
+          </div>
+        </div>
+        {!cameraOn&&<div style={{display:"flex",gap:8,justifyContent:"center",marginTop:10}}>
+          <button style={{...S.btnSecondary,fontSize:12,padding:"6px 12px"}} onClick={()=>photoRef.current.click()}>📁 Upload</button>
+          <button style={{...S.btnSecondary,fontSize:12,padding:"6px 12px"}} onClick={startCamera}>📷 Camera</button>
+        </div>}
+        {cameraOn&&<div style={{marginTop:10}}>
+          <video ref={videoRef} autoPlay playsInline style={{width:200,height:150,borderRadius:10,background:"#000"}}/>
+          <div style={{display:"flex",gap:8,justifyContent:"center",marginTop:8}}>
+            <button style={{...S.btnSecondary,fontSize:12}} onClick={()=>{streamRef.current?.getTracks().forEach(t=>t.stop());setCameraOn(false);}}>Cancel</button>
+            <button style={{...S.btnPrimary,fontSize:12}} onClick={takePhoto}>📸 Take</button>
+          </div>
+        </div>}
+        <input ref={photoRef} type="file" accept="image/*" style={{display:"none"}} onChange={handleFilePhoto}/>
+      </div>
+
+      <label style={S.label}>Username</label>
+      <div style={{position:"relative",marginBottom:12}}>
+        <span style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",color:C.muted,fontSize:13}}>@</span>
+        <input style={{...S.input,margin:0,paddingLeft:26}} placeholder="username" value={username} onChange={e=>setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_.]/g,""))}/>
+      </div>
+
+      <label style={S.label}>Display Name</label>
+      <input style={S.input} placeholder="Your name" value={displayName} onChange={e=>setDisplayName(e.target.value)}/>
+
+      <label style={S.label}>Bio</label>
+      <textarea style={{...S.input,height:80,resize:"none"}} placeholder="Tell people about yourself..." value={bio} onChange={e=>setBio(e.target.value)} maxLength={150}/>
+      <div style={{color:C.muted,fontSize:11,textAlign:"right",marginTop:-8,marginBottom:12}}>{bio.length}/150</div>
+
+      <button style={{...S.btnPrimary,width:"100%"}} onClick={saveProfile} disabled={saving}>
+        {saving?"Saving...":"Save Profile"}
+      </button>
+    </div>}
+
+    {/* TERMS OF SERVICE */}
+    {view==="terms"&&<div style={{padding:"16px"}}>
+      <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,padding:"16px"}}>
+        {[
+          ["1. Acceptance","By using GarageIQ you agree to these terms. If you do not agree, please do not use the app."],
+          ["2. User Accounts","You are responsible for maintaining the confidentiality of your account and password. You agree to accept responsibility for all activities under your account."],
+          ["3. Marketplace Rules","All vehicle listings must be accurate and truthful. Fraudulent listings will result in immediate account termination. GarageIQ is not responsible for transactions between users."],
+          ["4. Mechanic Services","Mechanics are independent service providers. GarageIQ does not guarantee the quality of services. Users engage mechanics at their own risk."],
+          ["5. Prohibited Content","Users may not post offensive, illegal, or misleading content. GarageIQ reserves the right to remove content and ban users at any time."],
+          ["6. Privacy","We collect data to provide our services. See our Privacy Policy for full details on data collection and usage."],
+          ["7. Payments","In-app purchases are processed by Apple/Google. GarageIQ is not responsible for payment disputes with third parties."],
+          ["8. Limitation of Liability","GarageIQ is not liable for any damages arising from use of the app, including vehicle transactions, service quality, or data loss."],
+          ["9. Changes","We may update these terms at any time. Continued use of the app constitutes acceptance of updated terms."],
+          ["10. Contact","For questions about these terms contact us at legal@garageiq.com"],
+        ].map(([title,text])=>(
+          <div key={title} style={{marginBottom:14}}>
+            <div style={{fontWeight:700,fontSize:13,marginBottom:4,color:C.accent}}>{title}</div>
+            <div style={{fontSize:12,color:C.muted,lineHeight:1.7}}>{text}</div>
+          </div>
+        ))}
+        <div style={{borderTop:`1px solid ${C.border}`,paddingTop:12,marginTop:4,color:C.muted,fontSize:11,textAlign:"center"}}>
+          Last updated: January 2025 · GarageIQ Inc.
+        </div>
+      </div>
+    </div>}
+  </div>);
+}
+
+
 function Community({user}){
   const [posts,setPosts]=useState(INIT_POSTS);const [newPost,setNewPost]=useState({text:"",tag:JOB_TAGS[0]});const [replyText,setReplyText]=useState({});const [showCompose,setShowCompose]=useState(false);const [filter,setFilter]=useState("all");
   const filtered=filter==="all"?posts:posts.filter(p=>p.tag===filter);
@@ -1505,7 +1765,8 @@ function CustomerPortal({user,users,setUsers,vehicles,setVehicles,quotes,setQuot
   const acceptPendingService=(vehicleId,serviceId)=>{setVehicles(prev=>prev.map(v=>{if(v.id!==vehicleId)return v;const svc=v.pendingServices.find(s=>s.id===serviceId);if(!svc)return v;return{...v,services:[{...svc,status:"confirmed"},...v.services],pendingServices:v.pendingServices.filter(s=>s.id!==serviceId),lastVisit:svc.date,mileage:svc.mileage};}));};
   const declinePendingService=(vehicleId,serviceId)=>setVehicles(prev=>prev.map(v=>v.id===vehicleId?{...v,pendingServices:v.pendingServices.filter(s=>s.id!==serviceId)}:v));
   const saveCarPhoto=(vehicleId,photo)=>setVehicles(prev=>prev.map(v=>v.id===vehicleId?{...v,carPhoto:photo}:v));
-  const tabs=[{id:"garage",label:"Garage",icon:"🚗",badge:totalPending},{id:"quotes",label:"Quotes",icon:"📋",badge:myQuotes.filter(q=>q.status==="pending").length},{id:"marketplace",label:"Market",icon:"🏪"},{id:"find",label:"Mechanics",icon:"🔧"},{id:"board",label:"Community",icon:"💬"},{id:"messages",label:"Messages",icon:"✉️"}];
+  const pendingQuotes=myQuotes.filter(q=>q.status==="pending").length;
+  const tabs=[{id:"garage",label:"Garage",icon:"🚗",badge:totalPending+pendingQuotes},{id:"marketplace",label:"Market",icon:"🏪"},{id:"find",label:"Mechanics",icon:"🔧"},{id:"board",label:"Community",icon:"💬"},{id:"messages",label:"Messages",icon:"✉️"},{id:"settings",label:"Settings",icon:"⚙️"}];
   return(<div style={{minHeight:"100vh",background:C.bg,fontFamily:"'DM Sans',sans-serif",color:C.text}}>
     <style>{`
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');
@@ -1522,16 +1783,16 @@ function CustomerPortal({user,users,setUsers,vehicles,setVehicles,quotes,setQuot
         <button onClick={toggleTheme} style={{background:C.faint,border:`1px solid ${C.border}`,borderRadius:99,width:34,height:34,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}} title="Toggle theme">
           {C.isDark?"☀️":"🌙"}
         </button>
-        <button onClick={()=>setShowProfile(true)} style={{background:"none",border:"none",cursor:"pointer",fontSize:24}}>{currentUser.photo||"😎"}</button>
+        <button onClick={()=>setTab("settings")} style={{background:"none",border:"none",cursor:"pointer",width:32,height:32,borderRadius:99,overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center"}}>{currentUser.profilePhoto?<img src={currentUser.profilePhoto} alt="P" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<span style={{fontSize:22}}>{currentUser.photo||"😎"}</span>}</button>
         <button onClick={onLogout} style={{background:"none",border:"none",color:C.muted,cursor:"pointer",fontSize:11}}>out</button>
       </div>
     </div>
     {/* Bottom Nav */}
     <div style={{position:"fixed",bottom:0,left:0,right:0,background:C.surface,borderTop:`1px solid ${C.border}`,display:"flex",zIndex:100,paddingBottom:"env(safe-area-inset-bottom)"}}>
       {tabs.map(t=>(
-        <button key={t.id} onClick={()=>{setDmContact(null);setTab(t.id);setSelectedVehicle(null);}} style={{flex:1,paddingTop:10,paddingBottom:10,border:"none",background:"transparent",color:tab===t.id?C.accent:C.muted,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3,position:"relative",transition:"color 0.15s",minHeight:60}}>
-          <span style={{fontSize:22}}>{t.icon}</span>
-          <span style={{fontSize:10,fontWeight:600,whiteSpace:"nowrap"}}>{t.label}</span>
+        <button key={t.id} onClick={()=>{setDmContact(null);setTab(t.id);setSelectedVehicle(null);}} style={{flex:1,paddingTop:12,paddingBottom:12,border:"none",background:"transparent",color:tab===t.id?C.accent:C.muted,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:4,position:"relative",transition:"color 0.15s",minHeight:68}}>
+          <span style={{fontSize:26}}>{t.icon}</span>
+          <span style={{fontSize:11,fontWeight:600,whiteSpace:"nowrap"}}>{t.label}</span>
           {t.badge>0&&<div style={{position:"absolute",top:6,right:"22%",background:C.red,color:"#fff",borderRadius:99,fontSize:9,fontWeight:800,minWidth:16,height:16,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 3px"}}>{t.badge}</div>}
         </button>
       ))}
@@ -1623,6 +1884,17 @@ function CustomerPortal({user,users,setUsers,vehicles,setVehicles,quotes,setQuot
           </div>
         </div>
       );})}
+      {/* Quotes notification inside garage */}
+      {pendingQuotes>0&&<div style={{background:C.surface,border:`2px solid ${C.purple}44`,borderRadius:12,padding:"14px 16px",marginBottom:14,cursor:"pointer"}} onClick={()=>setTab("quotes")}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <div style={{width:40,height:40,borderRadius:99,background:C.purpleDim,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>📋</div>
+          <div style={{flex:1}}>
+            <div style={{fontWeight:700,fontSize:14}}>You have {pendingQuotes} pending quote{pendingQuotes!==1?"s":""}</div>
+            <div style={{color:C.muted,fontSize:12,marginTop:2}}>Tap to review and accept or decline</div>
+          </div>
+          <span style={{color:C.purple,fontSize:18}}>→</span>
+        </div>
+      </div>}
       {myVehicles.length===0&&<div style={{textAlign:"center",padding:"40px 0",color:C.muted}}><div style={{fontSize:48,marginBottom:12}}>🚗</div><div style={{fontSize:14,marginBottom:6}}>No cars yet</div><div style={{fontSize:12}}>Tap + to add your first car</div></div>}
     </div>}
 
@@ -1638,13 +1910,15 @@ function CustomerPortal({user,users,setUsers,vehicles,setVehicles,quotes,setQuot
       onBack={()=>setSelectedVehicle(null)}
       onDMSeller={handleDM}
     />}
-    {tab==="quotes"&&<div style={{padding:"18px 16px",maxWidth:620,margin:"0 auto",animation:"fadeUp 0.3s ease"}}><div style={{marginBottom:13}}><div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,letterSpacing:2}}>My Quotes</div></div>{myQuotes.length===0&&<div style={{color:C.muted,fontSize:13}}>No quotes yet.</div>}{myQuotes.map(q=><QuoteCard key={q.id} quote={q} isCustomer={true} onRespond={respondToQuote}/>)}</div>}
+    {tab==="quotes"&&<div style={{padding:"18px 16px",maxWidth:620,margin:"0 auto",animation:"fadeUp 0.3s ease"}}><div style={{display:"flex",alignItems:"center",gap:10,marginBottom:13}}><button onClick={()=>setTab("garage")} style={{background:"none",border:"none",color:C.muted,cursor:"pointer",fontSize:20}}>←</button><div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,letterSpacing:2}}>My Quotes</div></div>{myQuotes.length===0&&<div style={{color:C.muted,fontSize:13}}>No quotes yet.</div>}{myQuotes.map(q=><QuoteCard key={q.id} quote={q} isCustomer={true} onRespond={respondToQuote}/>)}</div>}
     {tab==="marketplace"&&<Marketplace user={currentUser} users={users} listings={listings} setListings={setListings} onDM={handleDM} userLocation={userLocation}/>}
     {tab==="find"&&<FindMechanic user={currentUser} users={users} onDM={handleDM} userLocation={userLocation}/>}
     {tab==="board"&&<Community user={currentUser}/>}
     {tab==="messages"&&<Messages user={user} vehicles={vehicles} users={users} initContact={dmContact} toggleTheme={toggleTheme}/>}
+    {tab==="settings"&&<SettingsPage user={currentUser} users={users} setUsers={setUsers} onLogout={onLogout} toggleTheme={toggleTheme} onClose={()=>setTab("garage")}/>}
     {carPhotoTarget&&<CarPhotoPicker current={carPhotoTarget.carPhoto} onSave={(photo)=>saveCarPhoto(carPhotoTarget.id,photo)} onClose={()=>setCarPhotoTarget(null)}/>}
     {showProfile&&<ProfilePage user={currentUser} users={users} setUsers={setUsers} onClose={()=>setShowProfile(false)}/>}
+    {showSettings&&<SettingsPage user={currentUser} users={users} setUsers={setUsers} onLogout={()=>setUser(null)} toggleTheme={toggleTheme} onClose={()=>setShowSettings(false)}/>}
   </div>);
 }
 function GarageIQApp({theme,toggleTheme}){
@@ -1663,14 +1937,14 @@ function GarageIQApp({theme,toggleTheme}){
   if(!user){
     const LoginScreen=()=>{
       const [email,setEmail]=useState("");const [pass,setPass]=useState("");const [err,setErr]=useState("");const [tab,setTab]=useState("mechanic");
-      const handle=()=>{const u=users.find(u=>u.email===email&&u.password===pass);if(!u){setErr("Invalid credentials.");return;}const map={mechanic:["mechanic","admin"],customer:["customer"]};if(!map[tab].includes(u.role)){setErr(`Not a ${tab} account.`);return;}setUser(u);};
-      const hints={mechanic:[{label:"Mechanic",e:"jake@garageiq.com",p:"mechanic123"},{label:"Admin",e:"admin@garageiq.com",p:"admin123"}],customer:[{label:"Customer",e:"marcus@email.com",p:"customer123"},{label:"Dealer",e:"miami@autodealer.com",p:"dealer123"}]};
+      const handle=()=>{const u=users.find(u=>u.email===email&&u.password===pass);if(!u){setErr("Invalid credentials.");return;}setUser(u);};
+      const allHints=[{label:"Mechanic",e:"jake@garageiq.com",p:"mechanic123"},{label:"Admin",e:"admin@garageiq.com",p:"admin123"},{label:"Customer",e:"marcus@email.com",p:"customer123"},{label:"Dealer",e:"miami@autodealer.com",p:"dealer123"}];
       return <div style={{minHeight:"100vh",background:C.bg,display:"flex",alignItems:"center",justifyContent:"center",fontFamily:"'DM Sans',sans-serif",padding:20}}>
         <style>{`@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');*{box-sizing:border-box;margin:0;padding:0}@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}`}</style>
         <div style={{width:"100%",maxWidth:400,animation:"fadeUp 0.4s ease"}}>
           <div style={{textAlign:"center",marginBottom:26}}><div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:52,lineHeight:1}}><span style={{color:C.accent}}>G</span><span style={{color:C.text}}>ARAGEIQ</span></div><div style={{color:C.muted,fontSize:13,marginTop:3}}>Shop Management & Marketplace</div></div>
           <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:16,padding:24}}>
-            <div style={{display:"flex",background:C.faint,borderRadius:8,padding:3,marginBottom:18}}>{["mechanic","customer"].map(t=><button key={t} onClick={()=>{setTab(t);setErr("");}} style={{flex:1,padding:"7px 0",borderRadius:6,border:"none",cursor:"pointer",fontSize:13,fontWeight:600,background:tab===t?C.accent:"transparent",color:tab===t?"#000":C.muted,transition:"all 0.2s"}}>{t==="mechanic"?"Mechanic / Admin":"Customer"}</button>)}</div>
+            <div style={{textAlign:"center",marginBottom:16,color:C.muted,fontSize:13}}>Sign in to your account</div>
             <label style={S.label}>Email</label><input style={S.input} type="email" placeholder="your@email.com" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handle()}/>
             <label style={S.label}>Password</label><input style={S.input} type="password" placeholder="••••••••" value={pass} onChange={e=>setPass(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handle()}/>
             {err&&<div style={{color:C.red,fontSize:12,marginBottom:10}}>{err}</div>}
@@ -1696,15 +1970,16 @@ function GarageIQApp({theme,toggleTheme}){
   const sendCompletedService=(vehicleId,service)=>{setVehicles(p=>p.map(v=>v.id===vehicleId?{...v,pendingServices:[...(v.pendingServices||[]),service]}:v));if(selected?.id===vehicleId)setSelected(p=>({...p,pendingServices:[...(p.pendingServices||[]),service]}));};
 
   const myWorkerJobs=INIT_JOBS.filter(j=>j.assignedTo===INIT_WORKERS.find(w=>w.userId===user.id)?.id&&(j.status==="To-do"||j.status==="In Progress"||j.status==="Waiting on Parts"));
+  const isMechOnline=currentUser.isOnline||false;
   const navItems=[
-    {id:"dashboard",icon:"◈",label:"Dashboard"},
-    {id:"customers",icon:"◉",label:"Customers"},
+    {id:"dashboard",icon:"🏠",label:"Dashboard"},
+    {id:"customers",icon:"👥",label:"Customers"},
     {id:"shop",icon:"🏗",label:"Shop Jobs",badge:myWorkerJobs.length},
     {id:"quotes",icon:"📋",label:"Quotes",badge:myQuotes.filter(q=>q.status==="countered").length},
     {id:"marketplace",icon:"🏪",label:"Marketplace"},
-    {id:"alerts",icon:"⚠",label:"Alerts",badge:totalAlerts},
-    {id:"board",icon:"◫",label:"Community"},
-    {id:"messages",icon:"✉",label:"Messages"},
+    {id:"alerts",icon:"⚠️",label:"Alerts",badge:totalAlerts},
+    {id:"board",icon:"💬",label:"Community"},
+    {id:"messages",icon:"✉️",label:"Messages"},
   ];
 
   return(<div style={{display:"flex",height:"100vh",background:C.bg,fontFamily:"'DM Sans',sans-serif",color:C.text,overflow:"hidden"}}>
@@ -1727,7 +2002,13 @@ function GarageIQApp({theme,toggleTheme}){
 `}</style>
 
     <div className="sidebar" style={{width:186,background:C.surface,borderRight:`1px solid ${C.border}`,display:"flex",flexDirection:"column",padding:"14px 0",flexShrink:0}}>
-      <div style={{padding:"0 12px 18px",display:"flex",alignItems:"baseline",gap:2}}><span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,color:C.accent,lineHeight:1}}>G</span><span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,letterSpacing:3}}>ARAGEIQ</span></div>
+      <div style={{padding:"12px 12px 14px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+        <div style={{display:"flex",alignItems:"baseline",gap:2}}><span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,color:C.accent,lineHeight:1}}>G</span><span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,letterSpacing:3}}>ARAGEIQ</span></div>
+        <div onClick={()=>{setUsers(prev=>prev.map(u=>u.id===currentUser.id?{...u,isOnline:!u.isOnline}:u));}} style={{display:"flex",alignItems:"center",gap:4,cursor:"pointer",padding:"3px 7px",borderRadius:99,background:isMechOnline?C.greenDim:C.faint,border:`1px solid ${isMechOnline?C.green:C.border}`}} title={isMechOnline?"Go Offline":"Go Online"}>
+          <div style={{width:8,height:8,borderRadius:99,background:isMechOnline?C.green:C.muted}}/>
+          <span style={{fontSize:9,fontWeight:700,color:isMechOnline?C.green:C.muted}}>{isMechOnline?"ONLINE":"OFFLINE"}</span>
+        </div>
+      </div>
       <nav style={{flex:1,padding:"0 7px",display:"flex",flexDirection:"column",gap:1}}>
         {navItems.map(item=><button key={item.id} onClick={()=>{setNav(item.id);setSelected(null);}} style={{display:"flex",alignItems:"center",gap:7,padding:"7px 9px",borderRadius:7,border:"none",cursor:"pointer",fontSize:12,background:nav===item.id?C.accentDim:"transparent",color:nav===item.id?C.accent:C.muted,borderLeft:`2px solid ${nav===item.id?C.accent:"transparent"}`,fontWeight:nav===item.id?600:400,transition:"all 0.15s",textAlign:"left"}}>
           <span style={{fontSize:12,width:15,textAlign:"center"}}>{item.icon}</span>
@@ -1737,14 +2018,15 @@ function GarageIQApp({theme,toggleTheme}){
       </nav>
       <div style={{padding:"10px 9px",borderTop:`1px solid ${C.border}`}}>
         <button onClick={()=>setModal("vin")} style={{width:"100%",background:C.accentDim,border:`1px solid ${C.accent}30`,borderRadius:7,color:C.accent,padding:"6px 0",cursor:"pointer",fontSize:10,fontWeight:700,letterSpacing:1,marginBottom:9}}>+ SCAN VIN</button>
-        <button onClick={()=>setShowProfile(true)} style={{display:"flex",alignItems:"center",gap:6,background:"none",border:"none",cursor:"pointer",width:"100%",padding:0}}>
-          <div style={{fontSize:22}}>{currentUser.photo||"🧑‍🔧"}</div>
+        <button onClick={()=>setShowSettings(true)} style={{display:"flex",alignItems:"center",gap:6,background:"none",border:"none",cursor:"pointer",width:"100%",padding:0}}>
+          <div style={{width:26,height:26,borderRadius:99,overflow:"hidden",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>{currentUser.profilePhoto?<img src={currentUser.profilePhoto} alt="P" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<span style={{fontSize:22}}>{currentUser.photo||"🧑‍🔧"}</span>}</div>
           <div style={{minWidth:0,textAlign:"left"}}><div style={{fontSize:11,fontWeight:600,color:C.text,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{currentUser.name}</div><div style={{fontSize:9,color:C.muted,textTransform:"capitalize"}}>{currentUser.role}</div></div>
           <button onClick={(e)=>{e.stopPropagation();setUser(null);}} style={{background:"none",border:"none",color:C.muted,cursor:"pointer",fontSize:9,marginLeft:"auto"}}>out</button>
         </button>
         <button onClick={toggleTheme} style={{width:"100%",background:C.faint,border:`1px solid ${C.border}`,borderRadius:7,color:C.text,padding:"5px 0",cursor:"pointer",fontSize:10,marginTop:7,display:"flex",alignItems:"center",justifyContent:"center",gap:5}}>
           {C.isDark?"☀️ Light":"🌙 Dark"}
         </button>
+        <button onClick={()=>setShowSettings(true)} style={{width:"100%",background:C.accentDim,border:`1px solid ${C.accent}30`,borderRadius:7,color:C.accent,padding:"6px 0",cursor:"pointer",fontSize:10,fontWeight:700,letterSpacing:1,marginTop:5}}>⚙ SETTINGS</button>
       </div>
     </div>
 
@@ -1847,9 +2129,9 @@ function GarageIQApp({theme,toggleTheme}){
         {id:"marketplace",icon:"🏪",label:"Market"},
         {id:"messages",icon:"✉️",label:"Messages",badge:0},
       ].map(item=>(
-        <button key={item.id} onClick={()=>{setNav(item.id);setSelected(null);}} style={{flex:1,paddingTop:10,paddingBottom:10,border:"none",background:"transparent",color:nav===item.id?C.accent:C.muted,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3,position:"relative",transition:"color 0.15s",minHeight:60}}>
-          <span style={{fontSize:22}}>{item.icon}</span>
-          <span style={{fontSize:10,fontWeight:600,whiteSpace:"nowrap"}}>{item.label}</span>
+        <button key={item.id} onClick={()=>{setNav(item.id);setSelected(null);}} style={{flex:1,paddingTop:12,paddingBottom:12,border:"none",background:"transparent",color:nav===item.id?C.accent:C.muted,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:4,position:"relative",transition:"color 0.15s",minHeight:68}}>
+          <span style={{fontSize:26}}>{item.icon}</span>
+          <span style={{fontSize:11,fontWeight:600,whiteSpace:"nowrap"}}>{item.label}</span>
           {item.badge>0&&<div style={{position:"absolute",top:6,right:"22%",background:C.red,color:"#fff",borderRadius:99,fontSize:9,fontWeight:800,minWidth:16,height:16,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 3px"}}>{item.badge}</div>}
         </button>
       ))}
@@ -1859,6 +2141,7 @@ function GarageIQApp({theme,toggleTheme}){
     {modal==="quote"&&quoteTarget&&<QuoteBuilder mechanic={currentUser} vehicle={quoteTarget} onClose={()=>{setModal(null);setQuoteTarget(null);}} onSend={sendQuote}/>}
     {completedTarget&&<LogCompletedService mechanic={currentUser} vehicle={completedTarget} onClose={()=>setCompletedTarget(null)} onSend={sendCompletedService}/>}
     {showProfile&&<ProfilePage user={currentUser} users={users} setUsers={setUsers} onClose={()=>setShowProfile(false)}/>}
+    {showSettings&&<SettingsPage user={currentUser} users={users} setUsers={setUsers} onLogout={()=>setUser(null)} toggleTheme={toggleTheme} onClose={()=>setShowSettings(false)}/>}
 
     {modal==="share"&&shareTarget&&<div style={S.overlay}><div style={{...S.modal,maxWidth:340}}>
       <div style={S.modalHead}><span style={S.modalTitle}>Share Profile</span><button onClick={()=>setModal(null)} style={S.iconBtn}>✕</button></div>
