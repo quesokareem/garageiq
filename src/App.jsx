@@ -470,6 +470,270 @@ function QRCode({value,size=120}){
   </svg>);
 }
 
+// ── VEHICLE TRADING CARD ──────────────────────────────────────────────────────
+function VehicleCard({vehicle,onFlipComplete,autoFlip=false,onClick}){
+  const [flipped,setFlipped]=useState(false);
+  const [isAnimating,setIsAnimating]=useState(false);
+  const [glowPos,setGlowPos]=useState({x:50,y:50});
+  const cardRef=useRef();
+
+  // Auto flip on mount if new card
+  useEffect(()=>{
+    if(autoFlip){
+      setTimeout(()=>flip(),400);
+    }
+  },[]);
+
+  const flip=()=>{
+    if(isAnimating)return;
+    setIsAnimating(true);
+    setFlipped(p=>!p);
+    setTimeout(()=>{
+      setIsAnimating(false);
+      if(onFlipComplete)onFlipComplete();
+    },700);
+  };
+
+  // Holographic glow effect on mouse/touch move
+  const handleMove=(e)=>{
+    if(!cardRef.current)return;
+    const rect=cardRef.current.getBoundingClientRect();
+    const clientX=e.touches?e.touches[0].clientX:e.clientX;
+    const clientY=e.touches?e.touches[0].clientY:e.clientY;
+    const x=((clientX-rect.left)/rect.width)*100;
+    const y=((clientY-rect.top)/rect.height)*100;
+    setGlowPos({x,y});
+  };
+
+  // Determine card rarity color based on service history
+  const serviceCount=vehicle.services?.length||0;
+  const alertCount=vehicle.alerts?.length||0;
+  const getRarity=()=>{
+    if(serviceCount>=5&&alertCount===0)return{label:"LEGENDARY",color:"#FFD700",glow:"#FFD70066",border:"linear-gradient(135deg,#FFD700,#FFA500,#FFD700,#FF8C00,#FFD700)"};
+    if(serviceCount>=3)return{label:"RARE",color:"#C8F135",glow:"#C8F13544",border:"linear-gradient(135deg,#C8F135,#7EC200,#C8F135,#A0D800,#C8F135)"};
+    if(serviceCount>=1)return{label:"UNCOMMON",color:"#4FC3F7",glow:"#4FC3F744",border:"linear-gradient(135deg,#4FC3F7,#0288D1,#4FC3F7,#29B6F6,#4FC3F7)"};
+    return{label:"COMMON",color:"#888",glow:"#88888844",border:"linear-gradient(135deg,#666,#444,#666,#555,#666)"};
+  };
+  const rarity=getRarity();
+
+  // Parse year/make/model
+  const parts=vehicle.vehicle?.split(" ")||[];
+  const year=parts[0]||"";
+  const make=parts[1]||"";
+  const model=parts.slice(2).join(" ")||"";
+
+  const cardStyle={
+    width:"100%",
+    maxWidth:280,
+    height:380,
+    borderRadius:16,
+    position:"relative",
+    cursor:"pointer",
+    transformStyle:"preserve-3d",
+    transition:"transform 0.7s cubic-bezier(0.175,0.885,0.32,1.275)",
+    transform:flipped?"rotateY(180deg)":"rotateY(0deg)",
+    margin:"0 auto",
+  };
+
+  const faceStyle={
+    position:"absolute",
+    inset:0,
+    borderRadius:16,
+    backfaceVisibility:"hidden",
+    WebkitBackfaceVisibility:"hidden",
+    overflow:"hidden",
+  };
+
+  return(
+    <div style={{perspective:1000,width:"100%",maxWidth:280,margin:"0 auto"}}>
+      <div
+        ref={cardRef}
+        style={cardStyle}
+        onClick={()=>{flip();if(onClick&&flipped)onClick();}}
+        onMouseMove={handleMove}
+        onTouchMove={handleMove}
+      >
+        {/* ── FRONT ── */}
+        <div style={{...faceStyle,background:"linear-gradient(145deg,#1a1a2e,#16213e,#0f3460)",border:"2px solid transparent",backgroundClip:"padding-box",boxShadow:`0 0 20px ${rarity.glow}, 0 8px 32px #00000088, inset 0 1px 0 #ffffff22`}}>
+
+          {/* Animated border */}
+          <div style={{position:"absolute",inset:-2,borderRadius:18,background:rarity.border,backgroundSize:"200% 200%",animation:"borderShimmer 3s linear infinite",zIndex:-1}}/>
+
+          {/* Holographic overlay */}
+          <div style={{position:"absolute",inset:0,borderRadius:16,background:`radial-gradient(circle at ${glowPos.x}% ${glowPos.y}%, ${rarity.glow} 0%, transparent 60%)`,pointerEvents:"none",zIndex:2,mixBlendMode:"overlay"}}/>
+
+          {/* Card header */}
+          <div style={{padding:"10px 12px 6px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:11,letterSpacing:3,color:rarity.color}}>{rarity.label}</div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:11,letterSpacing:2,color:"#ffffff66"}}>GARAGEIQ</div>
+          </div>
+
+          {/* Car name */}
+          <div style={{padding:"0 12px 6px"}}>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,letterSpacing:1,color:"#fff",lineHeight:1.1,textShadow:`0 0 20px ${rarity.color}88`}}>{year} {make}</div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:1,color:rarity.color,lineHeight:1}}>{model}</div>
+          </div>
+
+          {/* Car photo */}
+          <div style={{margin:"0 10px",borderRadius:10,overflow:"hidden",height:160,background:"#000000aa",border:`1px solid ${rarity.color}44`,position:"relative"}}>
+            {vehicle.carPhoto
+              ?<img src={vehicle.carPhoto} alt="Car" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+              :<div style={{height:"100%",display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:4}}>
+                <div style={{fontSize:52}}>🚗</div>
+                <div style={{color:"#ffffff44",fontSize:10}}>TAP TO ADD PHOTO</div>
+              </div>
+            }
+            {/* Shine effect */}
+            <div style={{position:"absolute",inset:0,background:`linear-gradient(135deg, transparent 40%, ${rarity.color}22 50%, transparent 60%)`,backgroundSize:"200% 200%",animation:"cardShine 3s linear infinite"}}/>
+          </div>
+
+          {/* Stats preview */}
+          <div style={{padding:"8px 12px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div style={{textAlign:"center"}}>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,color:rarity.color,lineHeight:1}}>{serviceCount}</div>
+              <div style={{fontSize:8,color:"#ffffff66",textTransform:"uppercase",letterSpacing:1}}>Services</div>
+            </div>
+            <div style={{textAlign:"center"}}>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,color:alertCount>0?C.red:C.green,lineHeight:1}}>{alertCount}</div>
+              <div style={{fontSize:8,color:"#ffffff66",textTransform:"uppercase",letterSpacing:1}}>Alerts</div>
+            </div>
+            <div style={{textAlign:"center"}}>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,color:rarity.color,lineHeight:1}}>{(vehicle.mileage/1000).toFixed(0)}K</div>
+              <div style={{fontSize:8,color:"#ffffff66",textTransform:"uppercase",letterSpacing:1}}>Miles</div>
+            </div>
+            <div style={{textAlign:"center"}}>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,color:vehicle.forSale?C.green:"#ffffff66",lineHeight:1}}>{vehicle.forSale?"ON":"OFF"}</div>
+              <div style={{fontSize:8,color:"#ffffff66",textTransform:"uppercase",letterSpacing:1}}>Market</div>
+            </div>
+          </div>
+
+          {/* Tap hint */}
+          <div style={{textAlign:"center",paddingBottom:8}}>
+            <div style={{fontSize:9,color:"#ffffff33",letterSpacing:2}}>TAP TO FLIP</div>
+          </div>
+        </div>
+
+        {/* ── BACK ── */}
+        <div style={{...faceStyle,transform:"rotateY(180deg)",background:"linear-gradient(145deg,#0f3460,#16213e,#1a1a2e)",border:`2px solid ${rarity.color}44`,boxShadow:`0 0 30px ${rarity.glow}, 0 8px 32px #00000088`}}>
+
+          {/* Holographic overlay back */}
+          <div style={{position:"absolute",inset:0,borderRadius:16,background:`radial-gradient(circle at ${100-glowPos.x}% ${100-glowPos.y}%, ${rarity.glow} 0%, transparent 60%)`,pointerEvents:"none",zIndex:2,mixBlendMode:"overlay"}}/>
+
+          {/* Back header */}
+          <div style={{padding:"12px 14px 8px",borderBottom:`1px solid ${rarity.color}33`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:14,letterSpacing:2,color:rarity.color}}>{year} {make} {model}</div>
+            <div style={{background:rarity.color+"22",border:`1px solid ${rarity.color}`,borderRadius:99,padding:"2px 8px"}}>
+              <span style={{fontSize:9,fontWeight:700,color:rarity.color,letterSpacing:1}}>{rarity.label}</span>
+            </div>
+          </div>
+
+          {/* Stats grid */}
+          <div style={{padding:"10px 14px"}}>
+            {/* Power bars */}
+            {[
+              {label:"Condition",value:vehicle.services?.length>5?95:vehicle.services?.length>3?80:vehicle.services?.length>1?65:50,color:rarity.color},
+              {label:"Reliability",value:vehicle.alerts?.length===0?90:vehicle.alerts?.length===1?70:vehicle.alerts?.some(a=>a.level==="critical")?40:60,color:vehicle.alerts?.length===0?C.green:C.orange},
+              {label:"Service Record",value:Math.min(100,serviceCount*20),color:"#4FC3F7"},
+              {label:"Market Value",value:vehicle.forSale?85:70,color:"#C084FC"},
+            ].map(stat=>(
+              <div key={stat.label} style={{marginBottom:8}}>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+                  <span style={{fontSize:10,color:"#ffffff88",textTransform:"uppercase",letterSpacing:1}}>{stat.label}</span>
+                  <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:13,color:stat.color}}>{stat.value}</span>
+                </div>
+                <div style={{height:5,background:"#ffffff11",borderRadius:99,overflow:"hidden"}}>
+                  <div style={{height:"100%",width:`${stat.value}%`,background:`linear-gradient(90deg,${stat.color}88,${stat.color})`,borderRadius:99,transition:"width 1s ease",boxShadow:`0 0 8px ${stat.color}`}}/>
+                </div>
+              </div>
+            ))}
+
+            {/* Key info */}
+            <div style={{marginTop:10,display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+              {[
+                ["VIN",vehicle.vin?.slice(-8)||"—"],
+                ["Mileage",`${vehicle.mileage?.toLocaleString()} mi`],
+                ["Last Service",vehicle.lastVisit||"—"],
+                ["Services",`${serviceCount} records`],
+              ].map(([label,val])=>(
+                <div key={label} style={{background:"#ffffff08",borderRadius:7,padding:"6px 8px",border:`1px solid ${rarity.color}22`}}>
+                  <div style={{fontSize:8,color:"#ffffff44",textTransform:"uppercase",letterSpacing:1,marginBottom:2}}>{label}</div>
+                  <div style={{fontSize:10,color:"#fff",fontWeight:600,fontFamily:label==="VIN"?"monospace":"inherit"}}>{val}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Bottom */}
+          <div style={{position:"absolute",bottom:0,left:0,right:0,padding:"8px 14px",borderTop:`1px solid ${rarity.color}22`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div style={{fontSize:9,color:"#ffffff33",letterSpacing:2}}>TAP TO FLIP BACK</div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:11,color:rarity.color,letterSpacing:2}}>GARAGEIQ #{vehicle.id}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* CSS animations */}
+      <style>{`
+        @keyframes borderShimmer {
+          0%{background-position:0% 50%}
+          50%{background-position:100% 50%}
+          100%{background-position:0% 50%}
+        }
+        @keyframes cardShine {
+          0%{background-position:200% 0%}
+          100%{background-position:-200% 0%}
+        }
+        @keyframes cardEntrance {
+          0%{opacity:0;transform:scale(0.5) rotateY(90deg)}
+          60%{transform:scale(1.05) rotateY(-10deg)}
+          100%{opacity:1;transform:scale(1) rotateY(0deg)}
+        }
+        @keyframes newCardPop {
+          0%{opacity:0;transform:scale(0.3) rotateY(180deg) translateY(50px)}
+          50%{transform:scale(1.1) rotateY(10deg) translateY(-10px)}
+          75%{transform:scale(0.97) rotateY(-5deg)}
+          100%{opacity:1;transform:scale(1) rotateY(0deg) translateY(0)}
+        }
+      `}</style>
+    </div>
+  );
+}
+
+// ── NEW CAR REVEAL ────────────────────────────────────────────────────────────
+function NewCarReveal({vehicle,onDone}){
+  const [stage,setStage]=useState("entering"); // entering | showing | done
+  useEffect(()=>{
+    setTimeout(()=>setStage("showing"),100);
+    setTimeout(()=>setStage("done"),4000);
+    setTimeout(()=>onDone(),4500);
+  },[]);
+  return(
+    <div style={{position:"fixed",inset:0,background:"#000000ee",zIndex:2000,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:20}}>
+      <style>{`@keyframes goldPulse{0%,100%{opacity:0.6;transform:scale(1)}50%{opacity:1;transform:scale(1.02)}}`}</style>
+
+      {/* Particles */}
+      <div style={{position:"absolute",inset:0,overflow:"hidden",pointerEvents:"none"}}>
+        {[...Array(20)].map((_,i)=>(
+          <div key={i} style={{position:"absolute",width:4,height:4,borderRadius:99,background:i%3===0?"#FFD700":i%3===1?"#C8F135":"#fff",left:`${Math.random()*100}%`,top:`${Math.random()*100}%`,animation:`goldPulse ${1+Math.random()*2}s ease-in-out infinite`,animationDelay:`${Math.random()*2}s`,opacity:0.6}}/>
+        ))}
+      </div>
+
+      <div style={{textAlign:"center",marginBottom:10}}>
+        <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:14,letterSpacing:4,color:"#FFD700",marginBottom:4}}>NEW VEHICLE ACQUIRED</div>
+        <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:32,color:"#fff",textShadow:"0 0 30px #FFD70088"}}>{vehicle.vehicle}</div>
+      </div>
+
+      <div style={{animation:`newCardPop 0.8s cubic-bezier(0.175,0.885,0.32,1.275) forwards`,width:"100%",maxWidth:300,padding:"0 20px"}}>
+        <VehicleCard vehicle={vehicle} autoFlip={false}/>
+      </div>
+
+      <div style={{color:"#ffffff44",fontSize:12,letterSpacing:2,marginTop:10}}>TAP TO CONTINUE</div>
+
+      <div onClick={()=>{setStage("done");onDone();}} style={{position:"absolute",inset:0}}/>
+    </div>
+  );
+}
+
+
 // ── VEHICLE DETAIL PAGE ───────────────────────────────────────────────────
 function VehicleDetailPage({vehicle,user,users,vehicles,setVehicles,listings,setListings,userLocation,onBack,onDMSeller}){
   const [tab,setTab]=useState("overview");
@@ -1851,40 +2115,24 @@ function CustomerPortal({user,users,setUsers,vehicles,setVehicles,quotes,setQuot
             setVehicles(prev=>[...prev,nv]);
             setUsers(prev=>prev.map(u=>u.id===user.id?{...u,vehicleIds:[...(u.vehicleIds||[]),nv.id]}:u));
             setShowAddVehicle(false);setNewVehicleVin("");setNewVehicleData({year:new Date().getFullYear(),make:"Toyota",model:"",mileage:""});
+            setTimeout(()=>setNewCarReveal(nv),300);
           }}>Add to Garage</button>
         </div>
       </div>}
 
-      {myVehicles.map(v=>{const hasPending=(v.pendingServices?.length||0)>0;return(
-        <div key={v.id} style={{background:C.surface,border:`1px solid ${hasPending?C.orange+"44":v.forSale?C.green+"44":C.border}`,borderRadius:12,overflow:"hidden",marginBottom:14,cursor:"pointer"}} onClick={()=>setSelectedVehicle(v)}>
-          <div style={{position:"relative",height:130,background:C.faint,overflow:"hidden"}}>
-            {v.carPhoto
-              ?<img src={v.carPhoto} alt="Car" style={{width:"100%",height:"100%",objectFit:"cover"}}/>
-              :<div style={{height:"100%",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:4}}>
-                <div style={{fontSize:38}}>🚗</div>
-                <div style={{color:C.muted,fontSize:11}}>No photo yet</div>
+      {myVehicles.map(v=>{
+          const hasPending=(v.pendingServices?.length||0)>0;
+          return(
+            <div key={v.id} style={{position:"relative",marginBottom:24}}>
+              {hasPending&&<div style={{position:"absolute",top:-8,right:8,background:C.orange,color:"#000",borderRadius:99,fontSize:10,fontWeight:800,padding:"3px 10px",zIndex:10,boxShadow:"0 2px 8px #00000044"}}>🔔 {v.pendingServices.length} PENDING</div>}
+              <VehicleCard vehicle={v} autoFlip={false} onClick={()=>setSelectedVehicle(v)}/>
+              <div style={{display:"flex",gap:6,marginTop:10,justifyContent:"center"}}>
+                <button onClick={(e)=>{e.stopPropagation();setCarPhotoTarget(v);}} style={{background:"#000000aa",border:"1px solid #ffffff22",borderRadius:7,padding:"5px 10px",cursor:"pointer",color:"#fff",fontSize:11,fontWeight:600}}>📷 {v.carPhoto?"Change":"Add Photo"}</button>
+                <button onClick={()=>setSelectedVehicle(v)} style={{background:C.accentDim,border:`1px solid ${C.accent}44`,borderRadius:7,padding:"5px 10px",cursor:"pointer",color:C.accent,fontSize:11,fontWeight:600}}>View Details →</button>
               </div>
-            }
-            {/* Camera button — always visible, stops propagation so card click still works */}
-            <button
-              onClick={(e)=>{e.stopPropagation();setCarPhotoTarget(v);}}
-              style={{position:"absolute",bottom:8,right:8,background:"#000000cc",border:"none",borderRadius:7,padding:"5px 9px",cursor:"pointer",display:"flex",alignItems:"center",gap:5,color:"#fff",fontSize:11,fontWeight:600}}>
-              📷 {v.carPhoto?"Change Photo":"Add Photo"}
-            </button>
-            {v.forSale&&<div style={{position:"absolute",top:8,left:8,background:C.green,color:"#000",borderRadius:99,fontSize:10,fontWeight:700,padding:"2px 8px"}}>FOR SALE</div>}
-            {hasPending&&<div style={{position:"absolute",top:8,right:8,background:C.orange,color:"#000",borderRadius:99,fontSize:10,fontWeight:700,padding:"2px 8px"}}>🔔 {v.pendingServices.length}</div>}
-          </div>
-          <div style={{padding:"10px 13px"}}>
-            <div style={{fontWeight:700,fontSize:14}}>{v.vehicle}</div>
-            <div style={{color:C.muted,fontSize:11,display:"flex",justifyContent:"space-between",marginTop:3}}>
-              <span>{v.mileage.toLocaleString()} mi</span>
-              <span>Last visit: {v.lastVisit}</span>
             </div>
-            {v.alerts.length>0&&<div style={{color:C.red,fontSize:11,marginTop:4}}>⚠ {v.alerts.length} alert{v.alerts.length!==1?"s":""}</div>}
-          </div>
-        </div>
-      );})}
-      {/* Quotes notification inside garage */}
+          );
+        })}      {/* Quotes notification inside garage */}
       {pendingQuotes>0&&<div style={{background:C.surface,border:`2px solid ${C.purple}44`,borderRadius:12,padding:"14px 16px",marginBottom:14,cursor:"pointer"}} onClick={()=>setTab("quotes")}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
           <div style={{width:40,height:40,borderRadius:99,background:C.purpleDim,display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>📋</div>
@@ -1917,6 +2165,7 @@ function CustomerPortal({user,users,setUsers,vehicles,setVehicles,quotes,setQuot
     {tab==="messages"&&<Messages user={user} vehicles={vehicles} users={users} initContact={dmContact} toggleTheme={toggleTheme}/>}
     {tab==="settings"&&<SettingsPage user={currentUser} users={users} setUsers={setUsers} onLogout={onLogout} toggleTheme={toggleTheme} onClose={()=>setTab("garage")}/>}
     {carPhotoTarget&&<CarPhotoPicker current={carPhotoTarget.carPhoto} onSave={(photo)=>saveCarPhoto(carPhotoTarget.id,photo)} onClose={()=>setCarPhotoTarget(null)}/>}
+    {newCarReveal&&<NewCarReveal vehicle={newCarReveal} onDone={()=>setNewCarReveal(null)}/>}
     {showProfile&&<ProfilePage user={currentUser} users={users} setUsers={setUsers} onClose={()=>setShowProfile(false)}/>}
     {showSettings&&<SettingsPage user={currentUser} users={users} setUsers={setUsers} onLogout={()=>setUser(null)} toggleTheme={toggleTheme} onClose={()=>setShowSettings(false)}/>}
   </div>);
