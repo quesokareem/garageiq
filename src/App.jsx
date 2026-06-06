@@ -1016,7 +1016,7 @@ function CreateListing({user,onClose,onSave}){
   </div></div>);
 }
 
-function Messages({user,vehicles,users,initContact=null}){
+function Messages({user,vehicles,users,initContact=null,toggleTheme=()=>{}}){
   const allContacts=user.role==="customer"?users.filter(u=>u.role!=="customer"):users.filter(u=>u.role==="customer");
   const [msgs,setMsgs]=useState(INIT_MESSAGES);const [draft,setDraft]=useState("");const [readContacts,setReadContacts]=useState(new Set());const bottomRef=useRef();
 
@@ -1054,15 +1054,8 @@ function Messages({user,vehicles,users,initContact=null}){
   return(<div style={{display:"flex",height:"calc(100vh - 120px)",minHeight:300}}>
     <div style={{width:"min(205px, 38vw)",borderRight:`1px solid ${C.border}`,display:"flex",flexDirection:"column",flexShrink:0}}>
       <div style={{padding:"10px 12px 7px",borderBottom:`1px solid ${C.border}`}}><div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:14,letterSpacing:2,color:C.accent}}>MESSAGES</div></div>
-      {/* Mobile top bar - only shows on mobile */}
-      <div className="mobile-top-bar" style={{display:"none"}}>
-        <style>{`@media(max-width:768px){.mobile-top-bar{display:flex!important;align-items:center;justify-content:space-between;padding:10px 14px;background:${C.surface};border-bottom:1px solid ${C.border};position:sticky;top:0;z-index:50;}}`}</style>
-        <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22}}><span style={{color:C.accent}}>G</span><span style={{color:C.text}}>ARAGEIQ</span></div>
-        <div style={{display:"flex",alignItems:"center",gap:8}}>
-          <button onClick={toggleTheme} style={{background:C.faint,border:`1px solid ${C.border}`,borderRadius:99,width:32,height:32,cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"}}>{C.isDark?"☀️":"🌙"}</button>
-          <button onClick={()=>setShowProfile(true)} style={{background:"none",border:"none",cursor:"pointer",fontSize:22}}>{currentUser.photo||"🧑‍🔧"}</button>
-          <button onClick={()=>setUser(null)} style={{background:"none",border:"none",color:C.muted,cursor:"pointer",fontSize:11}}>out</button>
-        </div>
+      
+        
       </div>
       <div style={{flex:1,overflow:"auto"}}>{contacts.map(c=>{const v=getV(c.id);const unread=readContacts.has(c.id)?0:msgs.filter(m=>m.from===c.id&&m.to===user.id).length;return <div key={c.id} onClick={()=>openContact(c)} style={{display:"flex",alignItems:"center",gap:8,padding:"9px 11px",cursor:"pointer",borderBottom:`1px solid ${C.border}`,background:active?.id===c.id?C.faint:"transparent"}}>
               <div style={{position:"relative"}}><div style={{fontSize:22}}>{c.photo||"😎"}</div>{unread>0&&<div style={{position:"absolute",top:-2,right:-2,background:C.red,color:"#000",borderRadius:99,fontSize:9,fontWeight:800,width:14,height:14,display:"flex",alignItems:"center",justifyContent:"center"}}>{unread}</div>}</div>
@@ -1605,7 +1598,7 @@ function CustomerPortal({user,users,setUsers,vehicles,setVehicles,quotes,setQuot
     {tab==="marketplace"&&<Marketplace user={currentUser} users={users} listings={listings} setListings={setListings} onDM={handleDM} userLocation={userLocation}/>}
     {tab==="find"&&<FindMechanic user={currentUser} users={users} onDM={handleDM} userLocation={userLocation}/>}
     {tab==="board"&&<Community user={currentUser}/>}
-    {tab==="messages"&&<Messages user={user} vehicles={vehicles} users={users} initContact={dmContact}/>}
+    {tab==="messages"&&<Messages user={user} vehicles={vehicles} users={users} initContact={dmContact} toggleTheme={toggleTheme}/>}
     {carPhotoTarget&&<CarPhotoPicker current={carPhotoTarget.carPhoto} onSave={(photo)=>saveCarPhoto(carPhotoTarget.id,photo)} onClose={()=>setCarPhotoTarget(null)}/>}
     {showProfile&&<ProfilePage user={currentUser} users={users} setUsers={setUsers} onClose={()=>setShowProfile(false)}/>}
   </div>);
@@ -1768,7 +1761,7 @@ function GarageIQApp({theme,toggleTheme}){
 
         {nav==="shop"&&<ShopManagement user={currentUser} users={users} vehicles={vehicles}/>}
         {nav==="board"&&<Community user={currentUser}/>}
-        {nav==="messages"&&<Messages user={user} vehicles={vehicles} users={users}/>}
+        {nav==="messages"&&<Messages user={user} vehicles={vehicles} users={users} toggleTheme={toggleTheme}/>}
         {nav==="find"&&<FindMechanic user={currentUser} users={users} onDM={()=>setNav("messages")} userLocation={userLocation}/>}
 
         {nav==="detail"&&selected&&<div style={{padding:"20px 24px",maxWidth:740,animation:"fadeUp 0.25s ease"}}>
