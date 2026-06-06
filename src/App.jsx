@@ -1018,9 +1018,11 @@ function CreateListing({user,onClose,onSave}){
 
 function Messages({user,vehicles,users,initContact=null,toggleTheme=()=>{}}){
   const allContacts=user.role==="customer"?users.filter(u=>u.role!=="customer"):users.filter(u=>u.role==="customer");
-  const [msgs,setMsgs]=useState(INIT_MESSAGES);const [draft,setDraft]=useState("");const [readContacts,setReadContacts]=useState(new Set());const bottomRef=useRef();
+  const [msgs,setMsgs]=useState(INIT_MESSAGES);
+  const [draft,setDraft]=useState("");
+  const [readContacts,setReadContacts]=useState(new Set());
+  const bottomRef=useRef();
 
-  // Sort contacts by most recent message
   const contacts=[...allContacts].sort((a,b)=>{
     const lastA=msgs.filter(m=>(m.from===user.id&&m.to===a.id)||(m.from===a.id&&m.to===user.id)).slice(-1)[0];
     const lastB=msgs.filter(m=>(m.from===user.id&&m.to===b.id)||(m.from===b.id&&m.to===user.id)).slice(-1)[0];
@@ -1031,55 +1033,97 @@ function Messages({user,vehicles,users,initContact=null,toggleTheme=()=>{}}){
   });
 
   const [active,setActive]=useState(initContact?users.find(u=>u.id===initContact)||contacts[0]:contacts[0]);
-  // Mark contact as read when switching to them
+
   const openContact=(c)=>{
     setActive(c);
     setReadContacts(prev=>new Set([...prev,c.id]));
   };
-  // Also mark initial contact as read on mount
+
   useEffect(()=>{
     if(active) setReadContacts(prev=>new Set([...prev,active.id]));
   },[]);
+
   const thread=msgs.filter(m=>(m.from===user.id&&m.to===active?.id)||(m.from===active?.id&&m.to===user.id));
+
   const send=()=>{
     if(!draft.trim()||!active)return;
-    const newMsg={id:Date.now(),from:user.id,to:active.id,text:draft.trim(),time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:"Today"};
-    setMsgs(p=>[...p,newMsg]);
-    // Mark as read when you send a message
+    setMsgs(p=>[...p,{id:Date.now(),from:user.id,to:active.id,text:draft.trim(),time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),date:"Today"}]);
     setReadContacts(prev=>new Set([...prev,active.id]));
     setDraft("");
   };
+
   useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:"smooth"});},[thread.length,active?.id]);
+
   const getV=(id)=>vehicles.find(v=>v.customerId===id);
-  return(<div style={{display:"flex",height:"calc(100vh - 120px)",minHeight:300}}>
-    <div style={{width:"min(205px, 38vw)",borderRight:`1px solid ${C.border}`,display:"flex",flexDirection:"column",flexShrink:0}}>
-      <div style={{padding:"10px 12px 7px",borderBottom:`1px solid ${C.border}`}}><div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:14,letterSpacing:2,color:C.accent}}>MESSAGES</div></div>
-      
-        
-      </div>
-      <div style={{flex:1,overflow:"auto"}}>{contacts.map(c=>{const v=getV(c.id);const unread=readContacts.has(c.id)?0:msgs.filter(m=>m.from===c.id&&m.to===user.id).length;return <div key={c.id} onClick={()=>openContact(c)} style={{display:"flex",alignItems:"center",gap:8,padding:"9px 11px",cursor:"pointer",borderBottom:`1px solid ${C.border}`,background:active?.id===c.id?C.faint:"transparent"}}>
-              <div style={{position:"relative"}}><div style={{fontSize:22}}>{c.photo||"😎"}</div>{unread>0&&<div style={{position:"absolute",top:-2,right:-2,background:C.red,color:"#000",borderRadius:99,fontSize:9,fontWeight:800,width:14,height:14,display:"flex",alignItems:"center",justifyContent:"center"}}>{unread}</div>}</div>
-              <div style={{flex:1,minWidth:0}}>
-                <div style={{fontSize:13,fontWeight:unread>0?700:600,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{c.name}</div>
-                <div style={{fontSize:11,color:C.muted,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
-                  {(()=>{const last=msgs.filter(m=>(m.from===user.id&&m.to===c.id)||(m.from===c.id&&m.to===user.id)).slice(-1)[0];return last?`${last.from===user.id?"You: ":""}${last.text.substring(0,28)}${last.text.length>28?"...":""}`:c.shop||v?.vehicle||""})()}
+
+  return(
+    <div style={{display:"flex",height:"calc(100vh - 120px)",minHeight:300}}>
+      {/* Contact List */}
+      <div style={{width:"min(200px, 38vw)",borderRight:`1px solid ${C.border}`,display:"flex",flexDirection:"column",flexShrink:0}}>
+        <div style={{padding:"10px 12px 7px",borderBottom:`1px solid ${C.border}`}}>
+          <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:14,letterSpacing:2,color:C.accent}}>MESSAGES</div>
+        </div>
+        <div style={{flex:1,overflow:"auto"}}>
+          {contacts.map(c=>{
+            const v=getV(c.id);
+            const unread=readContacts.has(c.id)?0:msgs.filter(m=>m.from===c.id&&m.to===user.id).length;
+            return(
+              <div key={c.id} onClick={()=>openContact(c)} style={{display:"flex",alignItems:"center",gap:8,padding:"9px 11px",cursor:"pointer",borderBottom:`1px solid ${C.border}`,background:active?.id===c.id?C.faint:"transparent"}}>
+                <div style={{position:"relative"}}>
+                  <div style={{fontSize:22}}>{c.photo||"😎"}</div>
+                  {unread>0&&<div style={{position:"absolute",top:-2,right:-2,background:C.red,color:"#fff",borderRadius:99,fontSize:9,fontWeight:800,width:14,height:14,display:"flex",alignItems:"center",justifyContent:"center"}}>{unread}</div>}
+                </div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:13,fontWeight:unread>0?700:600,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{c.name}</div>
+                  <div style={{fontSize:11,color:C.muted,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
+                    {(()=>{const last=msgs.filter(m=>(m.from===user.id&&m.to===c.id)||(m.from===c.id&&m.to===user.id)).slice(-1)[0];return last?`${last.from===user.id?"You: ":""}${last.text.substring(0,25)}${last.text.length>25?"...":""}`:c.shop||v?.vehicle||"";})()}
+                  </div>
                 </div>
               </div>
-            </div>;})}
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Chat Area */}
+      <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden"}}>
+        {active?(
+          <>
+            <div style={{padding:"9px 13px",borderBottom:`1px solid ${C.border}`,display:"flex",alignItems:"center",gap:8,flexShrink:0}}>
+              <div style={{fontSize:22}}>{active.photo||"😎"}</div>
+              <div>
+                <div style={{fontWeight:600,fontSize:13}}>{active.name}</div>
+                <div style={{color:C.muted,fontSize:11}}>{active.shop||getV(active.id)?.vehicle||""}</div>
+              </div>
+            </div>
+            <div style={{flex:1,overflow:"auto",padding:"12px 13px",display:"flex",flexDirection:"column",gap:7}}>
+              {thread.length===0&&<div style={{color:C.muted,fontSize:13,textAlign:"center",marginTop:32}}>No messages yet 👋</div>}
+              {thread.map(m=>{
+                const mine=m.from===user.id;
+                return(
+                  <div key={m.id} style={{display:"flex",justifyContent:mine?"flex-end":"flex-start"}}>
+                    <div style={{maxWidth:"72%",background:mine?C.accent:C.surface,color:mine?"#000":C.text,borderRadius:mine?"14px 14px 3px 14px":"14px 14px 14px 3px",padding:"8px 12px",fontSize:13,border:mine?"none":`1px solid ${C.border}`}}>
+                      <div>{m.text}</div>
+                      <div style={{fontSize:10,marginTop:2,opacity:0.5,textAlign:"right"}}>{m.time}</div>
+                    </div>
+                  </div>
+                );
+              })}
+              <div ref={bottomRef}/>
+            </div>
+            <div style={{padding:"10px 12px",borderTop:`1px solid ${C.border}`,display:"flex",gap:8,flexShrink:0,background:C.surface}}>
+              <input style={{...S.input,margin:0,flex:1}} placeholder="Type a message..." value={draft} onChange={e=>setDraft(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()}/>
+              <button style={{...S.btnPrimary,padding:"9px 16px"}} onClick={send}>Send</button>
+            </div>
+          </>
+        ):(
+          <div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",color:C.muted}}>Select a conversation</div>
+        )}
       </div>
     </div>
-    <div style={{flex:1,display:"flex",flexDirection:"column"}}>
-      {active?<><div style={{padding:"9px 13px",borderBottom:`1px solid ${C.border}`,display:"flex",alignItems:"center",gap:8}}><div style={{fontSize:22}}>{active.photo||"😎"}</div><div><div style={{fontWeight:600,fontSize:13}}>{active.name}</div><div style={{color:C.muted,fontSize:11}}>{active.shop||getV(active.id)?.vehicle||""}</div></div></div>
-      <div style={{flex:1,overflow:"auto",padding:"12px 13px 16px",display:"flex",flexDirection:"column",gap:7}}>{thread.length===0&&<div style={{color:C.muted,fontSize:13,textAlign:"center",marginTop:32}}>No messages yet 👋</div>}{thread.map(m=>{const mine=m.from===user.id;return <div key={m.id} style={{display:"flex",justifyContent:mine?"flex-end":"flex-start"}}><div style={{maxWidth:"68%",background:mine?C.accent:C.surface,color:mine?"#000":C.text,borderRadius:mine?"14px 14px 3px 14px":"14px 14px 14px 3px",padding:"7px 11px",fontSize:13,border:mine?"none":`1px solid ${C.border}`}}><div>{m.text}</div><div style={{fontSize:10,marginTop:2,opacity:0.5,textAlign:"right"}}>{m.time}</div></div></div>;})}
-      <div ref={bottomRef}/></div>
-      <div style={{padding:"9px 11px 14px",borderTop:`1px solid ${C.border}`,display:"flex",gap:7,background:C.surface}}>
-        <input style={{...S.input,margin:0,flex:1}} placeholder="Type a message and press Enter or tap Send..." value={draft} onChange={e=>setDraft(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()}/>
-        <button style={{...S.btnPrimary,padding:"9px 16px"}} onClick={send}>Send</button>
-      </div>
-      </>:<div style={{flex:1,display:"flex",alignItems:"center",justifyContent:"center",color:C.muted}}>Select a conversation</div>}
-    </div>
-  </div>);
+  );
 }
+
 
 function FindMechanic({user,users,onDM,userLocation}){
   const mechanics=users.filter(u=>u.role==="mechanic"||u.role==="admin");
