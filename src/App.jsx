@@ -2015,7 +2015,9 @@ function Community({user}){
 function CustomerPortal({user,users,setUsers,vehicles,setVehicles,quotes,setQuotes,listings,setListings,onLogout,toggleTheme}){
   const myVehicles=vehicles.filter(v=>user.vehicleIds?.includes(v.id));const myQuotes=quotes.filter(q=>q.customerId===user.id);
   const totalPending=myVehicles.reduce((a,v)=>a+(v.pendingServices?.length||0),0);
-  const [tab,setTab]=useState("garage");const [dmContact,setDmContact]=useState(null);const [showProfile,setShowProfile]=useState(false);const [carPhotoTarget,setCarPhotoTarget]=useState(null);
+  const [tab,setTab]=useState("garage");const [dmContact,setDmContact]=useState(null);const [showProfile,setShowProfile]=useState(false);
+  const [showSettings,setShowSettings]=useState(false);
+  const [carPhotoTarget,setCarPhotoTarget]=useState(null);
   const [selectedVehicle,setSelectedVehicle]=useState(null);
   const [showAddVehicle,setShowAddVehicle]=useState(false);
   const [garagePublic,setGaragePublic]=useState(false);
@@ -2179,6 +2181,7 @@ function GarageIQApp({theme,toggleTheme}){
   const [nav,setNav]=useState("dashboard");const [selected,setSelected]=useState(null);const [modal,setModal]=useState(null);
   const [shareTarget,setShareTarget]=useState(null);const [newSvc,setNewSvc]=useState({type:SERVICE_TYPES[0],date:new Date().toISOString().split("T")[0],mileage:"",notes:""});
   const [alertSent,setAlertSent]=useState([]);const [search,setSearch]=useState("");const [showProfile,setShowProfile]=useState(false);
+  const [showSettings,setShowSettings]=useState(false);
   const [quoteTarget,setQuoteTarget]=useState(null);const [completedTarget,setCompletedTarget]=useState(null);
   const [userLocation,setUserLocation]=useState({lat:25.7617,lng:-80.1918,city:"Miami, FL"});
   // Location requested only when user clicks "Auto Detect" in LocationBar
