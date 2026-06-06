@@ -1950,7 +1950,7 @@ function GarageIQApp({theme,toggleTheme}){
             {err&&<div style={{color:C.red,fontSize:12,marginBottom:10}}>{err}</div>}
             <button style={{...S.btnPrimary,width:"100%"}} onClick={handle}>Sign In →</button>
           </div>
-          <div style={{marginTop:10,background:C.faint,borderRadius:10,padding:"10px 14px"}}><div style={{color:C.muted,fontSize:11,marginBottom:5,textTransform:"uppercase",letterSpacing:1}}>Demo Accounts</div>{hints[tab].map(h=><button key={h.e} onClick={()=>{setEmail(h.e);setPass(h.p);setErr("");}} style={{display:"block",width:"100%",background:"none",border:"none",textAlign:"left",color:C.accent,fontSize:12,cursor:"pointer",padding:"2px 0"}}>{h.label}: {h.e} / {h.p}</button>)}</div>
+          <div style={{marginTop:10,background:C.faint,borderRadius:10,padding:"10px 14px"}}><div style={{color:C.muted,fontSize:11,marginBottom:5,textTransform:"uppercase",letterSpacing:1}}>Demo Accounts</div>{allHints.map(h=><button key={h.e} onClick={()=>{setEmail(h.e);setPass(h.p);setErr("");}} style={{display:"block",width:"100%",background:"none",border:"none",textAlign:"left",color:C.accent,fontSize:12,cursor:"pointer",padding:"2px 0"}}>{h.label}: {h.e} / {h.p}</button>)}</div>
         </div>
       </div>;
     };
