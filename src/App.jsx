@@ -31,9 +31,9 @@ const getRoleColor=(role)=>role==="dealership"?"#F59E0B":role==="mechanic"||role
 const getRoleLabel=(role)=>role==="dealership"?"🏢 DEALER":role==="mechanic"||role==="admin"?"🔧 MECHANIC":"USER";
 
 const INIT_USERS=[
-  {id:"m1",role:"mechanic",name:"Jake Torres",email:"jake@garageiq.com",password:"mechanic123",shop:"Torres Auto",specialty:"Engine & Transmission",rating:4.9,reviews:47,available:true,isOnline:true,workingHours:{mon:"8:00 AM",monEnd:"6:00 PM",tue:"8:00 AM",tueEnd:"6:00 PM",wed:"8:00 AM",wedEnd:"6:00 PM",thu:"8:00 AM",thuEnd:"6:00 PM",fri:"8:00 AM",friEnd:"5:00 PM",sat:"9:00 AM",satEnd:"3:00 PM",sun:"Closed",sunEnd:""},showOnline:true,bio:"ASE certified, 12 years exp.",photo:"🧑‍🔧",logo:"🔧",signature:"Jake Torres",city:"Miami, FL",lat:25.7617,lng:-80.1918},
-  {id:"m2",role:"admin",name:"Sandra Lee",email:"admin@garageiq.com",password:"admin123",shop:"Lee's Auto Care",specialty:"Full Service",rating:4.7,reviews:83,available:true,isOnline:true,workingHours:{mon:"9:00 AM",monEnd:"5:00 PM",tue:"9:00 AM",tueEnd:"5:00 PM",wed:"9:00 AM",wedEnd:"5:00 PM",thu:"9:00 AM",thuEnd:"5:00 PM",fri:"9:00 AM",friEnd:"4:00 PM",sat:"Closed",satEnd:"",sun:"Closed",sunEnd:""},showOnline:true,bio:"Family owned since 2005.",photo:"👩‍🔧",logo:"⭐",signature:"Sandra Lee",city:"Miami, FL",lat:25.7745,lng:-80.2100},
-  {id:"m3",role:"mechanic",name:"Carlos Mendez",email:"carlos@garageiq.com",password:"mechanic123",shop:"Mendez Motors",specialty:"Electrical & AC",rating:4.6,reviews:31,available:false,bio:"Electrical & AC specialist.",photo:"👨‍🔧",logo:"⚡",signature:"Carlos Mendez",city:"Hialeah, FL",lat:25.8576,lng:-80.2781},
+  {id:"m1",role:"mechanic",plan:"free",shopRole:"senior",name:"Jake Torres",email:"jake@garageiq.com",password:"mechanic123",shop:"Torres Auto",specialty:"Engine & Transmission",rating:4.9,reviews:47,available:true,isOnline:true,workingHours:{mon:"8:00 AM",monEnd:"6:00 PM",tue:"8:00 AM",tueEnd:"6:00 PM",wed:"8:00 AM",wedEnd:"6:00 PM",thu:"8:00 AM",thuEnd:"6:00 PM",fri:"8:00 AM",friEnd:"5:00 PM",sat:"9:00 AM",satEnd:"3:00 PM",sun:"Closed",sunEnd:""},showOnline:true,bio:"ASE certified, 12 years exp.",photo:"🧑‍🔧",logo:"🔧",signature:"Jake Torres",city:"Miami, FL",lat:25.7617,lng:-80.1918},
+  {id:"m2",role:"admin",plan:"shop",shopRole:"owner",name:"Sandra Lee",email:"admin@garageiq.com",password:"admin123",shop:"Lee's Auto Care",specialty:"Full Service",rating:4.7,reviews:83,available:true,isOnline:true,workingHours:{mon:"9:00 AM",monEnd:"5:00 PM",tue:"9:00 AM",tueEnd:"5:00 PM",wed:"9:00 AM",wedEnd:"5:00 PM",thu:"9:00 AM",thuEnd:"5:00 PM",fri:"9:00 AM",friEnd:"4:00 PM",sat:"Closed",satEnd:"",sun:"Closed",sunEnd:""},showOnline:true,bio:"Family owned since 2005.",photo:"👩‍🔧",logo:"⭐",signature:"Sandra Lee",city:"Miami, FL",lat:25.7745,lng:-80.2100},
+  {id:"m3",role:"mechanic",plan:"free",shopRole:"worker",name:"Carlos Mendez",email:"carlos@garageiq.com",password:"mechanic123",shop:"Mendez Motors",specialty:"Electrical & AC",rating:4.6,reviews:31,available:false,bio:"Electrical & AC specialist.",photo:"👨‍🔧",logo:"⚡",signature:"Carlos Mendez",city:"Hialeah, FL",lat:25.8576,lng:-80.2781},
   {id:"c1",role:"customer",name:"Marcus Johnson",email:"marcus@email.com",password:"customer123",vehicleIds:[1],bio:"Car enthusiast.",photo:"😎",city:"Miami, FL",lat:25.7617,lng:-80.1918},
   {id:"c2",role:"customer",name:"Tanya Rivera",email:"tanya@email.com",password:"customer123",vehicleIds:[2],bio:"Just need reliable wheels.",photo:"👩",city:"Miami Beach, FL",lat:25.7907,lng:-80.1300},
   {id:"c3",role:"customer",name:"Derek Williams",email:"derek@email.com",password:"customer123",vehicleIds:[3],bio:"Weekend driver.",photo:"🧑",city:"Coral Gables, FL",lat:25.7215,lng:-80.2684},
@@ -93,7 +93,10 @@ const INIT_LISTINGS=[
 ];
 
 const INIT_SHOPS=[
-  {id:"shop1",ownerId:"m2",name:"Lee's Auto Care",workers:["m1","m3"],seniorMechanics:["m1"]},
+  {id:"shop1",ownerId:"m2",name:"Lee's Auto Care",workers:["m1","m3"],seniorMechanics:["m1"],
+   plan:"shop",planName:"Shop Plan",billingDate:"2024-12-01",
+   workerLimit:10,freeWorkers:2,priceBase:19.99,pricePerWorker:4.99,
+   verified:true,joinDate:"2020-03-15"},
 ];
 
 const INIT_WORKERS=[
@@ -1105,6 +1108,12 @@ function Marketplace({user,users,listings,setListings,onDM,userLocation,onLogin=
   const [savedListings,setSavedListings]=useState(new Set());
   const [loginPrompt,setLoginPrompt]=useState(null); // null | 'heart' | 'message' | 'offer'
   const [showSaved,setShowSaved]=useState(false);
+  const [showListingPlans,setShowListingPlans]=useState(false);
+  const [userListingPlan,setUserListingPlan]=useState("free");
+  const userListingsThisMonth=listings.filter(l=>l.sellerId===user?.id).length;
+  const listingLimit=LISTING_PLANS[userListingPlan]?.listingsPerMonth||2;
+  const listingsRemaining=listingLimit===Infinity?999:Math.max(0,listingLimit-userListingsThisMonth);
+  const canPost=!user||(listingsRemaining>0);
   const toggleSave=(listingId,e)=>{e.stopPropagation();if(!user){setLoginPrompt("heart");return;}setSavedListings(prev=>{const n=new Set(prev);n.has(listingId)?n.delete(listingId):n.add(listingId);return n;});};
   const [customMake,setCustomMake]=useState(false);const [customModel,setCustomModel]=useState(false);
   const setF=(k,v)=>setFilters(p=>({...p,[k]:v}));
@@ -1195,7 +1204,12 @@ function Marketplace({user,users,listings,setListings,onDM,userLocation,onLogin=
           <select style={{...S.input,margin:0,fontSize:11,padding:"5px 9px",width:"auto"}} value={sort} onChange={e=>setSort(e.target.value)}>
             <option value="newest">Newest</option><option value="price_asc">Price Low-High</option><option value="price_desc">Price High-Low</option><option value="miles">Lowest Miles</option>{userLocation&&<option value="distance">Nearest</option>}
           </select>
-          <button style={S.btnPrimary} onClick={()=>setShowCreate(true)}>+ List a Car</button>
+          <div style={{display:"flex",gap:6,alignItems:"center"}}>
+            {user&&<button onClick={()=>setShowListingPlans(true)} style={{...S.btnSecondary,fontSize:11,padding:"5px 10px",borderColor:C.accent+"40",color:listingsRemaining<=0?C.red:C.muted}}>
+              {listingLimit===Infinity?"∞":`${listingsRemaining}/${listingLimit}`} left
+            </button>}
+            <button style={{...S.btnPrimary,opacity:canPost?1:0.6}} onClick={()=>{if(!user){setLoginPrompt("post");return;}if(!canPost){setShowListingPlans(true);return;}setShowCreate(true);}}>+ List a Car</button>
+          </div>
         </div>
       </div>
       {filtered.length===0&&<div style={{textAlign:"center",padding:"36px 16px",color:C.muted}}><div style={{fontSize:44,marginBottom:10}}>🔍</div><div>No listings match your filters</div></div>}
@@ -1294,6 +1308,12 @@ function Marketplace({user,users,listings,setListings,onDM,userLocation,onLogin=
     {loginPrompt&&<SlideUpLogin reason={loginPrompt} users={users||[]} onLogin={(u)=>{if(onLogin)onLogin(u);}} onClose={()=>setLoginPrompt(null)}/>}
 
     {viewDealerProfile&&(()=>{const dealer=users?.find?.(u=>u.id===viewDealerProfile)||{id:viewDealerProfile,name:"Dealership",photo:"🏢",specialty:"Auto Dealer",rating:4.5,reviews:50,established:"2010",dealerLicense:"FL-DLR-2024",city:"Miami, FL",bio:""};return <DealerProfile dealer={dealer} listings={listings} onClose={()=>setViewDealerProfile(null)} onDM={onDM} userLocation={userLocation}/>;})()}
+    {showListingPlans&&<ListingPricingModal
+      currentPlan={userListingPlan}
+      listingsUsed={userListingsThisMonth}
+      onUpgrade={(planId)=>{setUserListingPlan(planId);setShowListingPlans(false);}}
+      onClose={()=>setShowListingPlans(false)}
+    />}
     {showCreate&&<CreateListing user={user} onClose={()=>setShowCreate(false)} onSave={l=>{setListings(p=>[{...l,id:Date.now(),sellerId:user.id,sellerName:user.name,sellerPhoto:user.photo||"😎",verified:user.role==="mechanic"||user.role==="admin",offers:[],listed:new Date().toLocaleDateString(),lat:userLocation?.lat||25.7617,lng:userLocation?.lng||-80.1918,city:l.zipCity||userLocation?.city||user.city||"Miami, FL",zipCity:l.zipCity},...p]);setShowCreate(false);}}/>}
   </div>);
 }
@@ -1321,8 +1341,8 @@ function CreateListing({user,onClose,onSave}){
     if(!form.price){setPublishError("Please enter a price.");return;}
     if(!form.mileage){setPublishError("Please enter mileage.");return;}
     setPublishError("");
-    onSave({...form,mileage:Number(form.mileage),price:Number(form.price),year:Number(form.year),photos:photos.length>0?photos:["🚗"],features:form.features.split(",").map(f=>f.trim()).filter(Boolean)});
-    onClose();
+    const listing={...form,mileage:Number(form.mileage),price:Number(form.price),year:Number(form.year),photos:photos.length>0?photos:["🚗"],features:form.features.split(",").map(f=>f.trim()).filter(Boolean)};
+    onSave(listing);
   };
   return(<div style={S.overlay}><div style={{...S.modal,maxWidth:480}}>
     <div style={S.modalHead}><span style={S.modalTitle}>List Your Car</span><button onClick={onClose} style={S.iconBtn}>✕</button></div>
@@ -1427,7 +1447,7 @@ function Messages({user,vehicles,users,initContact=null,toggleTheme=()=>{}}){
   const getV=(id)=>vehicles.find(v=>v.customerId===id);
 
   return(
-    <div style={{display:"flex",height:"calc(100vh - 120px)",minHeight:300}}>
+    <div style={{display:"flex",height:"calc(100vh - 190px)",minHeight:300}}>
       {/* Contact List */}
       <div style={{width:"min(200px, 38vw)",borderRight:`1px solid ${C.border}`,display:"flex",flexDirection:"column",flexShrink:0}}>
         <div style={{padding:"10px 12px 7px",borderBottom:`1px solid ${C.border}`}}>
@@ -1503,7 +1523,7 @@ function FindMechanic({user,users,onDM,userLocation}){
     .map(m=>({...m,dist:userLocation?distanceMiles(userLocation.lat,userLocation.lng,m.lat,m.lng):null})).sort((a,b)=>a.dist!=null?a.dist-b.dist:0);
   const mechReviews=(id)=>reviews.filter(r=>r.mechanicId===id);
   const avgRating=(id)=>{const r=mechReviews(id);return r.length?(r.reduce((a,b)=>a+b.rating,0)/r.length).toFixed(1):null;};
-  const submitReview=()=>{if(!newReview.text.trim())return;setReviews(p=>[...p,{id:Date.now(),mechanicId:reviewMech.id,authorName:user.name,rating:newReview.rating,text:newReview.text,time:"Just now",verified:true}]);setNewReview({rating:5,text:""});setReviewMech(null);};
+  const submitReview=()=>{if(!newReview.text.trim())return;setReviews(p=>[...p,{id:Date.now(),mechanicId:reviewMech.id,authorName:user.name,rating:newReview.rating,text:newReview.text,time:new Date().toLocaleDateString(),verified:true}]);setNewReview({rating:5,text:""});setReviewMech(null);};
   return(<div style={{padding:"20px 22px",maxWidth:720}}>
     <div style={{marginBottom:13}}><div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,letterSpacing:2}}>Find a Mechanic</div><div style={{color:C.muted,fontSize:12}}>Local mechanics near you</div></div>
     <div style={{display:"flex",gap:7,flexWrap:"wrap",marginBottom:11,alignItems:"center"}}>
@@ -1535,6 +1555,224 @@ function FindMechanic({user,users,onDM,userLocation}){
   </div>);
 }
 
+// ── MECHANIC PRICING PLANS ────────────────────────────────────────────────────
+const MECHANIC_PLANS = {
+  free: {
+    id:"free", name:"Free", price:0, priceLabel:"Always Free",
+    color:C.muted, icon:"🔧",
+    features:[
+      "Profile on Find a Mechanic",
+      "Send & receive quotes",
+      "Log customer services",
+      "Basic messaging",
+      "Community board",
+      "Up to 1 worker",
+      "Up to 3 jobs/month",
+      "2 free car listings/month",
+    ],
+    limits:{workers:1,jobs:3},
+  },
+  shop: {
+    id:"shop", name:"Shop Plan", price:19.99, priceLabel:"$19.99/mo",
+    trialDays:30, trialLabel:"30 days free",
+    perWorker:4.99, color:C.accent, icon:"🏗",
+    features:[
+      "🎁 30-day free trial — no charge today",
+      "Everything in Free",
+      "Up to 10 workers included",
+      "$4.99/worker beyond 2 free",
+      "Unlimited jobs",
+      "Full job board & tracking",
+      "Customer management",
+      "Analytics dashboard",
+      "✓ VERIFIED badge",
+      "Priority in search results",
+    ],
+    limits:{workers:10,jobs:Infinity},
+  },
+  enterprise: {
+    id:"enterprise", name:"Enterprise", price:79.99, priceLabel:"$79.99/mo",
+    trialDays:30, trialLabel:"30 days free",
+    color:"#F59E0B", icon:"🏆",
+    features:[
+      "🎁 30-day free trial — no charge today",
+      "Everything in Shop",
+      "Unlimited workers",
+      "Multiple managers",
+      "Custom shop branding",
+      "White glove support",
+      "Monthly performance reports",
+      "Dedicated account manager",
+    ],
+    limits:{workers:Infinity,jobs:Infinity},
+  },
+};
+
+function PricingModal({currentPlan,workerCount,onUpgrade,onClose}){
+  const [billingCycle,setBillingCycle]=useState("monthly");
+  const workers=workerCount||0;
+  const extraWorkers=Math.max(0,workers-2);
+
+  const calcTotal=(plan)=>{
+    if(plan.id==="free")return 0;
+    if(plan.id==="enterprise")return billingCycle==="annual"?plan.price*10:plan.price;
+    const base=billingCycle==="annual"?plan.price*10:plan.price;
+    const workerFee=extraWorkers*plan.perWorker;
+    return base+workerFee;
+  };
+
+  return(<div style={S.overlay}><div style={{...S.modal,maxWidth:560}}>
+    <div style={S.modalHead}>
+      <div>
+        <span style={S.modalTitle}>Upgrade Your Shop</span>
+        <div style={{color:C.muted,fontSize:12,marginTop:2}}>You have {workers} worker{workers!==1?"s":""} · {extraWorkers>0?`${extraWorkers} beyond free limit`:"within free limit"}</div>
+      </div>
+      <button onClick={onClose} style={S.iconBtn}>✕</button>
+    </div>
+
+    {/* Billing toggle */}
+    <div style={{display:"flex",background:C.faint,borderRadius:8,padding:3,marginBottom:18}}>
+      {["monthly","annual"].map(b=>(
+        <button key={b} onClick={()=>setBillingCycle(b)} style={{flex:1,padding:"7px 0",borderRadius:6,border:"none",cursor:"pointer",fontSize:12,fontWeight:600,background:billingCycle===b?C.accent:"transparent",color:billingCycle===b?"#000":C.muted,transition:"all 0.2s"}}>
+          {b==="monthly"?"Monthly":"Annual (2 months free)"}
+        </button>
+      ))}
+    </div>
+
+    {/* Plan cards */}
+    <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:16}}>
+      {Object.values(MECHANIC_PLANS).map(plan=>{
+        const isCurrent=currentPlan===plan.id;
+        const total=calcTotal(plan);
+        return(
+          <div key={plan.id} style={{background:isCurrent?plan.color+"11":C.faint,border:`2px solid ${isCurrent?plan.color:C.border}`,borderRadius:12,padding:"14px 12px",position:"relative",display:"flex",flexDirection:"column"}}>
+            {isCurrent&&<div style={{position:"absolute",top:-10,left:"50%",transform:"translateX(-50%)",background:plan.color,color:"#000",borderRadius:99,fontSize:9,fontWeight:800,padding:"2px 10px",whiteSpace:"nowrap"}}>CURRENT PLAN</div>}
+            <div style={{fontSize:24,marginBottom:6}}>{plan.icon}</div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:16,letterSpacing:1,color:plan.color,marginBottom:4}}>{plan.name}</div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,color:C.text,marginBottom:2}}>
+              {plan.price===0?"Free":`$${total.toFixed(2)}`}
+            </div>
+            {plan.price>0&&<div style={{color:C.muted,fontSize:10,marginBottom:8}}>
+              /month{billingCycle==="annual"?" (billed annually)":""}
+              {plan.perWorker&&extraWorkers>0&&<div style={{color:C.orange,marginTop:2}}>incl. {extraWorkers} extra worker{extraWorkers!==1?"s":""}</div>}
+            </div>}
+            <div style={{flex:1,marginBottom:10}}>
+              {plan.features.map((f,i)=>(
+                <div key={i} style={{fontSize:10,color:f.startsWith("✓")?plan.color:C.muted,padding:"2px 0",display:"flex",gap:4}}>
+                  <span style={{color:plan.color,flexShrink:0}}>{f.startsWith("✓")?"":"•"}</span>
+                  <span>{f.startsWith("✓")?f.slice(2):f}</span>
+                </div>
+              ))}
+            </div>
+            {!isCurrent&&<button
+              onClick={()=>onUpgrade(plan.id)}
+              style={{...S.btnPrimary,background:plan.color,color:"#000",fontSize:11,padding:"7px 0",width:"100%",marginTop:"auto"}}
+            >{plan.price===0?"Downgrade →":plan.trialDays?`Try Free for ${plan.trialDays} Days`:"Upgrade →"}</button>}
+          </div>
+        );
+      })}
+    </div>
+
+    {/* Worker fee explainer */}
+        <div style={{background:C.greenDim,border:`1px solid ${C.green}30`,borderRadius:8,padding:"10px 14px",fontSize:12,color:C.muted,marginBottom:10}}>
+      🎁 <strong style={{color:C.green}}>30-day free trial</strong> on all paid plans. Billed through Apple Pay or Google Pay — cancel anytime before day 30 and you won't be charged.
+    </div>
+    <div style={{background:C.accentDim,border:`1px solid ${C.accent}22`,borderRadius:8,padding:"10px 14px",fontSize:12,color:C.muted}}>
+      💡 <strong style={{color:C.text}}>How worker pricing works:</strong> Free plan includes 1 worker. Shop Plan includes up to 10 workers (first 2 free, $4.99/each after). On the Shop Plan, additional workers are $4.99/worker/month. Enterprise includes unlimited workers at a flat rate.
+    </div>
+  </div></div>);
+}
+
+// ── SHOP SETUP WIZARD ─────────────────────────────────────────────────────────
+function ShopSetupWizard({user,users,setUsers,onComplete}){
+  const [step,setStep]=useState(1);
+  const [shopData,setShopData]=useState({
+    name:"",specialty:"",city:user.city||"",phone:"",
+    description:"",logo:"🔧",plan:"free"
+  });
+  const logos=["🔧","⭐","⚡","🚗","🏎","🔩","🛞","🛠","🔑","🏆","🚘","🔨"];
+
+  const save=()=>{
+    setUsers(prev=>prev.map(u=>u.id===user.id?{...u,...shopData,shop:shopData.name,role:"mechanic",shopRole:"owner",isOnline:true,available:true}:u));
+    onComplete();
+  };
+
+  return(<div style={{minHeight:"100vh",background:C.bg,fontFamily:"'DM Sans',sans-serif",color:C.text,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+    <div style={{width:"100%",maxWidth:480}}>
+      {/* Progress */}
+      <div style={{display:"flex",gap:6,marginBottom:24,justifyContent:"center"}}>
+        {[1,2,3].map(s=>(
+          <div key={s} style={{height:4,flex:1,borderRadius:99,background:s<=step?C.accent:C.border,transition:"background 0.3s"}}/>
+        ))}
+      </div>
+
+      {step===1&&<>
+        <div style={{textAlign:"center",marginBottom:20}}>
+          <div style={{fontSize:36,marginBottom:8}}>🏗</div>
+          <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:2}}>SET UP YOUR SHOP</div>
+          <div style={{color:C.muted,fontSize:13}}>Tell customers about your business</div>
+        </div>
+        <label style={S.label}>Shop Name *</label>
+        <input style={S.input} placeholder="e.g. Torres Auto Repair" value={shopData.name} onChange={e=>setShopData(p=>({...p,name:e.target.value}))}/>
+        <label style={S.label}>Specialty *</label>
+        <input style={S.input} placeholder="e.g. Engine & Transmission, Full Service" value={shopData.specialty} onChange={e=>setShopData(p=>({...p,specialty:e.target.value}))}/>
+        <label style={S.label}>City / Location *</label>
+        <input style={S.input} placeholder="e.g. Miami, FL" value={shopData.city} onChange={e=>setShopData(p=>({...p,city:e.target.value}))}/>
+        <label style={S.label}>Phone Number</label>
+        <input style={S.input} placeholder="555-000-0000" value={shopData.phone} onChange={e=>setShopData(p=>({...p,phone:e.target.value}))}/>
+        <button style={{...S.btnPrimary,width:"100%"}} onClick={()=>setStep(2)} disabled={!shopData.name||!shopData.specialty||!shopData.city}>Next →</button>
+      </>}
+
+      {step===2&&<>
+        <div style={{textAlign:"center",marginBottom:20}}>
+          <div style={{fontSize:36,marginBottom:8}}>🎨</div>
+          <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:2}}>SHOP IDENTITY</div>
+          <div style={{color:C.muted,fontSize:13}}>Pick a logo and describe your shop</div>
+        </div>
+        <label style={S.label}>Shop Logo</label>
+        <div style={{display:"flex",flexWrap:"wrap",gap:8,marginBottom:14}}>
+          {logos.map(l=>(
+            <button key={l} onClick={()=>setShopData(p=>({...p,logo:l}))} style={{width:46,height:46,fontSize:24,borderRadius:10,border:`2px solid ${shopData.logo===l?C.accent:C.border}`,background:shopData.logo===l?C.accentDim:"transparent",cursor:"pointer"}}>{l}</button>
+          ))}
+        </div>
+        <label style={S.label}>About Your Shop</label>
+        <textarea style={{...S.input,height:80,resize:"none"}} placeholder="Tell customers what makes your shop special..." value={shopData.description} onChange={e=>setShopData(p=>({...p,description:e.target.value}))} maxLength={200}/>
+        <div style={{display:"flex",gap:8}}>
+          <button style={S.btnSecondary} onClick={()=>setStep(1)}>← Back</button>
+          <button style={{...S.btnPrimary,flex:1}} onClick={()=>setStep(3)}>Next →</button>
+        </div>
+      </>}
+
+      {step===3&&<>
+        <div style={{textAlign:"center",marginBottom:20}}>
+          <div style={{fontSize:36,marginBottom:8}}>💳</div>
+          <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:2}}>CHOOSE YOUR PLAN</div>
+          <div style={{color:C.muted,fontSize:13}}>Start free, upgrade anytime</div>
+        </div>
+        {Object.values(MECHANIC_PLANS).map(plan=>(
+          <div key={plan.id} onClick={()=>setShopData(p=>({...p,plan:plan.id}))} style={{background:shopData.plan===plan.id?plan.color+"11":C.surface,border:`2px solid ${shopData.plan===plan.id?plan.color:C.border}`,borderRadius:12,padding:"14px 16px",marginBottom:10,cursor:"pointer",display:"flex",alignItems:"center",gap:12}}>
+            <div style={{fontSize:28}}>{plan.icon}</div>
+            <div style={{flex:1}}>
+              <div style={{fontWeight:700,fontSize:14,color:shopData.plan===plan.id?plan.color:C.text}}>{plan.name}</div>
+              <div style={{color:C.muted,fontSize:12}}>{plan.features.slice(0,2).join(" · ")}</div>
+            </div>
+            <div style={{textAlign:"right"}}>
+              <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,color:shopData.plan===plan.id?plan.color:C.text}}>{plan.priceLabel}</div>
+              {plan.trialDays&&<div style={{color:C.green,fontSize:10,fontWeight:700}}>🎁 {plan.trialDays} days free</div>}
+              {plan.perWorker&&<div style={{color:C.muted,fontSize:10}}>+$4.99/worker</div>}
+            </div>
+          </div>
+        ))}
+        <div style={{display:"flex",gap:8,marginTop:8}}>
+          <button style={S.btnSecondary} onClick={()=>setStep(2)}>← Back</button>
+          <button style={{...S.btnPrimary,flex:1}} onClick={save}>Launch My Shop 🚀</button>
+        </div>
+      </>}
+    </div>
+  </div>);
+}
+
+
 // ── SHOP MANAGEMENT ──────────────────────────────────────────────────────────
 function ShopManagement({user,users,vehicles}){
   const [jobs,setJobs]=useState(INIT_JOBS);
@@ -1543,10 +1781,12 @@ function ShopManagement({user,users,vehicles}){
   const [view,setView]=useState("board"); // board | myjobs | workers | add
   const [showAddJob,setShowAddJob]=useState(false);
   const [showAddWorker,setShowAddWorker]=useState(false);
+  const [showPricing,setShowPricing]=useState(false);
   const [selectedJob,setSelectedJob]=useState(null);
   const [inviteEmail,setInviteEmail]=useState("");
   const [inviteSent,setInviteSent]=useState(false);
   const [newJob,setNewJob]=useState({vehicleName:"",customerName:"",customerPhone:"",service:"",assignedTo:"",priority:"Normal",notes:"",parts:"",estimatedHours:1});
+  const currentPlan=MECHANIC_PLANS[myShop?.plan||user?.plan||"free"]||MECHANIC_PLANS.free;
 
   const myShop=shops.find(s=>s.ownerId===user.id||s.workers.includes(user.id));
   const isSenior=myShop?.seniorMechanics?.includes(user.id)||myShop?.ownerId===user.id;
@@ -1585,16 +1825,27 @@ function ShopManagement({user,users,vehicles}){
     <style>{`@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}`}</style>
 
     {/* Header */}
-    <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:18,flexWrap:"wrap",gap:10}}>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14,flexWrap:"wrap",gap:10}}>
       <div>
         <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:26,letterSpacing:2}}>Shop Management</div>
-        <div style={{color:C.muted,fontSize:12}}>{myShop?.name||"Your Shop"} · {allShopJobs.length} jobs today</div>
+        <div style={{color:C.muted,fontSize:12,display:"flex",alignItems:"center",gap:8}}>
+          <span>{myShop?.name||"Your Shop"} · {allShopJobs.length} jobs today</span>
+          <span style={{background:currentPlan.color+"22",color:currentPlan.color,borderRadius:99,fontSize:9,fontWeight:700,padding:"2px 8px"}}>{currentPlan.icon} {currentPlan.name.toUpperCase()}</span>
+        </div>
       </div>
       <div style={{display:"flex",gap:8}}>
         {isSenior&&<button style={S.btnPrimary} onClick={()=>setShowAddJob(true)}>+ Assign Job</button>}
         {isOwner&&<button style={{...S.btnSecondary,borderColor:C.accent+"40",color:C.accent}} onClick={()=>setShowAddWorker(true)}>+ Add Worker</button>}
+        {isOwner&&<button style={{...S.btnSecondary,borderColor:"#F59E0B44",color:"#F59E0B",fontSize:12}} onClick={()=>setShowPricing(true)}>💳 Plans</button>}
       </div>
     </div>
+
+    {/* Free plan limit warning */}
+    {isOwner&&currentPlan.id==="free"&&shopWorkers.length>=1&&<div style={{background:C.orangeDim,border:`1px solid ${C.orange}33`,borderRadius:8,padding:"8px 14px",marginBottom:12,display:"flex",alignItems:"center",gap:10}}>
+      <span style={{fontSize:16}}>⚠️</span>
+      <div style={{flex:1}}><div style={{fontSize:12,fontWeight:600,color:C.orange}}>Worker Limit Reached</div><div style={{fontSize:11,color:C.muted}}>Free plan includes 1 worker. Upgrade to add more.</div></div>
+      <button style={{...S.btnPrimary,fontSize:11,padding:"5px 10px",background:"#F59E0B",color:"#000"}} onClick={()=>setShowPricing(true)}>Upgrade</button>
+    </div>}
 
     {/* Stats row */}
     <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:8,marginBottom:18}}>
@@ -1805,6 +2056,14 @@ function ShopManagement({user,users,vehicles}){
         <button style={S.btnPrimary} onClick={()=>{setShowAddWorker(false);setInviteSent(false);setInviteEmail("");}}>Done</button>
       </div>}
     </div></div>}
+
+    {/* PRICING MODAL */}
+    {showPricing&&<PricingModal
+      currentPlan={currentPlan.id}
+      workerCount={shopWorkers.length}
+      onUpgrade={(planId)=>{setShops(prev=>prev.map(s=>s.id===myShop?.id?{...s,plan:planId,planName:MECHANIC_PLANS[planId].name}:s));setShowPricing(false);}}
+      onClose={()=>setShowPricing(false)}
+    />}
 
     {/* JOB DETAIL MODAL */}
     {selectedJob&&<div style={S.overlay}><div style={{...S.modal,maxWidth:460}}>
@@ -2100,8 +2359,8 @@ function SettingsPage({user,users,setUsers,onLogout,toggleTheme,onClose}){
 function Community({user}){
   const [posts,setPosts]=useState(INIT_POSTS);const [newPost,setNewPost]=useState({text:"",tag:JOB_TAGS[0]});const [replyText,setReplyText]=useState({});const [showCompose,setShowCompose]=useState(false);const [filter,setFilter]=useState("all");
   const filtered=filter==="all"?posts:posts.filter(p=>p.tag===filter);
-  const submit=()=>{if(!newPost.text.trim())return;setPosts(p=>[{id:Date.now(),authorId:user.id,authorName:user.name,authorRole:user.role,time:"Just now",text:newPost.text,tag:newPost.tag,replies:[]},...p]);setNewPost({text:"",tag:JOB_TAGS[0]});setShowCompose(false);};
-  const reply=(postId)=>{const txt=replyText[postId];if(!txt?.trim())return;setPosts(prev=>prev.map(p=>p.id===postId?{...p,replies:[...p.replies,{id:Date.now(),authorId:user.id,authorName:user.name,authorRole:user.role,text:txt.trim(),time:"Just now"}]}:p));setReplyText(p=>({...p,[postId]:""}));};
+  const submit=()=>{if(!newPost.text.trim())return;setPosts(p=>[{id:Date.now(),authorId:user.id,authorName:user.name,authorRole:user.role,time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),text:newPost.text,tag:newPost.tag,replies:[]},...p]);setNewPost({text:"",tag:JOB_TAGS[0]});setShowCompose(false);};
+  const reply=(postId)=>{const txt=replyText[postId];if(!txt?.trim())return;setPosts(prev=>prev.map(p=>p.id===postId?{...p,replies:[...p.replies,{id:Date.now(),authorId:user.id,authorName:user.name,authorRole:user.role,text:txt.trim(),time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}]}:p));setReplyText(p=>({...p,[postId]:""}));};
   const roleColor=(role)=>role==="mechanic"||role==="admin"?C.orange:C.blue;
   return(<div style={{padding:"20px 22px",maxWidth:720}}>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:11}}><div><div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,letterSpacing:2}}>Community Board</div><div style={{color:C.muted,fontSize:12}}>Post requests or offer services</div></div><button style={S.btnPrimary} onClick={()=>setShowCompose(true)}>+ Post</button></div>
@@ -2122,6 +2381,7 @@ function CustomerPortal({user,users,setUsers,vehicles,setVehicles,quotes,setQuot
   const totalPending=myVehicles.reduce((a,v)=>a+(v.pendingServices?.length||0),0);
   const [tab,setTab]=useState("garage");const [dmContact,setDmContact]=useState(null);const [showProfile,setShowProfile]=useState(false);
   const [showSettings,setShowSettings]=useState(false);
+  const [inboxTab,setInboxTab]=useState("messages"); // messages | community
   const [carPhotoTarget,setCarPhotoTarget]=useState(null);
   const [selectedVehicle,setSelectedVehicle]=useState(null);
   const [showAddVehicle,setShowAddVehicle]=useState(false);
@@ -2130,7 +2390,7 @@ function CustomerPortal({user,users,setUsers,vehicles,setVehicles,quotes,setQuot
   const [newVehicleVin,setNewVehicleVin]=useState("");
   const [newVehicleData,setNewVehicleData]=useState({year:new Date().getFullYear(),make:"Toyota",model:"",mileage:""});
   const [userLocation,setUserLocation]=useState({lat:user.lat||25.7617,lng:user.lng||-80.1918,city:user.city||"Miami, FL"});
-  const handleDM=(id)=>{setDmContact(id);setTab("messages");};
+  const handleDM=(id)=>{setDmContact(id);setTab("inbox");setInboxTab("messages");};
   const respondToQuote=(qid,status,counter)=>setQuotes(p=>p.map(q=>q.id===qid?{...q,status,counterOffer:counter||null}:q));
   const currentUser=users.find(u=>u.id===user.id)||user;
   // Location requested only when user clicks "Auto Detect" in LocationBar
@@ -2138,7 +2398,7 @@ function CustomerPortal({user,users,setUsers,vehicles,setVehicles,quotes,setQuot
   const declinePendingService=(vehicleId,serviceId)=>setVehicles(prev=>prev.map(v=>v.id===vehicleId?{...v,pendingServices:v.pendingServices.filter(s=>s.id!==serviceId)}:v));
   const saveCarPhoto=(vehicleId,photo)=>setVehicles(prev=>prev.map(v=>v.id===vehicleId?{...v,carPhoto:photo}:v));
   const pendingQuotes=myQuotes.filter(q=>q.status==="pending").length;
-  const tabs=[{id:"garage",label:"Garage",icon:"🚗",badge:totalPending+pendingQuotes},{id:"marketplace",label:"Market",icon:"🏪"},{id:"find",label:"Mechanics",icon:"🔧"},{id:"board",label:"Community",icon:"💬"},{id:"messages",label:"Messages",icon:"✉️"},{id:"settings",label:"Settings",icon:"⚙️"}];
+  const tabs=[{id:"garage",label:"Garage",icon:"🚗",badge:totalPending+pendingQuotes},{id:"find",label:"Mechanics",icon:"🔧"},{id:"marketplace",label:"Market",icon:"🏪"},{id:"inbox",label:"Inbox",icon:"💬",badge:0},{id:"settings",label:"Settings",icon:"⚙️"}];
   return(<div style={{minHeight:"100vh",background:C.bg,fontFamily:"'DM Sans',sans-serif",color:C.text}}>
     <style>{`
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');
@@ -2164,20 +2424,31 @@ function CustomerPortal({user,users,setUsers,vehicles,setVehicles,quotes,setQuot
       {tabs.map(t=>{
         const isMarket=t.id==="marketplace";
         return(
-          <button key={t.id} onClick={()=>{setDmContact(null);setTab(t.id);setSelectedVehicle(null);}} style={{flex:1,paddingTop:isMarket?0:12,paddingBottom:isMarket?0:12,border:"none",background:"transparent",color:tab===t.id?C.accent:C.muted,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:isMarket?3:4,position:"relative",transition:"color 0.15s",minHeight:68}}>
+          <button key={t.id} onClick={()=>{setDmContact(null);setTab(t.id);setSelectedVehicle(null);}} style={{flex:1,paddingTop:isMarket?0:12,paddingBottom:isMarket?0:12,border:"none",background:"transparent",color:tab===t.id?C.accent:C.muted,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:isMarket?3:4,position:"relative",transition:"color 0.15s",minHeight:72}}>
             {isMarket
-              ?<div style={{width:52,height:52,borderRadius:99,background:tab==="marketplace"?C.accent:C.surface,border:`3px solid ${tab==="marketplace"?C.accent:C.border}`,display:"flex",alignItems:"center",justifyContent:"center",marginTop:-16,boxShadow:tab==="marketplace"?`0 4px 16px ${C.accent}66`:"0 4px 12px #00000044",transition:"all 0.2s"}}>
-                  <span style={{fontSize:26}}>{t.icon}</span>
+              ?<div style={{
+                  width:60,height:60,borderRadius:99,
+                  background:tab==="marketplace"?C.accent:`linear-gradient(135deg,${C.surface},${C.faint})`,
+                  border:`3px solid ${tab==="marketplace"?C.accent:C.border}`,
+                  display:"flex",alignItems:"center",justifyContent:"center",
+                  marginTop:-22,
+                  boxShadow:tab==="marketplace"
+                    ?`0 0 0 4px ${C.accent}22, 0 6px 20px ${C.accent}55, 0 2px 8px #00000066`
+                    :"0 4px 16px #00000055, 0 0 0 3px "+C.border,
+                  transition:"all 0.25s cubic-bezier(0.175,0.885,0.32,1.275)",
+                  transform:tab==="marketplace"?"scale(1.08)":"scale(1)",
+                }}>
+                  <span style={{fontSize:28}}>{t.icon}</span>
                 </div>
               :<span style={{fontSize:26}}>{t.icon}</span>
             }
-            <span style={{fontSize:isMarket?10:11,fontWeight:600,whiteSpace:"nowrap",color:isMarket&&tab==="marketplace"?C.accent:tab===t.id?C.accent:C.muted}}>{t.label}</span>
+            <span style={{fontSize:isMarket?10:11,fontWeight:700,whiteSpace:"nowrap",color:isMarket&&tab==="marketplace"?C.accent:tab===t.id?C.accent:C.muted,marginTop:isMarket?4:0}}>{t.label}</span>
             {t.badge>0&&<div style={{position:"absolute",top:6,right:"22%",background:C.red,color:"#fff",borderRadius:99,fontSize:9,fontWeight:800,minWidth:16,height:16,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 3px"}}>{t.badge}</div>}
           </button>
         );
       })}
     </div>
-    <div style={{height:70}}/>
+    <div style={{height:76}}/>
 
     {(tab==="marketplace"||tab==="find")&&<LocationBar location={userLocation} onUpdate={setUserLocation}/>}
     {tab==="garage"&&!selectedVehicle&&<div style={{padding:"18px 16px",maxWidth:620,margin:"0 auto",animation:"fadeUp 0.3s ease"}}>
@@ -2277,8 +2548,16 @@ function CustomerPortal({user,users,setUsers,vehicles,setVehicles,quotes,setQuot
     {tab==="quotes"&&<div style={{padding:"18px 16px",maxWidth:620,margin:"0 auto",animation:"fadeUp 0.3s ease"}}><div style={{display:"flex",alignItems:"center",gap:10,marginBottom:13}}><button onClick={()=>setTab("garage")} style={{background:"none",border:"none",color:C.muted,cursor:"pointer",fontSize:20}}>←</button><div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,letterSpacing:2}}>My Quotes</div></div>{myQuotes.length===0&&<div style={{color:C.muted,fontSize:13}}>No quotes yet.</div>}{myQuotes.map(q=><QuoteCard key={q.id} quote={q} isCustomer={true} onRespond={respondToQuote}/>)}</div>}
     {tab==="marketplace"&&<Marketplace user={currentUser} users={users} listings={listings} setListings={setListings} onDM={handleDM} userLocation={userLocation}/>}
     {tab==="find"&&<FindMechanic user={currentUser} users={users} onDM={handleDM} userLocation={userLocation}/>}
-    {tab==="board"&&<Community user={currentUser}/>}
-    {tab==="messages"&&<Messages user={user} vehicles={vehicles} users={users} initContact={dmContact} toggleTheme={toggleTheme}/>}
+    
+    {tab==="inbox"&&<div style={{display:"flex",flexDirection:"column",height:"calc(100vh - 190px)"}}>
+      {/* Inbox sub-tabs */}
+      <div style={{display:"flex",background:C.surface,borderBottom:`1px solid ${C.border}`,flexShrink:0}}>
+        <button onClick={()=>setInboxTab("messages")} style={{flex:1,padding:"11px 0",border:"none",background:"transparent",color:inboxTab==="messages"?C.accent:C.muted,fontSize:13,fontWeight:600,cursor:"pointer",borderBottom:`2px solid ${inboxTab==="messages"?C.accent:"transparent"}`}}>✉️ Messages</button>
+        <button onClick={()=>setInboxTab("community")} style={{flex:1,padding:"11px 0",border:"none",background:"transparent",color:inboxTab==="community"?C.accent:C.muted,fontSize:13,fontWeight:600,cursor:"pointer",borderBottom:`2px solid ${inboxTab==="community"?C.accent:"transparent"}`}}>📋 Community</button>
+      </div>
+      {inboxTab==="messages"&&<Messages user={user} vehicles={vehicles} users={users} initContact={dmContact} toggleTheme={toggleTheme}/>}
+      {inboxTab==="community"&&<div style={{flex:1,overflow:"auto"}}><Community user={currentUser}/></div>}
+    </div>}
     {tab==="settings"&&<SettingsPage user={currentUser} users={users} setUsers={setUsers} onLogout={onLogout} toggleTheme={toggleTheme} onClose={()=>setTab("garage")}/>}
     {carPhotoTarget&&<CarPhotoPicker current={carPhotoTarget.carPhoto} onSave={(photo)=>saveCarPhoto(carPhotoTarget.id,photo)} onClose={()=>setCarPhotoTarget(null)}/>}
     {newCarReveal&&<NewCarReveal vehicle={newCarReveal} onDone={()=>setNewCarReveal(null)}/>}
@@ -2286,6 +2565,98 @@ function CustomerPortal({user,users,setUsers,vehicles,setVehicles,quotes,setQuot
     {showSettings&&<SettingsPage user={currentUser} users={users} setUsers={setUsers} onLogout={()=>setUser(null)} toggleTheme={toggleTheme} onClose={()=>setShowSettings(false)}/>}
   </div>);
 }
+// ── LISTING PLANS ─────────────────────────────────────────────────────────────
+const LISTING_PLANS = {
+  free: {
+    id:"free", name:"Free", price:0, priceLabel:"Free",
+    color:C.muted, icon:"🚗",
+    listingsPerMonth:2,
+    features:["2 car listings/month","Basic listing photos","Standard search placement"],
+  },
+  basic: {
+    id:"basic", name:"Seller Basic", price:4.99, priceLabel:"$4.99/mo",
+    trialDays:30, trialLabel:"30 days free",
+    color:C.blue, icon:"⭐",
+    listingsPerMonth:10,
+    features:["🎁 30-day free trial","10 car listings/month","Up to 15 photos per listing","Standard placement","Listing analytics"],
+  },
+  pro: {
+    id:"pro", name:"Seller Pro", price:9.99, priceLabel:"$9.99/mo",
+    trialDays:30, trialLabel:"30 days free",
+    color:C.accent, icon:"🏆",
+    listingsPerMonth:25,
+    features:["🎁 30-day free trial","25 car listings/month","Up to 15 photos per listing","Priority search placement","Featured badge on listings","Listing analytics","Boost discount 20%"],
+  },
+  dealer: {
+    id:"dealer", name:"Dealer", price:49.99, priceLabel:"$49.99/mo",
+    trialDays:30, trialLabel:"30 days free",
+    color:"#F59E0B", icon:"🏢",
+    listingsPerMonth:Infinity,
+    features:["🎁 30-day free trial","Unlimited listings","🏢 DEALER badge","Top of search results","Dedicated dealer profile page","Inventory management","Lead tracking","Phone & email support"],
+  },
+};
+
+function ListingPricingModal({currentPlan,listingsUsed,onUpgrade,onClose}){
+  const used=listingsUsed||0;
+  const plan=LISTING_PLANS[currentPlan]||LISTING_PLANS.free;
+  const remaining=plan.listingsPerMonth===Infinity?999:Math.max(0,plan.listingsPerMonth-used);
+
+  return(<div style={S.overlay}><div style={{...S.modal,maxWidth:540}}>
+    <div style={S.modalHead}>
+      <div>
+        <span style={S.modalTitle}>Listing Plans</span>
+        <div style={{color:C.muted,fontSize:12,marginTop:2}}>
+          {used} listings used this month
+          {plan.listingsPerMonth!==Infinity&&` · ${remaining} remaining`}
+        </div>
+      </div>
+      <button onClick={onClose} style={S.iconBtn}>✕</button>
+    </div>
+
+    {/* Usage bar */}
+    {plan.listingsPerMonth!==Infinity&&<div style={{marginBottom:16}}>
+      <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+        <span style={{fontSize:11,color:C.muted}}>Monthly listings used</span>
+        <span style={{fontSize:11,fontWeight:700,color:used>=plan.listingsPerMonth?C.red:C.text}}>{used}/{plan.listingsPerMonth}</span>
+      </div>
+      <div style={{height:6,background:C.faint,borderRadius:99,overflow:"hidden"}}>
+        <div style={{height:"100%",width:`${Math.min(100,(used/plan.listingsPerMonth)*100)}%`,background:used>=plan.listingsPerMonth?C.red:C.accent,borderRadius:99,transition:"width 0.5s ease"}}/>
+      </div>
+    </div>}
+
+    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
+      {Object.values(LISTING_PLANS).map(p=>{
+        const isCurrent=currentPlan===p.id;
+        return(
+          <div key={p.id} style={{background:isCurrent?p.color+"11":C.faint,border:`2px solid ${isCurrent?p.color:C.border}`,borderRadius:12,padding:"12px",position:"relative",display:"flex",flexDirection:"column"}}>
+            {isCurrent&&<div style={{position:"absolute",top:-9,left:"50%",transform:"translateX(-50%)",background:p.color,color:"#000",borderRadius:99,fontSize:8,fontWeight:800,padding:"2px 8px",whiteSpace:"nowrap"}}>CURRENT</div>}
+            <div style={{fontSize:22,marginBottom:4}}>{p.icon}</div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:14,color:p.color,marginBottom:2}}>{p.name}</div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,marginBottom:6}}>{p.priceLabel}</div>
+            <div style={{fontSize:11,color:C.accent,fontWeight:700,marginBottom:6}}>
+              {p.listingsPerMonth===Infinity?"Unlimited listings":`${p.listingsPerMonth} listings/mo`}
+            </div>
+            <div style={{flex:1,marginBottom:8}}>
+              {p.features.map((f,i)=><div key={i} style={{fontSize:10,color:C.muted,padding:"1px 0"}}>• {f}</div>)}
+            </div>
+            {!isCurrent&&<button onClick={()=>onUpgrade(p.id)} style={{...S.btnPrimary,background:p.color,color:"#000",fontSize:11,padding:"6px 0",width:"100%"}}>
+              {p.price===0?"Downgrade →":p.trialDays?`Try ${p.trialDays} Days Free`:"Upgrade →"}
+            </button>}
+          </div>
+        );
+      })}
+    </div>
+
+    <div style={{background:C.greenDim,border:`1px solid ${C.green}30`,borderRadius:8,padding:"8px 12px",fontSize:11,color:C.muted,marginBottom:8}}>
+      🎁 <strong style={{color:C.green}}>30-day free trial</strong> on all paid plans. Processed through Apple Pay or Google Pay — cancel before day 30, pay nothing.
+    </div>
+    <div style={{background:C.accentDim,border:`1px solid ${C.accent}22`,borderRadius:8,padding:"8px 12px",fontSize:11,color:C.muted}}>
+      💡 Listings reset on the 1st of each month. Boosting a listing costs extra and is separate from your plan limit.
+    </div>
+  </div></div>);
+}
+
+
 // ── GUEST MARKETPLACE (no login required) ────────────────────────────────────
 function GuestMarketplace({listings,users,userLocation,theme,toggleTheme,onLogin,onGoToLogin}){
   Object.assign(C,theme);
@@ -2529,6 +2900,7 @@ function GarageIQApp({theme,toggleTheme}){
 
   const myWorkerJobs=INIT_JOBS.filter(j=>j.assignedTo===INIT_WORKERS.find(w=>w.userId===user.id)?.id&&(j.status==="To-do"||j.status==="In Progress"||j.status==="Waiting on Parts"));
   const isMechOnline=currentUser.isOnline||false;
+  const [showShopSetup,setShowShopSetup]=useState(!currentUser.shop&&(currentUser.role==="mechanic"||currentUser.role==="admin"));
   const navItems=[
     {id:"dashboard",icon:"🏠",label:"Dashboard"},
     {id:"customers",icon:"👥",label:"Customers"},
@@ -2687,7 +3059,7 @@ function GarageIQApp({theme,toggleTheme}){
         {id:"marketplace",icon:"🏪",label:"Market"},
         {id:"messages",icon:"✉️",label:"Messages",badge:0},
       ].map(item=>(
-        <button key={item.id} onClick={()=>{setNav(item.id);setSelected(null);}} style={{flex:1,paddingTop:12,paddingBottom:12,border:"none",background:"transparent",color:nav===item.id?C.accent:C.muted,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:4,position:"relative",transition:"color 0.15s",minHeight:68}}>
+        <button key={item.id} onClick={()=>{setNav(item.id);setSelected(null);}} style={{flex:1,paddingTop:12,paddingBottom:12,border:"none",background:"transparent",color:nav===item.id?C.accent:C.muted,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:4,position:"relative",transition:"color 0.15s",minHeight:72}}>
           <span style={{fontSize:26}}>{item.icon}</span>
           <span style={{fontSize:11,fontWeight:600,whiteSpace:"nowrap"}}>{item.label}</span>
           {item.badge>0&&<div style={{position:"absolute",top:6,right:"22%",background:C.red,color:"#fff",borderRadius:99,fontSize:9,fontWeight:800,minWidth:16,height:16,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 3px"}}>{item.badge}</div>}
