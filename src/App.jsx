@@ -1027,11 +1027,85 @@ function DealerProfile({dealer,listings,onClose,onDM,userLocation}){
 }
 
 
-function Marketplace({user,users,listings,setListings,onDM,userLocation}){
+// ── SLIDE UP LOGIN SHEET ──────────────────────────────────────────────────────
+function SlideUpLogin({reason,onLogin,onClose,users}){
+  const [email,setEmail]=useState("");
+  const [pass,setPass]=useState("");
+  const [err,setErr]=useState("");
+  const [mode,setMode]=useState("login"); // login | signup
+
+  const handle=()=>{
+    const u=users.find(u=>u.email===email&&u.password===pass);
+    if(!u){setErr("Invalid credentials.");return;}
+    onLogin(u);onClose();
+  };
+
+  const reasonMessages={
+    heart:"Sign in to save listings to your favorites",
+    message:"Sign in to message sellers and mechanics",
+    offer:"Sign in to make offers on listings",
+    post:"Sign in to post in the community",
+    garage:"Sign in to manage your garage",
+    default:"Sign in to access this feature",
+  };
+
+  return(
+    <div style={{position:"fixed",inset:0,zIndex:3000}} onClick={onClose}>
+      {/* Dark overlay */}
+      <div style={{position:"absolute",inset:0,background:"#00000077"}}/>
+
+      {/* Slide up sheet */}
+      <div
+        onClick={e=>e.stopPropagation()}
+        style={{position:"absolute",bottom:0,left:0,right:0,background:C.surface,borderRadius:"20px 20px 0 0",padding:"20px 20px 40px",boxShadow:"0 -8px 40px #00000066",animation:"slideUp 0.3s cubic-bezier(0.175,0.885,0.32,1.1) forwards"}}
+      >
+        <style>{`@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}`}</style>
+
+        {/* Handle bar */}
+        <div style={{width:40,height:4,borderRadius:99,background:C.border,margin:"0 auto 18px"}}/>
+
+        {/* Icon + reason */}
+        <div style={{textAlign:"center",marginBottom:18}}>
+          <div style={{fontSize:36,marginBottom:8}}>🔐</div>
+          <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,letterSpacing:1,color:C.text,marginBottom:4}}>Sign In Required</div>
+          <div style={{color:C.muted,fontSize:13}}>{reasonMessages[reason]||reasonMessages.default}</div>
+        </div>
+
+        {/* Login form */}
+        <label style={S.label}>Email</label>
+        <input style={S.input} type="email" placeholder="your@email.com" value={email} onChange={e=>setEmail(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handle()}/>
+        <label style={S.label}>Password</label>
+        <input style={S.input} type="password" placeholder="••••••••" value={pass} onChange={e=>setPass(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handle()}/>
+        {err&&<div style={{color:C.red,fontSize:12,marginBottom:10}}>⚠ {err}</div>}
+
+        <button style={{...S.btnPrimary,width:"100%",marginBottom:10}} onClick={handle}>Sign In →</button>
+
+        <div style={{textAlign:"center",color:C.muted,fontSize:12}}>
+          Don't have an account? <span style={{color:C.accent,cursor:"pointer"}} onClick={()=>alert("Sign up coming soon in the full app!")}>Sign Up</span>
+        </div>
+
+        {/* Demo accounts hint */}
+        <div style={{marginTop:12,background:C.faint,borderRadius:8,padding:"8px 12px"}}>
+          <div style={{color:C.muted,fontSize:10,textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>Demo Accounts</div>
+          {[{l:"Customer",e:"marcus@email.com",p:"customer123"},{l:"Mechanic",e:"jake@garageiq.com",p:"mechanic123"}].map(h=>(
+            <button key={h.e} onClick={()=>{setEmail(h.e);setPass(h.p);setErr("");}} style={{display:"block",background:"none",border:"none",color:C.accent,fontSize:11,cursor:"pointer",padding:"1px 0",textAlign:"left"}}>{h.l}: {h.e}</button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+function Marketplace({user,users,listings,setListings,onDM,userLocation,onLogin=null}){
   const [filters,setFilters]=useState({make:"Any",model:"Any",bodyType:"Any",color:"Any",condition:"Any",titleStatus:"Any",minPrice:"",maxPrice:"",minMiles:"",maxMiles:"",minYear:"",maxYear:"",maxDist:50});
   const [sort,setSort]=useState("newest");const [selected,setSelected]=useState(null);const [showCreate,setShowCreate]=useState(false);
   const [offerTarget,setOfferTarget]=useState(null);const [offerAmt,setOfferAmt]=useState("");const [offerMsg,setOfferMsg]=useState("");const [offerSent,setOfferSent]=useState(false);
   const [viewDealerProfile,setViewDealerProfile]=useState(null);
+  const [savedListings,setSavedListings]=useState(new Set());
+  const [loginPrompt,setLoginPrompt]=useState(null); // null | 'heart' | 'message' | 'offer'
+  const [showSaved,setShowSaved]=useState(false);
+  const toggleSave=(listingId,e)=>{e.stopPropagation();if(!user){setLoginPrompt("heart");return;}setSavedListings(prev=>{const n=new Set(prev);n.has(listingId)?n.delete(listingId):n.add(listingId);return n;});};
   const [customMake,setCustomMake]=useState(false);const [customModel,setCustomModel]=useState(false);
   const setF=(k,v)=>setFilters(p=>({...p,[k]:v}));
   const availableModels=(CAR_MODELS[filters.make]||[]);
@@ -1115,6 +1189,9 @@ function Marketplace({user,users,listings,setListings,onDM,userLocation}){
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,flexWrap:"wrap",gap:8}}>
         <div><span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:20,letterSpacing:2}}>MARKETPLACE</span><span style={{color:C.muted,fontSize:12,marginLeft:8}}>{filtered.length} listings</span></div>
         <div style={{display:"flex",gap:7,alignItems:"center"}}>
+          {user&&<button onClick={()=>setShowSaved(!showSaved)} style={{...S.btnSecondary,fontSize:11,padding:"5px 11px",borderColor:showSaved?C.red+"44":C.border,color:showSaved?C.red:C.muted,position:"relative"}}>
+            ❤️ Saved{savedListings.size>0&&<span style={{marginLeft:4,background:C.red,color:"#fff",borderRadius:99,fontSize:9,fontWeight:800,padding:"1px 5px"}}>{savedListings.size}</span>}
+          </button>}
           <select style={{...S.input,margin:0,fontSize:11,padding:"5px 9px",width:"auto"}} value={sort} onChange={e=>setSort(e.target.value)}>
             <option value="newest">Newest</option><option value="price_asc">Price Low-High</option><option value="price_desc">Price High-Low</option><option value="miles">Lowest Miles</option>{userLocation&&<option value="distance">Nearest</option>}
           </select>
@@ -1134,8 +1211,11 @@ function Marketplace({user,users,listings,setListings,onDM,userLocation}){
               <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><span style={{color:C.muted,fontSize:11}}>🔢 {l.mileage.toLocaleString()} mi</span>{dist!=null&&<span style={{color:C.muted,fontSize:11}}>📍 {dist<1?"<1":dist.toFixed(1)} mi</span>}</div>
               <div style={{display:"flex",alignItems:"center",gap:5}}>
                 <div style={{fontSize:14}}>{l.sellerPhoto}</div>
-                <span style={{fontSize:11,color:C.muted}}>{l.sellerName}</span>
+                <span style={{fontSize:11,color:C.muted,flex:1}}>{l.sellerName}</span>
                 {l.isDealer?<span style={{background:"#F59E0B18",color:"#F59E0B",fontSize:9,fontWeight:700,padding:"1px 6px",borderRadius:99}}>🏢 DEALER</span>:l.verified&&<span style={{background:C.greenDim,color:C.green,fontSize:9,fontWeight:700,padding:"1px 5px",borderRadius:99}}>🔧 MECH</span>}
+                <button onClick={(e)=>toggleSave(l.id,e)} style={{background:"none",border:"none",cursor:"pointer",fontSize:18,padding:"0 2px",flexShrink:0}}>
+                  {savedListings.has(l.id)?"❤️":"🤍"}
+                </button>
               </div>
             </div>
           </div>
@@ -1188,6 +1268,31 @@ function Marketplace({user,users,listings,setListings,onDM,userLocation}){
       <div style={{display:"flex",gap:8}}><button style={S.btnSecondary} onClick={()=>setOfferTarget(null)}>Cancel</button><button style={{...S.btnPrimary,flex:1}} onClick={sendOffer} disabled={!offerAmt}>Send Offer</button></div></>
       :<div style={{textAlign:"center",padding:"16px 0"}}><div style={{fontSize:42,marginBottom:8}}>🎉</div><div style={{fontWeight:700,fontSize:15,marginBottom:4}}>Offer Sent!</div><div style={{color:C.muted,fontSize:13,marginBottom:14}}>Your offer of <strong style={{color:C.accent}}>${Number(offerAmt).toLocaleString()}</strong> was sent to {offerTarget.sellerName}.</div><button style={S.btnPrimary} onClick={()=>{setOfferTarget(null);setSelected(null);}}>Done</button></div>}
     </div></div>}
+    {/* Saved listings overlay */}
+    {showSaved&&<div style={{position:"fixed",inset:0,background:"#00000099",zIndex:1000,display:"flex",alignItems:"flex-end",justifyContent:"center"}} onClick={()=>setShowSaved(false)}>
+      <div onClick={e=>e.stopPropagation()} style={{background:C.surface,borderRadius:"16px 16px 0 0",width:"100%",maxWidth:600,maxHeight:"70vh",overflow:"auto",padding:"16px 16px 40px"}}>
+        <div style={{width:40,height:4,borderRadius:99,background:C.border,margin:"0 auto 14px"}}/>
+        <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:18,letterSpacing:2,marginBottom:14}}>❤️ SAVED LISTINGS ({savedListings.size})</div>
+        {savedListings.size===0&&<div style={{color:C.muted,fontSize:13,textAlign:"center",padding:"20px 0"}}>No saved listings yet. Tap 🤍 on any car to save it.</div>}
+        {listings.filter(l=>savedListings.has(l.id)).map(l=>(
+          <div key={l.id} style={{display:"flex",gap:10,padding:"10px 0",borderBottom:`1px solid ${C.border}`,cursor:"pointer"}} onClick={()=>{setShowSaved(false);setSelected(l);}}>
+            <div style={{width:80,height:60,borderRadius:8,background:C.faint,overflow:"hidden",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:28}}>
+              {l.photos[0]&&l.photos[0].startsWith("data:")?<img src={l.photos[0]} alt="Car" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<span>{l.photos[0]||"🚗"}</span>}
+            </div>
+            <div style={{flex:1}}>
+              <div style={{fontWeight:700,fontSize:13}}>{l.year} {l.make} {l.model}</div>
+              <div style={{color:C.accent,fontSize:13,fontWeight:700}}>${l.price.toLocaleString()}</div>
+              <div style={{color:C.muted,fontSize:11}}>{l.mileage.toLocaleString()} mi · {l.city}</div>
+            </div>
+            <button onClick={(e)=>toggleSave(l.id,e)} style={{background:"none",border:"none",cursor:"pointer",fontSize:20,alignSelf:"center"}}>❤️</button>
+          </div>
+        ))}
+      </div>
+    </div>}
+
+    {/* Login prompt for guest actions */}
+    {loginPrompt&&<SlideUpLogin reason={loginPrompt} users={users||[]} onLogin={(u)=>{if(onLogin)onLogin(u);}} onClose={()=>setLoginPrompt(null)}/>}
+
     {viewDealerProfile&&(()=>{const dealer=users?.find?.(u=>u.id===viewDealerProfile)||{id:viewDealerProfile,name:"Dealership",photo:"🏢",specialty:"Auto Dealer",rating:4.5,reviews:50,established:"2010",dealerLicense:"FL-DLR-2024",city:"Miami, FL",bio:""};return <DealerProfile dealer={dealer} listings={listings} onClose={()=>setViewDealerProfile(null)} onDM={onDM} userLocation={userLocation}/>;})()}
     {showCreate&&<CreateListing user={user} onClose={()=>setShowCreate(false)} onSave={l=>{setListings(p=>[{...l,id:Date.now(),sellerId:user.id,sellerName:user.name,sellerPhoto:user.photo||"😎",verified:user.role==="mechanic"||user.role==="admin",offers:[],listed:new Date().toLocaleDateString(),lat:userLocation?.lat||25.7617,lng:userLocation?.lng||-80.1918,city:l.zipCity||userLocation?.city||user.city||"Miami, FL",zipCity:l.zipCity},...p]);setShowCreate(false);}}/>}
   </div>);
@@ -2020,6 +2125,7 @@ function CustomerPortal({user,users,setUsers,vehicles,setVehicles,quotes,setQuot
   const [carPhotoTarget,setCarPhotoTarget]=useState(null);
   const [selectedVehicle,setSelectedVehicle]=useState(null);
   const [showAddVehicle,setShowAddVehicle]=useState(false);
+  const [newCarReveal,setNewCarReveal]=useState(null);
   const [garagePublic,setGaragePublic]=useState(false);
   const [newVehicleVin,setNewVehicleVin]=useState("");
   const [newVehicleData,setNewVehicleData]=useState({year:new Date().getFullYear(),make:"Toyota",model:"",mileage:""});
@@ -2055,13 +2161,21 @@ function CustomerPortal({user,users,setUsers,vehicles,setVehicles,quotes,setQuot
     </div>
     {/* Bottom Nav */}
     <div style={{position:"fixed",bottom:0,left:0,right:0,background:C.surface,borderTop:`1px solid ${C.border}`,display:"flex",zIndex:100,paddingBottom:"env(safe-area-inset-bottom)"}}>
-      {tabs.map(t=>(
-        <button key={t.id} onClick={()=>{setDmContact(null);setTab(t.id);setSelectedVehicle(null);}} style={{flex:1,paddingTop:12,paddingBottom:12,border:"none",background:"transparent",color:tab===t.id?C.accent:C.muted,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:4,position:"relative",transition:"color 0.15s",minHeight:68}}>
-          <span style={{fontSize:26}}>{t.icon}</span>
-          <span style={{fontSize:11,fontWeight:600,whiteSpace:"nowrap"}}>{t.label}</span>
-          {t.badge>0&&<div style={{position:"absolute",top:6,right:"22%",background:C.red,color:"#fff",borderRadius:99,fontSize:9,fontWeight:800,minWidth:16,height:16,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 3px"}}>{t.badge}</div>}
-        </button>
-      ))}
+      {tabs.map(t=>{
+        const isMarket=t.id==="marketplace";
+        return(
+          <button key={t.id} onClick={()=>{setDmContact(null);setTab(t.id);setSelectedVehicle(null);}} style={{flex:1,paddingTop:isMarket?0:12,paddingBottom:isMarket?0:12,border:"none",background:"transparent",color:tab===t.id?C.accent:C.muted,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:isMarket?3:4,position:"relative",transition:"color 0.15s",minHeight:68}}>
+            {isMarket
+              ?<div style={{width:52,height:52,borderRadius:99,background:tab==="marketplace"?C.accent:C.surface,border:`3px solid ${tab==="marketplace"?C.accent:C.border}`,display:"flex",alignItems:"center",justifyContent:"center",marginTop:-16,boxShadow:tab==="marketplace"?`0 4px 16px ${C.accent}66`:"0 4px 12px #00000044",transition:"all 0.2s"}}>
+                  <span style={{fontSize:26}}>{t.icon}</span>
+                </div>
+              :<span style={{fontSize:26}}>{t.icon}</span>
+            }
+            <span style={{fontSize:isMarket?10:11,fontWeight:600,whiteSpace:"nowrap",color:isMarket&&tab==="marketplace"?C.accent:tab===t.id?C.accent:C.muted}}>{t.label}</span>
+            {t.badge>0&&<div style={{position:"absolute",top:6,right:"22%",background:C.red,color:"#fff",borderRadius:99,fontSize:9,fontWeight:800,minWidth:16,height:16,display:"flex",alignItems:"center",justifyContent:"center",padding:"0 3px"}}>{t.badge}</div>}
+          </button>
+        );
+      })}
     </div>
     <div style={{height:70}}/>
 
@@ -2172,6 +2286,182 @@ function CustomerPortal({user,users,setUsers,vehicles,setVehicles,quotes,setQuot
     {showSettings&&<SettingsPage user={currentUser} users={users} setUsers={setUsers} onLogout={()=>setUser(null)} toggleTheme={toggleTheme} onClose={()=>setShowSettings(false)}/>}
   </div>);
 }
+// ── GUEST MARKETPLACE (no login required) ────────────────────────────────────
+function GuestMarketplace({listings,users,userLocation,theme,toggleTheme,onLogin,onGoToLogin}){
+  Object.assign(C,theme);
+  const [selected,setSelected]=useState(null);
+  const [loginPrompt,setLoginPrompt]=useState(null);
+  const [savedListings,setSavedListings]=useState(new Set());
+  const [filters,setFilters]=useState({make:"Any",model:"Any",bodyType:"Any",color:"Any",condition:"Any",titleStatus:"Any",minPrice:"",maxPrice:"",minMiles:"",maxMiles:"",minYear:"",maxYear:"",maxDist:50});
+  const [sort,setSort]=useState("newest");
+  const [showFilters,setShowFilters]=useState(false);
+  const [activeTab,setActiveTab]=useState("browse"); // browse | mechanics
+  const [customMake,setCustomMake]=useState(false);
+  const setF=(k,v)=>setFilters(p=>({...p,[k]:v}));
+  const availableModels=(CAR_MODELS[filters.make]||[]);
+
+  const filtered=listings.filter(l=>{
+    if(filters.make!=="Any"&&l.make!==filters.make)return false;
+    if(filters.model&&filters.model!=="Any"&&!l.model.toLowerCase().includes(filters.model.toLowerCase()))return false;
+    if(filters.bodyType!=="Any"&&MODEL_TYPES[l.model]!==filters.bodyType)return false;
+    if(filters.condition!=="Any"&&l.condition!==filters.condition)return false;
+    if(filters.minPrice&&l.price<Number(filters.minPrice))return false;
+    if(filters.maxPrice&&l.price>Number(filters.maxPrice))return false;
+    if(filters.minMiles&&l.mileage<Number(filters.minMiles))return false;
+    if(filters.maxMiles&&l.mileage>Number(filters.maxMiles))return false;
+    if(filters.titleStatus&&filters.titleStatus!=="Any"&&l.titleStatus!==filters.titleStatus)return false;
+    return true;
+  });
+
+  const requireLogin=(reason)=>setLoginPrompt(reason);
+
+  return(<div style={{minHeight:"100vh",background:C.bg,fontFamily:"'DM Sans',sans-serif",color:C.text}}>
+    <style>{`@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap');*{box-sizing:border-box;margin:0;padding:0}::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#333;border-radius:2px}@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}`}</style>
+
+    {/* Top bar */}
+    <div style={{background:C.surface,borderBottom:`1px solid ${C.border}`,padding:"0 16px",height:52,display:"flex",alignItems:"center",gap:10,position:"sticky",top:0,zIndex:50}}>
+      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:24,flex:1}}><span style={{color:C.accent}}>G</span><span style={{color:C.text}}>ARAGEIQ</span></div>
+      <button onClick={toggleTheme} style={{background:C.faint,border:`1px solid ${C.border}`,borderRadius:99,width:32,height:32,cursor:"pointer",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center"}}>{C.isDark?"☀️":"🌙"}</button>
+      <button onClick={onGoToLogin} style={{...S.btnPrimary,fontSize:12,padding:"6px 14px"}}>Sign In</button>
+    </div>
+
+    {/* Hero banner */}
+    <div style={{background:`linear-gradient(135deg,#0f3460,#16213e)`,padding:"20px 16px",textAlign:"center",borderBottom:`1px solid ${C.border}`}}>
+      <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:28,letterSpacing:2,color:"#fff",marginBottom:4}}>Find Your Next Car</div>
+      <div style={{color:"#aaa",fontSize:13,marginBottom:14}}>Browse listings from verified mechanics and private sellers</div>
+      <div style={{display:"flex",gap:8,justifyContent:"center",flexWrap:"wrap"}}>
+        {[["🚗","Buy a Car"],["🔧","Find Mechanic"],["📋","Service History"],["🔒","Safe & Verified"]].map(([icon,label])=>(
+          <div key={label} style={{background:"#ffffff11",borderRadius:99,padding:"5px 12px",fontSize:11,color:"#fff",display:"flex",alignItems:"center",gap:5}}><span>{icon}</span><span>{label}</span></div>
+        ))}
+      </div>
+    </div>
+
+    {/* Tab bar */}
+    <div style={{display:"flex",background:C.surface,borderBottom:`1px solid ${C.border}`}}>
+      {[{id:"browse",label:"🏪 Browse Cars"},{id:"mechanics",label:"🔧 Mechanics"}].map(t=>(
+        <button key={t.id} onClick={()=>setActiveTab(t.id)} style={{flex:1,padding:"12px 0",border:"none",background:"transparent",color:activeTab===t.id?C.accent:C.muted,fontSize:13,fontWeight:600,cursor:"pointer",borderBottom:`2px solid ${activeTab===t.id?C.accent:"transparent"}`}}>{t.label}</button>
+      ))}
+    </div>
+
+    {activeTab==="browse"&&<div>
+      {/* Filter + sort bar */}
+      <div style={{padding:"10px 14px",display:"flex",gap:8,alignItems:"center",borderBottom:`1px solid ${C.border}`,background:C.surface}}>
+        <button onClick={()=>setShowFilters(!showFilters)} style={{...S.btnSecondary,fontSize:12,padding:"6px 12px",borderColor:showFilters?C.accent:C.border,color:showFilters?C.accent:C.muted}}>⚙ Filters</button>
+        <select style={{...S.input,margin:0,fontSize:11,padding:"5px 8px",flex:1}} value={sort} onChange={e=>setSort(e.target.value)}>
+          <option value="newest">Newest</option>
+          <option value="price_asc">Price: Low-High</option>
+          <option value="price_desc">Price: High-Low</option>
+          <option value="miles">Lowest Miles</option>
+        </select>
+        <span style={{color:C.muted,fontSize:12,flexShrink:0}}>{filtered.length} cars</span>
+      </div>
+
+      {/* Filters panel */}
+      {showFilters&&<div style={{background:C.surface,borderBottom:`1px solid ${C.border}`,padding:"12px 14px"}}>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
+          <div>
+            <label style={S.label}>Make</label>
+            <select style={{...S.input,marginBottom:0}} value={filters.make} onChange={e=>{setF("make",e.target.value);setF("model","Any");}}>
+              {CAR_MAKES.map(m=><option key={m}>{m}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={S.label}>Model</label>
+            {availableModels.length>0
+              ?<select style={{...S.input,marginBottom:0}} value={filters.model} onChange={e=>setF("model",e.target.value)}><option value="Any">Any</option>{availableModels.map(m=><option key={m}>{m}</option>)}</select>
+              :<input style={{...S.input,marginBottom:0}} placeholder="Any model" value={filters.model==="Any"?"":filters.model} onChange={e=>setF("model",e.target.value||"Any")}/>
+            }
+          </div>
+          <div>
+            <label style={S.label}>Min Price</label>
+            <input style={{...S.input,marginBottom:0}} type="number" placeholder="$" value={filters.minPrice} onChange={e=>setF("minPrice",e.target.value)}/>
+          </div>
+          <div>
+            <label style={S.label}>Max Price</label>
+            <input style={{...S.input,marginBottom:0}} type="number" placeholder="$" value={filters.maxPrice} onChange={e=>setF("maxPrice",e.target.value)}/>
+          </div>
+        </div>
+        <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
+          {BODY_TYPES.map(t=><button key={t} onClick={()=>setF("bodyType",t)} style={{padding:"3px 9px",borderRadius:99,border:`1px solid ${filters.bodyType===t?C.accent:C.border}`,background:filters.bodyType===t?C.accentDim:"transparent",color:filters.bodyType===t?C.accent:C.muted,fontSize:11,cursor:"pointer"}}>{t}</button>)}
+        </div>
+        <button onClick={()=>setFilters({make:"Any",model:"Any",bodyType:"Any",color:"Any",condition:"Any",titleStatus:"Any",minPrice:"",maxPrice:"",minMiles:"",maxMiles:"",minYear:"",maxYear:"",maxDist:50})} style={{...S.btnSecondary,fontSize:11,padding:"4px 10px",marginTop:8}}>Clear</button>
+      </div>}
+
+      {/* Listings grid */}
+      <div style={{padding:"14px",display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))",gap:12}}>
+        {filtered.map(l=>(
+          <div key={l.id} style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:11,overflow:"hidden",cursor:"pointer"}} onClick={()=>setSelected(l)}>
+            <div style={{height:140,background:C.faint,display:"flex",alignItems:"center",justifyContent:"center",fontSize:56,borderBottom:`1px solid ${C.border}`,overflow:"hidden",position:"relative"}}>
+              {l.photos[0]&&l.photos[0].startsWith("data:")?<img src={l.photos[0]} alt="Car" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<span style={{fontSize:56}}>{l.photos[0]||"🚗"}</span>}
+              {/* Heart button */}
+              <button onClick={(e)=>{e.stopPropagation();if(savedListings.has(l.id)){setSavedListings(prev=>{const n=new Set(prev);n.delete(l.id);return n;});}else{requireLogin("heart");}}} style={{position:"absolute",top:8,right:8,background:"#000000aa",border:"none",borderRadius:99,width:30,height:30,cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                {savedListings.has(l.id)?"❤️":"🤍"}
+              </button>
+            </div>
+            <div style={{padding:"10px 12px"}}>
+              <div style={{display:"flex",justifyContent:"space-between",marginBottom:2}}>
+                <div style={{fontWeight:700,fontSize:14}}>{l.year} {l.make} {l.model}</div>
+                <div style={{fontWeight:700,fontSize:14,color:C.accent}}>${l.price.toLocaleString()}</div>
+              </div>
+              <div style={{color:C.muted,fontSize:11,marginBottom:5}}>{l.trim} · {l.color} · {l.condition}</div>
+              <div style={{display:"flex",alignItems:"center",gap:5}}>
+                <span style={{fontSize:13}}>{l.sellerPhoto}</span>
+                <span style={{fontSize:11,color:C.muted,flex:1}}>{l.sellerName}</span>
+                {l.isDealer?<span style={{background:"#F59E0B18",color:"#F59E0B",fontSize:9,fontWeight:700,padding:"1px 6px",borderRadius:99}}>🏢 DEALER</span>:l.verified&&<span style={{background:C.greenDim,color:C.green,fontSize:9,fontWeight:700,padding:"1px 5px",borderRadius:99}}>🔧 MECH</span>}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>}
+
+    {activeTab==="mechanics"&&<div style={{padding:"16px"}}>
+      <div style={{textAlign:"center",padding:"30px 0",color:C.muted}}>
+        <div style={{fontSize:44,marginBottom:10}}>🔧</div>
+        <div style={{fontSize:15,fontWeight:600,marginBottom:6,color:C.text}}>Find Local Mechanics</div>
+        <div style={{fontSize:13,marginBottom:20}}>Sign in to see mechanics near you, check availability, and book services</div>
+        <button style={{...S.btnPrimary,padding:"10px 28px"}} onClick={onGoToLogin}>Sign In to Browse Mechanics</button>
+      </div>
+    </div>}
+
+    {/* Bottom CTA bar */}
+    <div style={{position:"fixed",bottom:0,left:0,right:0,background:C.surface,borderTop:`1px solid ${C.border}`,padding:"12px 16px 28px",display:"flex",gap:8,alignItems:"center"}}>
+      <div style={{flex:1}}>
+        <div style={{fontSize:13,fontWeight:600}}>Ready to buy or sell?</div>
+        <div style={{color:C.muted,fontSize:11}}>Sign in for full access</div>
+      </div>
+      <button onClick={onGoToLogin} style={{...S.btnSecondary,fontSize:12,padding:"8px 14px"}}>Sign In</button>
+      <button onClick={()=>requireLogin("garage")} style={{...S.btnPrimary,fontSize:12,padding:"8px 14px"}}>List a Car</button>
+    </div>
+    <div style={{height:80}}/>
+
+    {/* Listing detail */}
+    {selected&&<div style={{position:"fixed",inset:0,background:"#00000099",zIndex:500,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+      <div style={{background:C.surface,border:`1px solid ${C.border}`,borderRadius:14,width:"100%",maxWidth:520,maxHeight:"90vh",overflow:"auto"}}>
+        <div style={{height:200,background:C.faint,display:"flex",alignItems:"center",justifyContent:"center",fontSize:70,borderBottom:`1px solid ${C.border}`,position:"relative",overflow:"hidden"}}>
+          {selected.photos[0]&&selected.photos[0].startsWith("data:")?<img src={selected.photos[0]} alt="Car" style={{width:"100%",height:"100%",objectFit:"cover"}}/>:<span style={{fontSize:70}}>{selected.photos[0]||"🚗"}</span>}
+          <button onClick={()=>setSelected(null)} style={{position:"absolute",top:10,right:10,background:"#000000aa",border:"none",color:"#fff",borderRadius:99,width:28,height:28,cursor:"pointer",fontSize:14}}>✕</button>
+        </div>
+        <div style={{padding:"16px 18px"}}>
+          <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}>
+            <div><div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22}}>{selected.year} {selected.make} {selected.model}</div><div style={{color:C.muted,fontSize:12}}>{selected.trim} · {selected.color} · {selected.condition}</div></div>
+            <div style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:22,color:C.accent}}>${selected.price.toLocaleString()}</div>
+          </div>
+          <div style={{color:C.text,fontSize:13,lineHeight:1.6,marginBottom:12}}>{selected.description}</div>
+          {selected.features?.length>0&&<div style={{display:"flex",flexWrap:"wrap",gap:5,marginBottom:12}}>{selected.features.map(f=><span key={f} style={{background:C.accentDim,color:C.accent,borderRadius:99,fontSize:11,padding:"2px 8px"}}>{f}</span>)}</div>}
+          <div style={{display:"flex",gap:8}}>
+            <button style={{...S.btnSecondary,flex:1}} onClick={()=>requireLogin("message")}>💬 Message Seller</button>
+            <button style={{...S.btnPrimary,flex:1}} onClick={()=>requireLogin("offer")}>💰 Make Offer</button>
+          </div>
+        </div>
+      </div>
+    </div>}
+
+    {loginPrompt&&<SlideUpLogin reason={loginPrompt} users={users} onLogin={onLogin} onClose={()=>setLoginPrompt(null)}/>}
+  </div>);
+}
+
+
 function GarageIQApp({theme,toggleTheme}){
   // Update global C with current theme
   Object.assign(C, theme);
@@ -2186,7 +2476,9 @@ function GarageIQApp({theme,toggleTheme}){
   const [userLocation,setUserLocation]=useState({lat:25.7617,lng:-80.1918,city:"Miami, FL"});
   // Location requested only when user clicks "Auto Detect" in LocationBar
 
-  if(!user){
+  const [guestMode,setGuestMode]=useState(true); // Start in guest mode showing marketplace
+
+  if(!user&&!guestMode){
     const LoginScreen=()=>{
       const [email,setEmail]=useState("");const [pass,setPass]=useState("");const [err,setErr]=useState("");const [tab,setTab]=useState("mechanic");
       const handle=()=>{const u=users.find(u=>u.email===email&&u.password===pass);if(!u){setErr("Invalid credentials.");return;}setUser(u);};
@@ -2201,6 +2493,7 @@ function GarageIQApp({theme,toggleTheme}){
             <label style={S.label}>Password</label><input style={S.input} type="password" placeholder="••••••••" value={pass} onChange={e=>setPass(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handle()}/>
             {err&&<div style={{color:C.red,fontSize:12,marginBottom:10}}>{err}</div>}
             <button style={{...S.btnPrimary,width:"100%"}} onClick={handle}>Sign In →</button>
+            <button onClick={()=>setGuestMode(true)} style={{width:"100%",background:"none",border:`1px solid ${C.border}`,borderRadius:8,padding:"9px 18px",cursor:"pointer",fontSize:13,color:C.muted,marginTop:8}}>Browse as Guest →</button>
           </div>
           <div style={{marginTop:10,background:C.faint,borderRadius:10,padding:"10px 14px"}}><div style={{color:C.muted,fontSize:11,marginBottom:5,textTransform:"uppercase",letterSpacing:1}}>Demo Accounts</div>{allHints.map(h=><button key={h.e} onClick={()=>{setEmail(h.e);setPass(h.p);setErr("");}} style={{display:"block",width:"100%",background:"none",border:"none",textAlign:"left",color:C.accent,fontSize:12,cursor:"pointer",padding:"2px 0"}}>{h.label}: {h.e} / {h.p}</button>)}</div>
         </div>
@@ -2209,8 +2502,21 @@ function GarageIQApp({theme,toggleTheme}){
     return <LoginScreen/>;
   }
 
+  // Guest marketplace view
+  if(!user&&guestMode){
+    return <GuestMarketplace
+      listings={listings}
+      users={users}
+      userLocation={userLocation}
+      theme={theme}
+      toggleTheme={toggleTheme}
+      onLogin={(u)=>{setUser(u);setGuestMode(false);}}
+      onGoToLogin={()=>setGuestMode(false)}
+    />;
+  }
+
   const currentUser=users.find(u=>u.id===user.id)||user;
-  if(currentUser.role==="customer"||currentUser.role==="dealership") return <CustomerPortal user={currentUser} users={users} setUsers={setUsers} vehicles={vehicles} setVehicles={setVehicles} quotes={quotes} setQuotes={setQuotes} listings={listings} setListings={setListings} onLogout={()=>setUser(null)} toggleTheme={toggleTheme}/>;
+  if(currentUser.role==="customer"||currentUser.role==="dealership") return <CustomerPortal user={currentUser} users={users} setUsers={setUsers} vehicles={vehicles} setVehicles={setVehicles} quotes={quotes} setQuotes={setQuotes} listings={listings} setListings={setListings} onLogout={()=>{setUser(null);setGuestMode(true);}} toggleTheme={toggleTheme}/>;
 
   const totalAlerts=vehicles.reduce((a,v)=>a+v.alerts.length,0);
   const criticals=vehicles.filter(v=>v.alerts.some(a=>a.level==="critical"));
