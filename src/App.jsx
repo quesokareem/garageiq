@@ -630,40 +630,74 @@ function VehicleCard({vehicle,onFlipComplete,autoFlip=false,onClick}){
             </div>
           </div>
 
-          {/* Stats grid */}
+          {/* REAL DATA STATS */}
           <div style={{padding:"10px 14px"}}>
-            {/* Power bars */}
-            {[
-              {label:"Condition",value:vehicle.services?.length>5?95:vehicle.services?.length>3?80:vehicle.services?.length>1?65:50,color:rarity.color},
-              {label:"Reliability",value:vehicle.alerts?.length===0?90:vehicle.alerts?.length===1?70:vehicle.alerts?.some(a=>a.level==="critical")?40:60,color:vehicle.alerts?.length===0?C.green:C.orange},
-              {label:"Service Record",value:Math.min(100,serviceCount*20),color:"#4FC3F7"},
-              {label:"Market Value",value:vehicle.forSale?85:70,color:"#C084FC"},
-            ].map(stat=>(
-              <div key={stat.label} style={{marginBottom:8}}>
-                <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
-                  <span style={{fontSize:10,color:"#ffffff88",textTransform:"uppercase",letterSpacing:1}}>{stat.label}</span>
-                  <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:13,color:stat.color}}>{stat.value}</span>
-                </div>
-                <div style={{height:5,background:"#ffffff11",borderRadius:99,overflow:"hidden"}}>
-                  <div style={{height:"100%",width:`${stat.value}%`,background:`linear-gradient(90deg,${stat.color}88,${stat.color})`,borderRadius:99,transition:"width 1s ease",boxShadow:`0 0 8px ${stat.color}`}}/>
-                </div>
-              </div>
-            ))}
 
-            {/* Key info */}
-            <div style={{marginTop:10,display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
-              {[
-                ["VIN",vehicle.vin?.slice(-8)||"—"],
-                ["Mileage",`${vehicle.mileage?.toLocaleString()} mi`],
-                ["Last Service",vehicle.lastVisit||"—"],
-                ["Services",`${serviceCount} records`],
-              ].map(([label,val])=>(
-                <div key={label} style={{background:"#ffffff08",borderRadius:7,padding:"6px 8px",border:`1px solid ${rarity.color}22`}}>
-                  <div style={{fontSize:8,color:"#ffffff44",textTransform:"uppercase",letterSpacing:1,marginBottom:2}}>{label}</div>
-                  <div style={{fontSize:10,color:"#fff",fontWeight:600,fontFamily:label==="VIN"?"monospace":"inherit"}}>{val}</div>
+            {/* Service Activity Bar - based on real service count */}
+            {(()=>{
+              const maxServices=10;
+              const pct=Math.min(100,(serviceCount/maxServices)*100);
+              const verifiedCount=vehicle.services?.filter(s=>s.status==="confirmed"||s.mechanicName).length||0;
+              const alertLevel=alertCount===0?"clean":vehicle.alerts?.some(a=>a.level==="critical")?"critical":"warning";
+              const daysSince=vehicle.lastVisit&&vehicle.lastVisit!=="—"?(()=>{const d=new Date(vehicle.lastVisit);return isNaN(d)?null:Math.floor((Date.now()-d)/86400000);})():null;
+
+              return(<>
+                {/* Service Activity */}
+                <div style={{marginBottom:8}}>
+                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+                    <span style={{fontSize:9,color:"#ffffff88",textTransform:"uppercase",letterSpacing:1}}>Service Activity</span>
+                    <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:12,color:rarity.color}}>{serviceCount} record{serviceCount!==1?"s":""}</span>
+                  </div>
+                  <div style={{height:5,background:"#ffffff11",borderRadius:99,overflow:"hidden"}}>
+                    <div style={{height:"100%",width:`${pct}%`,background:`linear-gradient(90deg,${rarity.color}88,${rarity.color})`,borderRadius:99,boxShadow:`0 0 8px ${rarity.color}`}}/>
+                  </div>
+                  <div style={{fontSize:8,color:"#ffffff44",marginTop:2}}>{pct>=80?"Excellent history":pct>=50?"Good history":pct>=20?"Some history":"New to app"}</div>
                 </div>
-              ))}
-            </div>
+
+                {/* Alert Status */}
+                <div style={{marginBottom:8}}>
+                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+                    <span style={{fontSize:9,color:"#ffffff88",textTransform:"uppercase",letterSpacing:1}}>Alert Status</span>
+                    <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:12,color:alertLevel==="clean"?C.green:alertLevel==="critical"?C.red:C.orange}}>
+                      {alertLevel==="clean"?"ALL CLEAR":alertLevel==="critical"?"CRITICAL":alertCount+" ALERTS"}
+                    </span>
+                  </div>
+                  <div style={{height:5,background:"#ffffff11",borderRadius:99,overflow:"hidden"}}>
+                    <div style={{height:"100%",width:alertLevel==="clean"?"100%":alertLevel==="critical"?"20%":"50%",background:alertLevel==="clean"?C.green:alertLevel==="critical"?C.red:C.orange,borderRadius:99}}/>
+                  </div>
+                  <div style={{fontSize:8,color:"#ffffff44",marginTop:2}}>{alertLevel==="clean"?"No issues detected":alertLevel==="critical"?"Needs immediate attention":"Some attention needed"}</div>
+                </div>
+
+                {/* Mechanic Verified */}
+                <div style={{marginBottom:8}}>
+                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+                    <span style={{fontSize:9,color:"#ffffff88",textTransform:"uppercase",letterSpacing:1}}>Verified Services</span>
+                    <span style={{fontFamily:"'Bebas Neue',sans-serif",fontSize:12,color:"#4FC3F7"}}>{verifiedCount}/{serviceCount}</span>
+                  </div>
+                  <div style={{height:5,background:"#ffffff11",borderRadius:99,overflow:"hidden"}}>
+                    <div style={{height:"100%",width:serviceCount>0?`${(verifiedCount/serviceCount)*100}%`:"0%",background:"linear-gradient(90deg,#4FC3F788,#4FC3F7)",borderRadius:99,boxShadow:"0 0 8px #4FC3F7"}}/>
+                  </div>
+                  <div style={{fontSize:8,color:"#ffffff44",marginTop:2}}>{verifiedCount===serviceCount&&serviceCount>0?"All services verified by mechanic":verifiedCount>0?"Some services mechanic verified":"No mechanic verification yet"}</div>
+                </div>
+
+                {/* Key Facts Grid */}
+                <div style={{marginTop:10,display:"grid",gridTemplateColumns:"1fr 1fr",gap:5}}>
+                  {[
+                    ["VIN (last 8)",vehicle.vin?.slice(-8)||"—"],
+                    ["Mileage",vehicle.mileage?`${vehicle.mileage.toLocaleString()} mi`:"—"],
+                    ["Last Service",vehicle.lastVisit||"—"],
+                    ["Days Since Service",daysSince!=null?`${daysSince} days`:"Unknown"],
+                    ["Total Services",serviceCount+" logged"],
+                    ["For Sale",vehicle.forSale?"Yes — Listed":"No"],
+                  ].map(([label,val])=>(
+                    <div key={label} style={{background:"#ffffff08",borderRadius:6,padding:"5px 7px",border:`1px solid ${rarity.color}22`}}>
+                      <div style={{fontSize:7,color:"#ffffff44",textTransform:"uppercase",letterSpacing:0.8,marginBottom:1}}>{label}</div>
+                      <div style={{fontSize:9,color:"#fff",fontWeight:600,fontFamily:label.includes("VIN")?"monospace":"inherit",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{val}</div>
+                    </div>
+                  ))}
+                </div>
+              </>);
+            })()}
           </div>
 
           {/* Bottom */}
@@ -1314,12 +1348,12 @@ function Marketplace({user,users,listings,setListings,onDM,userLocation,onLogin=
       onUpgrade={(planId)=>{setUserListingPlan(planId);setShowListingPlans(false);}}
       onClose={()=>setShowListingPlans(false)}
     />}
-    {showCreate&&<CreateListing user={user} onClose={()=>setShowCreate(false)} onSave={l=>{setListings(p=>[{...l,id:Date.now(),sellerId:user.id,sellerName:user.name,sellerPhoto:user.photo||"😎",verified:user.role==="mechanic"||user.role==="admin",offers:[],listed:new Date().toLocaleDateString(),lat:userLocation?.lat||25.7617,lng:userLocation?.lng||-80.1918,city:l.zipCity||userLocation?.city||user.city||"Miami, FL",zipCity:l.zipCity},...p]);setShowCreate(false);}}/>}
+    {showCreate&&<CreateListing user={user} onClose={()=>setShowCreate(false)} onSave={l=>{setListings(p=>[{...l,id:Date.now(),sellerId:user?.id||"guest",sellerName:user?.name||"Anonymous",sellerPhoto:user?.photo||"😎",verified:user?.role==="mechanic"||user?.role==="admin",offers:[],listed:new Date().toLocaleDateString(),lat:userLocation?.lat||25.7617,lng:userLocation?.lng||-80.1918,city:l.zipCity||userLocation?.city||user.city||"Miami, FL",zipCity:l.zipCity},...p]);setShowCreate(false);}}/>}
   </div>);
 }
 
 function CreateListing({user,onClose,onSave}){
-  const [form,setForm]=useState({year:new Date().getFullYear(),make:"Toyota",model:"",trim:"",color:"Black",mileage:"",price:"",condition:"Good",description:"",features:""});
+  const [form,setForm]=useState({year:new Date().getFullYear(),make:"Toyota",model:"",trim:"",color:"Black",mileage:"",price:"",condition:"Good",titleStatus:"Clean Title",description:"",features:""});
   const [publishError,setPublishError]=useState("");
   const [customMake,setCustomMake]=useState(false);const [customModel,setCustomModel]=useState(false);
   const [photos,setPhotos]=useState([]);const photoRef=useRef();
@@ -1355,7 +1389,7 @@ function CreateListing({user,onClose,onSave}){
         </div>
         {customMake
           ? <input style={{...S.input,marginBottom:0}} placeholder="e.g. Porsche..." value={form.make} onChange={e=>setF("make",e.target.value)}/>
-          : <select style={{...S.input,marginBottom:0}} value={form.make} onChange={e=>{setF("make",e.target.value);setF("model","");}}>{CAR_MAKES.filter(m=>m!=="Any").map(m=><option key={m}>{m}</option>)}</select>
+          : <select style={{...S.input,marginBottom:0}} value={form.make} onChange={e=>{const newMake=e.target.value;setF("make",newMake);setF("model",(CAR_MODELS[newMake]||[])[0]||"");}}>{CAR_MAKES.filter(m=>m!=="Any").map(m=><option key={m}>{m}</option>)}</select>
         }
       </div>
       <div>
@@ -1366,7 +1400,7 @@ function CreateListing({user,onClose,onSave}){
         {customModel||availableModels.length===0
           ? <input style={{...S.input,marginBottom:0}} placeholder="e.g. Civic..." value={form.model} onChange={e=>setF("model",e.target.value)}/>
           : <select style={{...S.input,marginBottom:0}} value={form.model} onChange={e=>setF("model",e.target.value)}>
-              <option value="">Select model...</option>
+              <option value="">Select a model...</option>
               {availableModels.map(m=><option key={m}>{m}</option>)}
             </select>
         }
@@ -1379,6 +1413,7 @@ function CreateListing({user,onClose,onSave}){
       <div><label style={S.label}>Mileage</label><input style={{...S.input,marginBottom:0}} type="number" placeholder="e.g. 45000" value={form.mileage} onChange={e=>setF("mileage",e.target.value)}/></div>
       <div><label style={S.label}>Price ($)</label><input style={{...S.input,marginBottom:0}} type="number" placeholder="e.g. 18500" value={form.price} onChange={e=>setF("price",e.target.value)}/></div>
       <div><label style={S.label}>Condition</label><select style={{...S.input,marginBottom:0}} value={form.condition} onChange={e=>setF("condition",e.target.value)}>{["Excellent","Good","Fair","Poor"].map(c=><option key={c}>{c}</option>)}</select></div>
+      <div><label style={S.label}>Title Status</label><select style={{...S.input,marginBottom:0}} value={form.titleStatus} onChange={e=>setF("titleStatus",e.target.value)}>{["Clean Title","Salvage","Rebuilt"].map(c=><option key={c}>{c}</option>)}</select></div>
     </div>
     {bodyType&&<div style={{background:C.accentDim,border:`1px solid ${C.accent}22`,borderRadius:6,padding:"5px 10px",marginBottom:10,fontSize:12,color:C.accent}}>Body type: <strong>{bodyType}</strong> (auto-detected)</div>}
 
