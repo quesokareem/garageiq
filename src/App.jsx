@@ -1348,7 +1348,18 @@ function Marketplace({user,users,listings,setListings,onDM,userLocation,onLogin=
       onUpgrade={(planId)=>{setUserListingPlan(planId);setShowListingPlans(false);}}
       onClose={()=>setShowListingPlans(false)}
     />}
-    {showCreate&&<CreateListing user={user} onClose={()=>setShowCreate(false)} onSave={l=>{setListings(p=>[{...l,id:Date.now(),sellerId:user?.id||"guest",sellerName:user?.name||"Anonymous",sellerPhoto:user?.photo||"😎",verified:user?.role==="mechanic"||user?.role==="admin",offers:[],listed:new Date().toLocaleDateString(),lat:userLocation?.lat||25.7617,lng:userLocation?.lng||-80.1918,city:l.zipCity||userLocation?.city||user.city||"Miami, FL",zipCity:l.zipCity},...p]);setShowCreate(false);}}/>}
+    {showCreate&&<CreateListing user={user} onClose={()=>setShowCreate(false)} onSave={l=>{
+            const nl={...l,id:Date.now(),sellerId:user?.id||"guest",
+              sellerName:user?.name||"Anonymous",sellerPhoto:user?.photo||"😎",
+              verified:user?.role==="mechanic"||user?.role==="admin",
+              isDealer:user?.role==="dealership",
+              offers:[],listed:new Date().toLocaleDateString(),
+              lat:userLocation?.lat||25.7617,lng:userLocation?.lng||-80.1918,
+              city:l.zipCity||userLocation?.city||user?.city||"Miami, FL",
+            };
+            setListings(p=>[nl,...p]);
+            setShowCreate(false);
+          }}/>}
   </div>);
 }
 
@@ -2596,8 +2607,9 @@ function CustomerPortal({user,users,setUsers,vehicles,setVehicles,quotes,setQuot
     {tab==="settings"&&<SettingsPage user={currentUser} users={users} setUsers={setUsers} onLogout={onLogout} toggleTheme={toggleTheme} onClose={()=>setTab("garage")}/>}
     {carPhotoTarget&&<CarPhotoPicker current={carPhotoTarget.carPhoto} onSave={(photo)=>saveCarPhoto(carPhotoTarget.id,photo)} onClose={()=>setCarPhotoTarget(null)}/>}
     {newCarReveal&&<NewCarReveal vehicle={newCarReveal} onDone={()=>setNewCarReveal(null)}/>}
-    {showProfile&&<ProfilePage user={currentUser} users={users} setUsers={setUsers} onClose={()=>setShowProfile(false)}/>}
-    {showSettings&&<SettingsPage user={currentUser} users={users} setUsers={setUsers} onLogout={()=>setUser(null)} toggleTheme={toggleTheme} onClose={()=>setShowSettings(false)}/>}
+    {showShopSetup&&<ShopSetupWizard user={currentUser} users={users} setUsers={setUsers} onComplete={()=>setShowShopSetup(false)}/>}
+    {!showShopSetup&&showProfile&&<ProfilePage user={currentUser} users={users} setUsers={setUsers} onClose={()=>setShowProfile(false)}/>}
+    {!showShopSetup&&showSettings&&<SettingsPage user={currentUser} users={users} setUsers={setUsers} onLogout={()=>setUser(null)} toggleTheme={toggleTheme} onClose={()=>setShowSettings(false)}/>}
   </div>);
 }
 // ── LISTING PLANS ─────────────────────────────────────────────────────────────
@@ -2935,7 +2947,7 @@ function GarageIQApp({theme,toggleTheme}){
 
   const myWorkerJobs=INIT_JOBS.filter(j=>j.assignedTo===INIT_WORKERS.find(w=>w.userId===user.id)?.id&&(j.status==="To-do"||j.status==="In Progress"||j.status==="Waiting on Parts"));
   const isMechOnline=currentUser.isOnline||false;
-  const [showShopSetup,setShowShopSetup]=useState(!currentUser.shop&&(currentUser.role==="mechanic"||currentUser.role==="admin"));
+  const [showShopSetup,setShowShopSetup]=useState(false); // Set true for new mechanics only
   const navItems=[
     {id:"dashboard",icon:"🏠",label:"Dashboard"},
     {id:"customers",icon:"👥",label:"Customers"},
@@ -3105,8 +3117,9 @@ function GarageIQApp({theme,toggleTheme}){
     {modal==="vin"&&<VINModal onClose={()=>setModal(null)} onAdd={addVehicle}/>}
     {modal==="quote"&&quoteTarget&&<QuoteBuilder mechanic={currentUser} vehicle={quoteTarget} onClose={()=>{setModal(null);setQuoteTarget(null);}} onSend={sendQuote}/>}
     {completedTarget&&<LogCompletedService mechanic={currentUser} vehicle={completedTarget} onClose={()=>setCompletedTarget(null)} onSend={sendCompletedService}/>}
-    {showProfile&&<ProfilePage user={currentUser} users={users} setUsers={setUsers} onClose={()=>setShowProfile(false)}/>}
-    {showSettings&&<SettingsPage user={currentUser} users={users} setUsers={setUsers} onLogout={()=>setUser(null)} toggleTheme={toggleTheme} onClose={()=>setShowSettings(false)}/>}
+    {showShopSetup&&<ShopSetupWizard user={currentUser} users={users} setUsers={setUsers} onComplete={()=>setShowShopSetup(false)}/>}
+    {!showShopSetup&&showProfile&&<ProfilePage user={currentUser} users={users} setUsers={setUsers} onClose={()=>setShowProfile(false)}/>}
+    {!showShopSetup&&showSettings&&<SettingsPage user={currentUser} users={users} setUsers={setUsers} onLogout={()=>setUser(null)} toggleTheme={toggleTheme} onClose={()=>setShowSettings(false)}/>}
 
     {modal==="share"&&shareTarget&&<div style={S.overlay}><div style={{...S.modal,maxWidth:340}}>
       <div style={S.modalHead}><span style={S.modalTitle}>Share Profile</span><button onClick={()=>setModal(null)} style={S.iconBtn}>✕</button></div>
